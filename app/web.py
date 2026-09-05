@@ -537,7 +537,9 @@ BROWSE = """<h1>All collected tenders</h1>
 <pre id=err></pre>
 <script>
 const LIMIT=25; let offset=0;
-const esc=s=>String(s??'').replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
+// esc() comes from the shared chrome in HEAD. Re-declaring it with const here
+// threw "Identifier 'esc' has already been declared", which killed this whole
+// script block -- the listing never rendered and the page sat on "loading...".
 const inr=v=>v==null?'':' &middot; INR '+Number(v).toLocaleString('en-IN');
 function go(e,off){
   if(e) e.preventDefault();
