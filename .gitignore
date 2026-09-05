@@ -36,3 +36,7 @@ vercel_login.log
 
 .vercel
 .env*
+body.html
+headers.txt
+seed*.log
+seed*.err
