@@ -278,3 +278,33 @@ def test_every_form_binds_its_submit_handler_in_script(client):
     for path in ("/login", "/signup", "/profile", "/browse"):
         html = client.get(path).text
         assert "addEventListener('submit'" in html, path
+
+
+def test_no_duplicate_top_level_js_declarations(client):
+    """Two script blocks on one page share a global scope.
+
+    `function esc(){}` in the shared chrome plus `const esc = ...` in the browse
+    script is a SyntaxError -- "Identifier 'esc' has already been declared" --
+    which kills the whole second block. The page then renders fine, serves valid
+    HTML, and simply never runs its JavaScript, so it sits on "loading..." while
+    every server-side check passes.
+    """
+    import re
+
+    decl = re.compile(
+        r"^\s*(?:function\s+(\w+)|const\s+(\w+)\s*=|let\s+(\w+)\s*=)", re.M
+    )
+    for path in ("/", "/login", "/signup", "/profile", "/browse"):
+        html = client.get(path).text
+        seen: dict[str, int] = {}
+        for i, block in enumerate(re.findall(r"<script[^>]*>(.*?)</script>", html, re.S)):
+            # Top level only: anything indented is inside a function or block.
+            for m in decl.finditer(block):
+                name = next(g for g in m.groups() if g)
+                if m.group(0).startswith((" ", "\t")):
+                    continue
+                assert name not in seen or seen[name] == i, (
+                    f"{path}: '{name}' declared at top level in script blocks "
+                    f"{seen[name]} and {i} -- that is a SyntaxError at runtime"
+                )
+                seen[name] = i
