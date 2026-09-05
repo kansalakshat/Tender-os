@@ -255,3 +255,26 @@ def test_serverless_does_not_pool_connections(monkeypatch):
     assert db._pool_options() == {"poolclass": NullPool}
     monkeypatch.delenv("VERCEL")
     assert db._pool_options() == {"pool_pre_ping": True}
+
+
+def test_no_page_relies_on_inline_event_handlers(client):
+    """A nonce whitelists a <script> block; it does NOT whitelist onclick=/onsubmit=
+    attributes. Shipping those with our CSP silently broke every form on the site:
+    signup, login, profile save and the browse search all did nothing when clicked.
+    """
+    import re
+
+    handler = re.compile(r'\son[a-z]+\s*=\s*"', re.I)
+    for path in ("/", "/login", "/signup", "/profile", "/browse"):
+        html = client.get(path).text
+        # Strip <script> bodies: `el.onclick = fn` inside JS is a property
+        # assignment, which CSP permits. Only HTML attributes are the problem.
+        markup = re.sub(r"<script\b[^>]*>.*?</script>", "", html, flags=re.S)
+        found = handler.findall(markup)
+        assert not found, f"{path} has CSP-blocked inline handlers: {found}"
+
+
+def test_every_form_binds_its_submit_handler_in_script(client):
+    for path in ("/login", "/signup", "/profile", "/browse"):
+        html = client.get(path).text
+        assert "addEventListener('submit'" in html, path

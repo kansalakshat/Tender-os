@@ -68,8 +68,7 @@ function flash(html, kind){
     '<div class="banner '+(kind||'warn')+'">'+html+'</div>';
 }
 
-function resend(e){
-  if(e) e.preventDefault();
+function resend(){
   fetch('/auth/resend-verification',{method:'POST'}).then(r=>r.json()).then(d=>{
     flash(d.delivered
       ? 'Sent. Check your inbox.'
@@ -83,7 +82,7 @@ const _q = new URLSearchParams(location.search);
 if(_q.get('verify')==='ok') flash('Email address confirmed. Thanks.', 'good');
 if(_q.get('verify')==='invalid')
   flash('That confirmation link is invalid or has expired. '
-       +'<a href="#" onclick="resend(event)">Send a new one</a>.');
+       +'<a href="#" data-action="resend">Send a new one</a>.');
 if(_q.get('error')==='state')
   flash('That sign-in link expired or did not come from here. Please try again.');
 if(_q.get('error')==='google') flash('Google sign-in did not complete. Please try again.');
@@ -94,19 +93,30 @@ fetch('/me').then(r=>r.json()).then(d=>{
   const el=document.getElementById('me');
   el.innerHTML = d.user
     ? esc(d.user.email)+' &middot; <a href="/profile">edit answers</a> &middot; '
-      +'<a href="#" onclick="signout(event)">sign out</a>'
+      +'<a href="#" data-action="signout">sign out</a>'
     : '<a href="/login">sign in</a> &middot; <a href="/signup">create account</a>';
   // Nagged, not blocked: an unconfirmed address must not lock anyone out of the
   // matches they already answered for. Flip REQUIRE_EMAIL_VERIFICATION to change.
   if(d.user && !d.user.email_verified && !_q.get('verify')){
     flash('Please confirm <b>'+esc(d.user.email)+'</b>. '
-          +'<a href="#" onclick="resend(event)">Resend the link</a>.'
+          +'<a href="#" data-action="resend">Resend the link</a>.'
           +(d.smtp_configured ? '' : ' <i>(no mail server configured here &mdash; '
             +'the link goes to <code>outbox.log</code>)</i>'));
   }
 });
-function signout(e){e.preventDefault();
+function signout(){
   fetch('/auth/logout',{method:'POST'}).then(()=>location.assign('/'));}
+
+// Inline onclick="" attributes are blocked by our own Content-Security-Policy:
+// a nonce whitelists a <script> block, it does NOT whitelist attribute handlers.
+// One delegated listener covers links that are inserted later via innerHTML.
+document.addEventListener('click', function(e){
+  const el = e.target.closest('[data-action]');
+  if(!el) return;
+  e.preventDefault();
+  if(el.dataset.action === 'signout') signout();
+  if(el.dataset.action === 'resend') resend();
+});
 
 </script>"""
 
@@ -289,7 +299,7 @@ collected tender</a> without an account.</p>"""
 SIGNUP = """<h1>Create your account</h1>
 <p class=hint>Everything below is asked once. You will not be asked again.</p>
 __GOOGLE__
-<form id=f onsubmit="go(event)">
+<form id=f>
 
 <fieldset><legend>Sign-in details</legend>
 <p>Email<br><input name=email type=email required size=34 autocomplete=username></p>
@@ -327,6 +337,7 @@ function go(e){
          .then(d=>location.assign('/c/'+d.id))
          .catch(showErr);
 }
+document.getElementById('f').addEventListener('submit', go);
 </script>"""
 
 
@@ -344,7 +355,7 @@ def signup_page(request: Request, db: Session = Depends(get_db)) -> str:
 
 LOGIN = """<h1>Sign in</h1>
 __GOOGLE__
-<form id=f onsubmit="go(event)">
+<form id=f>
 <p>Email<br><input name=email type=email required size=34 autocomplete=username></p>
 <p>Password<br><input name=password type=password required size=34
    autocomplete=current-password></p>
@@ -362,6 +373,7 @@ function go(e){
    .then(r=>r.json().then(d=>r.ok?location.assign('/')
      :document.getElementById('err').textContent=d.detail));
 }
+document.getElementById('f').addEventListener('submit', go);
 </script>"""
 
 
@@ -378,7 +390,7 @@ def login_page(request: Request) -> str:
 
 EDIT = """<h1>__HEADING__</h1>
 <p class=hint id=savehint>__HINT__</p>
-<form id=f onsubmit="go(event)">
+<form id=f>
 __PROFILE_FIELDS__
 <fieldset><legend>Contact</legend>
 <p>Contact email<br><input name=contact_email type=email size=40></p>
@@ -437,6 +449,7 @@ function go(e){
    .then(r=>r.json().then(d=>{if(!r.ok) throw d.detail; renderPreview(d);}))
    .catch(showErr);
 }
+document.getElementById('f').addEventListener('submit', go);
 </script>"""
 
 
@@ -507,7 +520,7 @@ def results(
 # ---- corpus browser --------------------------------------------------------
 
 BROWSE = """<h1>All collected tenders</h1>
-<form id=f onsubmit="go(event,0)">
+<form id=f>
 <p><input name=q size=34 placeholder="search titles, e.g. transformer">
    <select name=source_id><option value="">every source</option>__SOURCES__</select>
    <select name=sort>
@@ -550,6 +563,7 @@ function go(e,off){
     document.getElementById('next').disabled = offset+LIMIT >= d.total;
   }).catch(e=>document.getElementById('err').textContent=e);
 }
+document.getElementById('f').addEventListener('submit', e=>go(e,0));
 prev.onclick=()=>go(null, Math.max(0, offset-LIMIT));
 next.onclick=()=>go(null, offset+LIMIT);
 go(null,0);
