@@ -25,3 +25,9 @@ from app.api import app
 
 # Vercel looks for this name.
 __all__ = ["app"]
+
+# vercel.json uses the legacy `builds`/`routes` form on purpose. The modern
+# `rewrites` form REWRITES the request path, so FastAPI received "/api/index"
+# for every URL and answered 404 on its own routes. `routes` maps the request to
+# this function while preserving the original path, which is what an ASGI app
+# needs in order to do its own routing.

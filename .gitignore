@@ -33,3 +33,6 @@ build/
 dist/
 vercel_login.log
 .vercel/
+
+.vercel
+.env*
