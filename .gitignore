@@ -31,3 +31,5 @@ detail_sample.html
 *.egg-info/
 build/
 dist/
+vercel_login.log
+.vercel/
