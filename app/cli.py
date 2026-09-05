@@ -21,6 +21,12 @@ def cmd_run(args) -> int:
             print(f"unknown connector {name!r}; known: {', '.join(REGISTRY)}", file=sys.stderr)
             return 2
         connector = REGISTRY[name]()
+        if args.rate_limit is not None:
+            # An explicit operator choice for one run. The class default stays as
+            # it is, so the scheduler keeps the polite cadence. Backoff on 429/5xx
+            # is untouched -- this changes how fast we ask, never how we react to
+            # being told to slow down.
+            connector.rate_limit_seconds = max(args.rate_limit, 0.25)
         # Only meaningful for page-based connectors; ignored by the rest.
         for attr in ("max_pages", "start_page"):
             value = getattr(args, attr)
@@ -124,6 +130,9 @@ def main(argv=None) -> int:
                        help="page-based connectors: how many listing pages to read")
     p_run.add_argument("--start-page", type=int, default=None,
                        help="page-based connectors: resume a backfill from this page")
+    p_run.add_argument("--rate-limit", type=float, default=None,
+                       help="seconds between requests for this run only "
+                            "(default: the connector's own, 3s for CPPP/GePNIC)")
     p_run.set_defaults(func=cmd_run)
 
     p_robots = sub.add_parser("check-robots", help="check robots.txt only, write nothing")

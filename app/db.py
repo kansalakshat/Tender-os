@@ -5,6 +5,7 @@ import os
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import NullPool
 
 load_dotenv()
 
@@ -56,8 +57,27 @@ def get_engine():
                 "e.g. postgresql+psycopg://user:pass@host/dbname -- a provider's "
                 "postgres:// URL is accepted too."
             )
-        _engine = create_engine(DATABASE_URL, pool_pre_ping=True, future=True)
+        _engine = create_engine(DATABASE_URL, future=True, **_pool_options())
     return _engine
+
+
+def _pool_options() -> dict:
+    """Serverless must not pool.
+
+    A function instance is frozen between requests, so any connection it holds is
+    idle-but-occupied. With several instances warm, a small Postgres (a Neon free
+    tier especially) runs out of connections and new requests queue instead of
+    being served -- which looks exactly like the site hanging.
+
+    NullPool opens one connection per request and closes it. That costs a connect
+    per request, which is the right trade when the alternative is exhausting the
+    database. A long-lived process keeps the normal pool.
+    """
+    if os.getenv("VERCEL") or os.getenv("AWS_LAMBDA_FUNCTION_NAME"):
+        return {"poolclass": NullPool}
+    # pool_pre_ping costs a round trip per checkout; worth it for a process that
+    # can otherwise hand out a connection the database has since dropped.
+    return {"pool_pre_ping": True}
 
 
 def SessionLocal():

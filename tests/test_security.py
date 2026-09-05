@@ -242,3 +242,16 @@ def test_health_does_not_need_a_database(client):
 
     assert "db" not in inspect.signature(api.health).parameters
     assert client.get("/health").json() == {"status": "ok"}
+
+
+def test_serverless_does_not_pool_connections(monkeypatch):
+    """A frozen function instance holding an idle connection exhausts a small
+    Postgres; concurrent requests then queue and the site appears to hang."""
+    from sqlalchemy.pool import NullPool
+
+    import app.db as db
+
+    monkeypatch.setenv("VERCEL", "1")
+    assert db._pool_options() == {"poolclass": NullPool}
+    monkeypatch.delenv("VERCEL")
+    assert db._pool_options() == {"pool_pre_ping": True}
