@@ -1,0 +1,11 @@
+# Runtime dependencies for the web app only (Vercel installs from this file).
+# apscheduler and alembic are deliberately absent: the scheduler cannot run on
+# serverless, and migrations are applied from a machine with a real shell.
+fastapi>=0.115
+sqlalchemy>=2.0
+psycopg[binary]>=3.2
+httpx>=0.28
+pydantic>=2.9
+python-dotenv>=1.0
+selectolax>=0.3.21
+pyyaml>=6.0

@@ -10,6 +10,7 @@ buckets to Redis or Postgres -- the `hit()` signature does not change.
 """
 from __future__ import annotations
 
+import logging
 import os
 import secrets
 import time
@@ -29,6 +30,16 @@ SIGNUP_LIMIT, SIGNUP_WINDOW = 5, 3600       # 5 per hour
 MAIL_LIMIT, MAIL_WINDOW = 4, 3600           # 4 verification mails per hour
 
 _MAX_BUCKETS = 20_000
+
+# Serverless invocations do not share memory, so these buckets protect almost
+# nothing there. Say so loudly rather than letting the deployment quietly believe
+# it is throttled.
+if os.getenv("VERCEL") or os.getenv("AWS_LAMBDA_FUNCTION_NAME"):
+    logging.getLogger(__name__).warning(
+        "Rate limiting is in-process and this looks like a serverless runtime: "
+        "login throttling is NOT effective here. Move the buckets to Postgres or "
+        "Redis before exposing this publicly."
+    )
 
 
 def client_ip(request: Request) -> str:

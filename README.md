@@ -357,3 +357,42 @@ tests/             141 tests, no network
 Anything targeting gem.gov.in; anti-detection, CAPTCHA-bypass, or proxy-rotation
 tooling; bidder/seller personal or contact information; deployment infrastructure
 (local-first until the pipeline is proven).
+
+---
+
+## Deploying
+
+The repo is Vercel-ready (`vercel.json`, `api/index.py`, `requirements.txt`), but
+**only the web app can run there.** Read this before deploying.
+
+### What Vercel can and cannot host
+
+| Part | On Vercel |
+|---|---|
+| FastAPI pages + JSON API | Works |
+| Postgres | **No.** Needs a hosted database; `localhost` will fail. |
+| `app/scheduler.py` ingest | **No.** Serverless has no always-on process. |
+| Rate limiting (`app/security.py`) | **Degraded.** Buckets are per-process memory and are not shared between invocations, so login throttling is close to useless. Move them to Postgres/Redis first. |
+
+The workable shape is: **Vercel serves the site; ingest runs elsewhere** — your
+machine, a small VM, Railway or Fly.io — with `python -m app.scheduler` pointed
+at the same `DATABASE_URL`.
+
+### Steps
+
+1. **Hosted Postgres.** Create one (Neon, Supabase, Vercel Postgres) and note the
+   connection string. It must start `postgresql+psycopg://` for SQLAlchemy.
+2. **Apply migrations** from a machine with a shell, not from Vercel:
+   `DATABASE_URL=<hosted-url> alembic upgrade head`
+3. **Deploy:** `vercel login`, then `vercel --prod`. Name the project when asked.
+4. **Set the environment variables** in the Vercel dashboard (Settings ->
+   Environment Variables): `DATABASE_URL`, `SESSION_SECRET`, `CONTACT_EMAIL`,
+   `PUBLIC_BASE_URL` (the https Vercel URL), and the `SMTP_*` and `GOOGLE_*` keys
+   if you want mail and Google sign-in. See `.env.example`.
+5. **Add the deployed callback URL to the Google OAuth client**, exactly:
+   `https://<your-domain>/auth/google/callback`. A mismatch is the usual cause of
+   `redirect_uri_mismatch`.
+6. **Point the scheduler at the hosted database** on whatever machine will run it.
+
+Setting `PUBLIC_BASE_URL` to an `https://` origin also turns on the `Secure`
+cookie flag and HSTS automatically -- see `app/security.py`.
