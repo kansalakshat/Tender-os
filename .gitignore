@@ -1,0 +1,33 @@
+# Secrets. NEVER commit: .env holds the Google client secret, the Gmail app
+# password, SESSION_SECRET and the database URL.
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# Local databases and dumps. The pg_dump backup contains the `users` table --
+# real email addresses and password hashes. It must never reach a remote.
+*.db
+*.sql
+backup_*.sql
+
+# Runtime logs. outbox.log holds live, valid email-verification tokens.
+outbox.log
+server.log
+server.err
+scheduler.log
+scheduler.err
+
+# One-off survey artefacts
+detail_sample.html
+
+# Build output
+*.egg-info/
+build/
+dist/

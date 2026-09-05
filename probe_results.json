@@ -1,0 +1,166 @@
+[
+  {
+    "domain": "eproc.bihar.gov.in",
+    "state": "Bihar",
+    "robots": "could not reach https://eproc.bihar.gov.in/robots.txt ([Errno 11001] getaddrinfo failed); refusing until it answers",
+    "verdict": "unreachable",
+    "detail": "could not reach https://eproc.bihar.gov.in/robots.txt ([Errno 11001] getaddrinfo failed); refusing until it answers",
+    "rows": 0
+  },
+  {
+    "domain": "eproc.cgstate.gov.in",
+    "state": "Chhattisgarh (eproc)",
+    "robots": "allowed",
+    "verdict": "no-listing",
+    "detail": "listing returned HTTP 404",
+    "rows": 0
+  },
+  {
+    "domain": "cgeprocurement.gov.in",
+    "state": "Chhattisgarh (alt)",
+    "robots": "could not reach https://cgeprocurement.gov.in/robots.txt ([Errno 11001] getaddrinfo failed); refusing until it answers",
+    "verdict": "unreachable",
+    "detail": "could not reach https://cgeprocurement.gov.in/robots.txt ([Errno 11001] getaddrinfo failed); refusing until it answers",
+    "rows": 0
+  },
+  {
+    "domain": "govtprocurement.delhi.gov.in",
+    "state": "Delhi",
+    "robots": "allowed",
+    "verdict": "captcha-gated",
+    "detail": "listing renders empty; the data is behind the CAPTCHA'd search",
+    "rows": 0,
+    "captcha_on_page": true
+  },
+  {
+    "domain": "eproc.karnataka.gov.in",
+    "state": "Karnataka",
+    "robots": "robots.txt disallows /nicgep/app",
+    "verdict": "robots-disallowed",
+    "detail": "robots.txt disallows /nicgep/app",
+    "rows": 0
+  },
+  {
+    "domain": "etenders.chd.nic.in",
+    "state": "Chandigarh",
+    "robots": "allowed",
+    "verdict": "captcha-gated",
+    "detail": "listing renders empty; the data is behind the CAPTCHA'd search",
+    "rows": 0,
+    "captcha_on_page": true
+  },
+  {
+    "domain": "eproc.py.gov.in",
+    "state": "Puducherry",
+    "robots": "could not reach https://eproc.py.gov.in/robots.txt ([Errno 11001] getaddrinfo failed); refusing until it answers",
+    "verdict": "unreachable",
+    "detail": "could not reach https://eproc.py.gov.in/robots.txt ([Errno 11001] getaddrinfo failed); refusing until it answers",
+    "rows": 0
+  },
+  {
+    "domain": "tender.py.gov.in",
+    "state": "Puducherry (alt)",
+    "robots": "could not reach https://tender.py.gov.in/robots.txt ([Errno 11001] getaddrinfo failed); refusing until it answers",
+    "verdict": "unreachable",
+    "detail": "could not reach https://tender.py.gov.in/robots.txt ([Errno 11001] getaddrinfo failed); refusing until it answers",
+    "rows": 0
+  },
+  {
+    "domain": "sikkimtenders.gov.in",
+    "state": "Sikkim",
+    "robots": "could not reach https://sikkimtenders.gov.in/robots.txt ([Errno 11001] getaddrinfo failed); refusing until it answers",
+    "verdict": "unreachable",
+    "detail": "could not reach https://sikkimtenders.gov.in/robots.txt ([Errno 11001] getaddrinfo failed); refusing until it answers",
+    "rows": 0
+  },
+  {
+    "domain": "eproc.punjab.gov.in",
+    "state": "Punjab",
+    "robots": "allowed",
+    "verdict": "captcha-gated",
+    "detail": "listing renders empty; the data is behind the CAPTCHA'd search",
+    "rows": 0,
+    "captcha_on_page": true
+  },
+  {
+    "domain": "tenders.gujarat.gov.in",
+    "state": "Gujarat",
+    "robots": "could not reach https://tenders.gujarat.gov.in/robots.txt ([Errno 11001] getaddrinfo failed); refusing until it answers",
+    "verdict": "unreachable",
+    "detail": "could not reach https://tenders.gujarat.gov.in/robots.txt ([Errno 11001] getaddrinfo failed); refusing until it answers",
+    "rows": 0
+  },
+  {
+    "domain": "etender.up.nic.in",
+    "state": "Uttar Pradesh (nic)",
+    "robots": "allowed",
+    "verdict": "captcha-gated",
+    "detail": "listing renders empty; the data is behind the CAPTCHA'd search",
+    "rows": 0,
+    "captcha_on_page": true
+  },
+  {
+    "domain": "etender.uk.gov.in",
+    "state": "Uttarakhand (alt)",
+    "robots": "could not reach https://etender.uk.gov.in/robots.txt ([Errno 11001] getaddrinfo failed); refusing until it answers",
+    "verdict": "unreachable",
+    "detail": "could not reach https://etender.uk.gov.in/robots.txt ([Errno 11001] getaddrinfo failed); refusing until it answers",
+    "rows": 0
+  },
+  {
+    "domain": "tenders.apeprocurement.gov.in",
+    "state": "Andhra Pradesh",
+    "robots": "could not reach https://tenders.apeprocurement.gov.in/robots.txt ([Errno 11001] getaddrinfo failed); refusing until it answers",
+    "verdict": "unreachable",
+    "detail": "could not reach https://tenders.apeprocurement.gov.in/robots.txt ([Errno 11001] getaddrinfo failed); refusing until it answers",
+    "rows": 0
+  },
+  {
+    "domain": "eprocurement.gov.in",
+    "state": "AP/TS shared eProcurement",
+    "robots": "could not reach https://eprocurement.gov.in/robots.txt (timed out); refusing until it answers",
+    "verdict": "unreachable",
+    "detail": "could not reach https://eprocurement.gov.in/robots.txt (timed out); refusing until it answers",
+    "rows": 0
+  },
+  {
+    "domain": "etenders.kerala.gov.in",
+    "state": "Kerala (alt)",
+    "robots": "allowed",
+    "verdict": "error",
+    "detail": "ReadTimeout: The read operation timed out",
+    "rows": 0
+  },
+  {
+    "domain": "eproc.jharkhand.gov.in",
+    "state": "Jharkhand (alt)",
+    "robots": "could not reach https://eproc.jharkhand.gov.in/robots.txt ([Errno 11001] getaddrinfo failed); refusing until it answers",
+    "verdict": "unreachable",
+    "detail": "could not reach https://eproc.jharkhand.gov.in/robots.txt ([Errno 11001] getaddrinfo failed); refusing until it answers",
+    "rows": 0
+  },
+  {
+    "domain": "eproctenders.gov.in",
+    "state": "generic probe",
+    "robots": "could not reach https://eproctenders.gov.in/robots.txt ([Errno 11001] getaddrinfo failed); refusing until it answers",
+    "verdict": "unreachable",
+    "detail": "could not reach https://eproctenders.gov.in/robots.txt ([Errno 11001] getaddrinfo failed); refusing until it answers",
+    "rows": 0
+  },
+  {
+    "domain": "tenders.telangana.gov.in",
+    "state": "Telangana (alt)",
+    "robots": "could not reach https://tenders.telangana.gov.in/robots.txt ([Errno 11001] getaddrinfo failed); refusing until it answers",
+    "verdict": "unreachable",
+    "detail": "could not reach https://tenders.telangana.gov.in/robots.txt ([Errno 11001] getaddrinfo failed); refusing until it answers",
+    "rows": 0
+  },
+  {
+    "domain": "eprocurement.telangana.gov.in",
+    "state": "Telangana (eproc)",
+    "robots": "allowed",
+    "verdict": "no-listing",
+    "detail": "listing returned HTTP 404",
+    "rows": 0
+  }
+]

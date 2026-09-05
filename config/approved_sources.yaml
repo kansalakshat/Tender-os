@@ -1,0 +1,86 @@
+# Compliance allowlist. A connector whose host is NOT listed here refuses to run.
+#
+# Adding a domain is a MANUAL step with a human in the loop:
+#   1. Fetch https://<domain>/robots.txt yourself and read it.
+#   2. Confirm every path the connector needs is permitted.
+#   3. Read the site's terms of use / disclaimer page.
+#   4. Confirm no CAPTCHA, login, or anti-bot gate stands between us and the data.
+#      If one does, the source is out -- we do not solve, bypass, or evade (rule #3).
+#   5. Record the licence and who verified it, below.
+#
+# GeM (gem.gov.in and subdomains) must NEVER be added. It is blocked in code
+# (app/compliance.py BLOCKED_HOSTS) and an entry here will not override that.
+
+sources:
+  - domain: api.data.gov.in
+    name: data.gov.in
+    license: NDSAP
+    robots_verified_on: 2026-08-25
+    verified_by: initial-build
+    paths: ["/resource/", "/lists"]
+    notes: >
+      Official Open Government Data API, accessed with a registered API key.
+      robots.txt returns HTTP 404 (no restrictions) as of the verification date.
+      Datasets are published under the National Data Sharing and Accessibility
+      Policy, which permits reuse including commercial reuse.
+
+  - domain: eprocure.gov.in
+    name: CPPP
+    license: public-published
+    robots_verified_on: 2026-08-25
+    verified_by: initial-build
+    paths: ["/cppp/latestactivetendersnew/cpppdata"]
+    notes: >
+      Central Public Procurement Portal (NIC). robots.txt returns HTTP 404 (no
+      restrictions) as of the verification date. We read ONLY the default
+      server-rendered listing at /cppp/latestactivetendersnew/cpppdata and its
+      pagination links, which require no CAPTCHA. The search form on that page
+      and the whole /eprocure/app?page=FrontEndLatestActiveTenders page ARE
+      CAPTCHA-gated and are therefore permanently off-limits (rule #3).
+      Tenders here are mandatory public disclosures under GFR 2017.
+
+  - domain: mptenders.gov.in
+    name: MP eProcurement
+    license: public-published
+    robots_verified_on: 2026-08-25
+    verified_by: initial-build
+    paths: ["/nicgep/app"]
+    notes: >
+      Madhya Pradesh GePNIC instance (NIC). robots.txt returns HTTP 404 (no
+      restrictions) as of the verification date. The Disclaimer page states the
+      portal exists "to facilitate faster dissemination and easy access to
+      information related to Tenders" and places no restriction on automated
+      access. We read ONLY FrontEndListTendersbyDate, which renders with no
+      CAPTCHA. FrontEndLatestActiveTenders and FrontEndTendersByOrganisation are
+      CAPTCHA-gated on this portal and are therefore off-limits (rule #3).
+      This approval covers mptenders.gov.in ONLY -- every other state GePNIC
+      instance is a separate domain needing its own verification.
+
+  - domain: hptenders.gov.in
+    name: HP eProcurement
+    license: public-published
+    robots_verified_on: 2026-09-06
+    verified_by: operator-authorised (nirmaanos35@gmail.com), probed by probe_sources.py
+    paths: ["/nicgep/app"]
+    notes: >
+      Himachal Pradesh GePNIC instance (NIC). robots.txt returns HTTP 404 (no
+      restrictions) as of the verification date. The Disclaimer page carries the
+      standard NIC wording -- the portal exists "to facilitate faster dissemination
+      and easy access to information related to Tenders" -- and places no
+      restriction on automated access. FrontEndListTendersbyDate renders its
+      listing table server-side and parsed 3 rows on probe; the CAPTCHA on this
+      portal sits on the search form only, NOT over the listing table, which is the
+      same arrangement as CPPP and mptenders.gov.in.
+
+  - domain: eproc.rajasthan.gov.in
+    name: Rajasthan eProcurement
+    license: public-published
+    robots_verified_on: 2026-09-06
+    verified_by: operator-authorised (nirmaanos35@gmail.com), probed by probe_sources.py
+    paths: ["/nicgep/app"]
+    notes: >
+      Rajasthan GePNIC instance (NIC), run by Government of Rajasthan. robots.txt
+      returns HTTP 404 (no restrictions) as of the verification date. Disclaimer
+      carries the same NIC dissemination wording with no automated-access
+      restriction. FrontEndListTendersbyDate parsed 10 rows server-side on probe;
+      CAPTCHA is on the search form only, not over the listing table.
