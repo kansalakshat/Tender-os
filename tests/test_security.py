@@ -198,3 +198,47 @@ def test_forged_oauth_state_is_refused(client, monkeypatch):
     r = client.get(f"/auth/google/callback?code=x&state={oauth.make_state()}",
                    follow_redirects=False)
     assert r.headers["location"] == "/login?error=state"
+
+
+# ---- deployment robustness: a bad DATABASE_URL must not kill the whole app ----
+
+def test_provider_postgres_urls_are_normalised():
+    """Neon/Supabase/Railway hand out postgres:// or postgresql://; SQLAlchemy
+    needs the driver named. Pasting the provider's string must just work."""
+    from app.db import normalize_database_url as n
+
+    assert n("postgres://u:p@h/db") == "postgresql+psycopg://u:p@h/db"
+    assert n("postgresql://u:p@h/db") == "postgresql+psycopg://u:p@h/db"
+    assert n("postgresql+psycopg://u:p@h/db") == "postgresql+psycopg://u:p@h/db"
+    assert n("  postgres://u:p@h/db  ") == "postgresql+psycopg://u:p@h/db"
+    assert n("sqlite://") == "sqlite://"          # left alone
+    assert n(None) == "" and n("") == ""
+
+
+def test_empty_database_url_fails_loudly_not_silently(monkeypatch):
+    """An empty value means someone tried to configure it and failed. Falling
+    back to localhost would hide that behind a connection timeout."""
+    import importlib
+
+    import app.db as db
+
+    monkeypatch.setenv("DATABASE_URL", "")
+    reloaded = importlib.reload(db)
+    try:
+        assert reloaded.DATABASE_URL == ""
+        with pytest.raises(RuntimeError, match="set but empty"):
+            reloaded.get_engine()
+    finally:
+        monkeypatch.setenv("DATABASE_URL", "sqlite://")
+        importlib.reload(db)
+
+
+def test_health_does_not_need_a_database(client):
+    """The whole app used to die at import if DATABASE_URL was unparseable, so
+    even /health 500'd. It touches no database and must never depend on one."""
+    import inspect
+
+    from app import api
+
+    assert "db" not in inspect.signature(api.health).parameters
+    assert client.get("/health").json() == {"status": "ok"}
