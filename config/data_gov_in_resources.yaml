@@ -1,0 +1,31 @@
+# data.gov.in datasets to ingest, pinned by resource id.
+#
+# THIS LIST IS THE ALLOWLIST. Nothing is ingested that is not named here.
+#
+# Keyword discovery deliberately does NOT auto-ingest, because searching the
+# catalogue for "tender" and "procurement" is wildly imprecise on this platform:
+#   - "tender" matches "Variety-wise Daily Market Prices of TENDER COCONUT"
+#   - "procurement" matches paddy/wheat/coarsegrain crop procurement under MSP
+# Of 242 datasets matching "procurement", the ones below were the genuine public
+# procurement records. Ingesting the rest would fill the tenders table with
+# vegetable prices.
+#
+# To find candidates:  tenders discover-data-gov-in
+# Then read each one's title and fields, and paste the good ones here.
+
+resources:
+  # Assam public procurement, published as OCDS (Open Contracting Data Standard).
+  # Fields: tender/id, tender/title, tender/value/amount, tender/datePublished,
+  # tender/status, tender/mainProcurementCategory, buyer/name.
+  - id: 91e35f71-68d2-4e77-ae6b-e5a16642ffc1
+    note: Assam Public Procurement Data 2016-17
+  - id: d9a9fd53-4edd-4f65-8dcd-d5844f7fa76e
+    note: Assam Public Procurement Data 2017-18
+  - id: 64fa2910-4d48-469d-92d8-d00086d1e462
+    note: Assam Public Procurement Data 2018-19
+  - id: deadcf24-4261-4574-b766-ccb377dd0f3b
+    note: Assam Public Procurement Data 2019-20
+  - id: fbf7f636-5926-41d5-b168-b030c3415a5c
+    note: Assam Public Procurement Data 2020-21
+  - id: 48571d3f-38c8-4cba-b94f-fa12dddbdcdf
+    note: Assam Public Procurement Data 2021-22
