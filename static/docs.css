@@ -1,0 +1,295 @@
+/* Swagger UI, restyled to match the site.
+ *
+ * Served from our own origin, so the docs CSP ("style-src 'self' ..." ) already
+ * allows it and no host needed adding. Only Swagger's own class names are
+ * targeted; the markup it generates is untouched, so its behaviour -- schemas,
+ * try-it-out, auth -- keeps working.
+ */
+
+@font-face {
+  font-family: Quicksand;
+  src: url(/static/fonts/Quicksand.woff2) format("woff2");
+  font-weight: 300 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: Nunito;
+  src: url(/static/fonts/Nunito.woff2) format("woff2");
+  font-weight: 200 1000;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Space Mono";
+  src: url(/static/fonts/SpaceMono-400.woff2) format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Space Mono";
+  src: url(/static/fonts/SpaceMono-700.woff2) format("woff2");
+  font-weight: 700;
+  font-display: swap;
+}
+
+:root {
+  --paper: #8EA439;
+  --panel: #EFD7A5;
+  --ink: #2A1608;
+  --muted: #42230A;
+  --accent: #653511;
+  --rule: #2A1608;
+  --hair: rgba(42, 22, 8, .3);
+  --r: 8px;
+  --r-lg: 16px;
+  --sans: Nunito, system-ui, sans-serif;
+  --display: Quicksand, Nunito, system-ui, sans-serif;
+  --mono: "Space Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+
+body {
+  background-color: var(--paper);
+  background-image:
+    radial-gradient(80% 40% at 12% 8%, rgba(255, 251, 235, .075), transparent 72%),
+    radial-gradient(65% 45% at 88% 72%, rgba(42, 22, 8, .07), transparent 72%);
+  font-family: var(--sans);
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+/* the site's own bar, rendered by the docs route */
+.tos-bar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: var(--paper);
+  border-bottom: 3px solid var(--rule);
+}
+.tos-bar .wrap {
+  max-width: 78rem;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  min-height: 4.75rem;
+  display: flex;
+  align-items: center;
+  gap: 1.3rem;
+  flex-wrap: wrap;
+}
+.tos-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: .65rem;
+  color: var(--ink);
+  text-decoration: none;
+  font: 900 1.12rem/1 var(--display);
+  text-transform: uppercase;
+  letter-spacing: -.03em;
+}
+.tos-brand span { color: var(--muted); font-weight: 500; }
+.tos-mark { width: 1.6rem; height: 1.6rem; border-radius: 5px; }
+.tos-nav { display: flex; gap: .2rem; margin-left: auto; }
+.tos-nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.4rem;
+  padding: 0 .8rem;
+  border-radius: var(--r);
+  color: var(--muted);
+  text-decoration: none;
+  font: 700 .9rem/1 var(--mono);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  transition: background .12s, color .12s;
+}
+.tos-nav a:hover { background: var(--panel); color: var(--ink); }
+.tos-nav a.on { background: var(--ink); color: #fff; }
+
+/* Swagger's own header block is redundant next to ours */
+.swagger-ui .topbar { display: none; }
+
+.swagger-ui { font-family: var(--sans); color: var(--ink); }
+.swagger-ui .wrapper { max-width: 78rem; padding: 0 1.5rem; }
+
+.swagger-ui .info { margin: 2.5rem 0 1.5rem; }
+.swagger-ui .info .title,
+.swagger-ui .info h1, .swagger-ui .info h2 {
+  font-family: var(--display);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: -.022em;
+  color: var(--ink);
+}
+.swagger-ui .info .title { font-size: clamp(2rem, 1rem + 3vw, 3.4rem); line-height: .95; }
+.swagger-ui .info .title small { background: var(--ink); border-radius: var(--r); }
+.swagger-ui .info .title small pre { font-family: var(--mono); }
+.swagger-ui .info p,
+.swagger-ui .info li,
+.swagger-ui .markdown p { color: var(--ink); font-weight: 500; font-size: 1.05rem; }
+.swagger-ui .info a { color: var(--accent); font-weight: 700; }
+
+/* every block is a sand sheet with a hard brown rule, like the rest of the site */
+.swagger-ui .opblock,
+.swagger-ui section.models {
+  background: var(--panel);
+  border: 3px solid var(--rule);
+  border-radius: var(--r-lg);
+  box-shadow: none;
+  margin: 0 0 1.25rem;
+  overflow: hidden;
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.swagger-ui .opblock:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 32px -18px rgba(42, 22, 8, .6);
+}
+.swagger-ui .opblock .opblock-summary { border-bottom: 2px solid var(--hair); }
+.swagger-ui .opblock .opblock-summary-method {
+  border-radius: var(--r);
+  font-family: var(--mono);
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-shadow: none;
+  min-width: 5.5rem;
+}
+.swagger-ui .opblock.opblock-get .opblock-summary-method { background: #2A1608; }
+.swagger-ui .opblock.opblock-post .opblock-summary-method { background: #3F6B1E; }
+.swagger-ui .opblock.opblock-put .opblock-summary-method { background: #8A5C0B; }
+.swagger-ui .opblock.opblock-delete .opblock-summary-method { background: #9B2C0F; }
+.swagger-ui .opblock .opblock-summary-path,
+.swagger-ui .opblock .opblock-summary-path__deprecated {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 1.02rem;
+  color: var(--ink);
+}
+.swagger-ui .opblock .opblock-summary-description {
+  font-family: var(--sans);
+  font-weight: 600;
+  color: var(--muted);
+}
+.swagger-ui .opblock-tag {
+  font-family: var(--display);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: -.01em;
+  color: var(--ink);
+  border-bottom: 3px solid var(--rule);
+  margin: 2.25rem 0 1rem;
+}
+.swagger-ui .opblock-tag small { font-family: var(--sans); color: var(--muted); }
+
+.swagger-ui .btn {
+  border-radius: var(--r);
+  border: 2px solid var(--ink);
+  font-family: var(--mono);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  box-shadow: none;
+  transition: background .16s, color .16s, transform .12s;
+}
+.swagger-ui .btn:hover { transform: translateY(-2px); }
+.swagger-ui .btn.execute {
+  background: var(--ink);
+  color: #fff;
+  border-color: var(--ink);
+}
+.swagger-ui .btn.execute:hover { background: var(--paper); color: var(--ink); }
+.swagger-ui .btn.authorize { color: var(--ink); border-color: var(--ink); }
+.swagger-ui .btn.authorize svg { fill: var(--ink); }
+
+.swagger-ui select,
+.swagger-ui input[type=text],
+.swagger-ui input[type=password],
+.swagger-ui input[type=email],
+.swagger-ui textarea {
+  background: #FFFDF6;
+  border: 2px solid var(--ink);
+  border-radius: var(--r);
+  font-family: var(--mono);
+  color: var(--ink);
+  box-shadow: none;
+}
+.swagger-ui .parameter__name {
+  font-family: var(--mono);
+  font-weight: 700;
+  color: var(--ink);
+}
+.swagger-ui .parameter__type { font-family: var(--mono); color: var(--muted); }
+.swagger-ui table thead tr th,
+.swagger-ui table thead tr td {
+  font-family: var(--mono);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--muted);
+  border-bottom: 2px solid var(--hair);
+}
+.swagger-ui .responses-inner h4,
+.swagger-ui .responses-inner h5,
+.swagger-ui .opblock-section-header h4 {
+  font-family: var(--display);
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.swagger-ui .opblock-section-header {
+  background: rgba(42, 22, 8, .06);
+  box-shadow: none;
+  border-radius: var(--r);
+}
+.swagger-ui .microlight,
+.swagger-ui .highlight-code > .microlight {
+  font-family: var(--mono);
+  border-radius: var(--r);
+}
+.swagger-ui .model,
+.swagger-ui .model-title { font-family: var(--mono); color: var(--ink); }
+.swagger-ui .scheme-container {
+  background: transparent;
+  box-shadow: none;
+  padding: 1rem 0;
+}
+.swagger-ui .response-col_status { font-family: var(--mono); font-weight: 700; }
+.swagger-ui a { color: var(--accent); }
+.swagger-ui *:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+/* Swagger colours each block by method with a more specific selector than
+ * .opblock, so the sand panel has to be stated at the same specificity or the
+ * default blue/green tints win. */
+.swagger-ui .opblock.opblock-get,
+.swagger-ui .opblock.opblock-post,
+.swagger-ui .opblock.opblock-put,
+.swagger-ui .opblock.opblock-patch,
+.swagger-ui .opblock.opblock-delete,
+.swagger-ui .opblock.opblock-head,
+.swagger-ui .opblock.opblock-options {
+  background: var(--panel);
+  border-color: var(--rule);
+}
+.swagger-ui .opblock .opblock-summary { border-color: var(--hair); }
+.swagger-ui .opblock.is-open .opblock-summary { border-bottom-color: var(--hair); }
+
+/* the expanded body and its tables sit on the same sheet */
+.swagger-ui .opblock-body,
+.swagger-ui .opblock-description-wrapper,
+.swagger-ui .opblock-external-docs-wrapper,
+.swagger-ui .opblock-title_normal { background: transparent; color: var(--ink); }
+.swagger-ui .responses-table,
+.swagger-ui .parameters-col_description { color: var(--ink); }
+.swagger-ui .response-col_links { color: var(--muted); }
+.swagger-ui .tab li { font-family: var(--mono); }
+.swagger-ui .copy-to-clipboard { background: var(--ink); border-radius: 5px; }
+.swagger-ui .copy-to-clipboard button { background: var(--ink); }
+.swagger-ui .model-box { background: rgba(42, 22, 8, .06); border-radius: var(--r); }
+.swagger-ui section.models .model-container { background: rgba(42, 22, 8, .05); }
+.swagger-ui section.models h4 { font-family: var(--display); color: var(--ink); }
+
+/* ...and the summary carries its own per-method border colour as well */
+.swagger-ui .opblock.opblock-get .opblock-summary,
+.swagger-ui .opblock.opblock-post .opblock-summary,
+.swagger-ui .opblock.opblock-put .opblock-summary,
+.swagger-ui .opblock.opblock-patch .opblock-summary,
+.swagger-ui .opblock.opblock-delete .opblock-summary,
+.swagger-ui .opblock.opblock-head .opblock-summary,
+.swagger-ui .opblock.opblock-options .opblock-summary { border-color: var(--hair); }
