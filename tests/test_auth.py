@@ -206,25 +206,57 @@ def test_signup_page_asks_the_questionnaire_too(client):
 
 
 def test_returning_user_lands_on_matches_not_the_form(client):
+    """/matches is the stable address for "my answers, scored".
+
+    It used to be "/", but that made the home page unreachable to anyone with
+    an account, so the redirect moved to its own route.
+    """
     client.post("/auth/signup", json=CREDS)
     company_id = client.post("/companies", json=PROFILE).json()["id"]
     client.post("/auth/logout")
     client.post("/auth/login", json=CREDS)
 
-    landing = client.get("/", follow_redirects=False)
+    landing = client.get("/matches", follow_redirects=False)
     assert landing.status_code == 303
     assert landing.headers["location"] == f"/c/{company_id}"
     # And the questionnaire is nowhere on the page they actually land on.
-    assert "type=checkbox name=sectors" not in client.get("/").text
+    assert "type=checkbox name=sectors" not in client.get("/matches").text
 
 
 def test_account_without_answers_is_sent_to_finish_them(client):
     """If the profile save failed during signup, ask for it -- do not show an
     empty matches page."""
     client.post("/auth/signup", json=CREDS)
-    landing = client.get("/", follow_redirects=False)
+    landing = client.get("/matches", follow_redirects=False)
     assert landing.status_code == 303
     assert landing.headers["location"] == "/profile"
+
+
+def test_home_is_reachable_and_personal_once_you_have_an_account(client):
+    """Having a profile used to redirect straight past the home page. It now
+    stays reachable, and it is built from that profile's own matches."""
+    client.post("/auth/signup", json=CREDS)
+    client.post("/companies", json=PROFILE)
+    home = client.get("/", follow_redirects=False)
+    assert home.status_code == 200
+    assert f"Signed in as {PROFILE['name']}" in home.text
+    assert "Matches for you" in home.text
+    assert "The buyers behind your matches" in home.text
+    # the signed-out pitch is gone
+    assert "Create a free account" not in home.text
+
+
+def test_home_is_still_the_generic_pitch_when_signed_out(client):
+    home = client.get("/")
+    assert home.status_code == 200
+    assert "Create a free account" in home.text
+    assert "Signed in as" not in home.text
+
+
+def test_matches_requires_signing_in(client):
+    r = client.get("/matches", follow_redirects=False)
+    assert r.status_code == 303
+    assert r.headers["location"] == "/login"
 
 
 def test_signed_out_visitor_can_still_preview_without_an_account(client):

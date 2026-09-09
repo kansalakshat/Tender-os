@@ -15,11 +15,12 @@ from __future__ import annotations
 
 import math
 import re
+from dataclasses import dataclass
 from functools import lru_cache
 from datetime import date, timedelta
 from decimal import Decimal
 
-from sqlalchemy import or_, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
 from .models import Tender
@@ -149,7 +150,14 @@ def derive_sectors(*texts: str | None) -> set[str]:
     return {key for key, (_, pat) in _COMPILED.items() if pat.search(blob)}
 
 
-@lru_cache(maxsize=8192)
+# One entry per (sector, title) pair the corpus can produce: rows x the sectors
+# on a profile. At 8192 -- sized when the corpus was ~8k rows -- a 25k-row search
+# measured 1,334 hits against 83,378 misses, so the memo was pure overhead and
+# every title paid the regex twice. Size it for the corpus, not for a past one.
+_TERM_CACHE = 250_000
+
+
+@lru_cache(maxsize=_TERM_CACHE)
 def sector_terms(sector: str, title: str | None) -> frozenset[str]:
     """The distinct terms of a sector's pattern that the title actually hit.
 
@@ -348,13 +356,115 @@ def match_score(
     return min(score, 100), reasons
 
 
+# --- cached digest ----------------------------------------------------------
+#
+# Scoring walks every open notice and costs seconds on a 25k corpus, so a page
+# that only needs totals and a handful of rows must not redo it on each load.
+# The digest is everything the pages actually ask for, computed once during the
+# scoring pass that already holds the rows, and reused until either the answers
+# or the corpus change.
+#
+# ponytail: process-local dict, so each worker warms it separately and a restart
+# clears it. That is fine for one process; move it to Redis keyed on the same
+# stamp if this ever runs behind more than one.
+
+_DIGESTS: dict[tuple, "MatchDigest"] = {}
+_DIGEST_MAX = 128
+
+
+@dataclass(frozen=True)
+class MatchDigest:
+    """What the matches and home pages need, without holding ORM rows.
+
+    Ids only: a cached Tender would be detached from the session that loaded it,
+    and the next request would touch a dead instance.
+    """
+
+    total: int
+    closing_within_7: int
+    scored: tuple[tuple[int, tuple[str, ...], int], ...]   # score, reasons, id
+    by_deadline: tuple[int, ...]                            # ids, soonest first
+    buyers: tuple[tuple[str, int], ...]                     # name, count
+
+
+def _profile_stamp(profile) -> tuple:
+    """Any answer that changes the ranking has to change the key."""
+    def get(name):
+        v = getattr(profile, name, None)
+        return tuple(v) if isinstance(v, (list, tuple)) else v
+
+    return (
+        get("sectors"), get("keywords"), get("states"), get("districts"),
+        get("buyers"), get("exclude_keywords"), get("exclude_buyers"),
+        get("min_lead_days"), get("max_project_value"),
+    )
+
+
+def _corpus_stamp(db: Session) -> tuple:
+    """Cheap and sufficient: ingest bumps last_updated_at, retention drops rows."""
+    return tuple(
+        db.execute(
+            select(func.count(), func.max(Tender.last_updated_at)).select_from(Tender)
+        ).one()
+    )
+
+
+def match_digest(db: Session, profile, today: date | None = None) -> MatchDigest:
+    """The digest for one profile, computed at most once per corpus change."""
+    today = today or date.today()
+    key = (_profile_stamp(profile), _corpus_stamp(db), today)
+    hit = _DIGESTS.get(key)
+    if hit is not None:
+        return hit
+
+    scored = find_matches(db, profile, limit=None, today=today)
+    horizon = today + timedelta(days=7)
+    tally: dict[str, int] = {}
+    soon = 0
+    for _s, _r, t in scored:
+        if t.organization:
+            tally[t.organization] = tally.get(t.organization, 0) + 1
+        if t.deadline and t.deadline <= horizon:
+            soon += 1
+
+    digest = MatchDigest(
+        total=len(scored),
+        closing_within_7=soon,
+        scored=tuple((s, tuple(r), t.id) for s, r, t in scored),
+        by_deadline=tuple(
+            t.id for _s, _r, t in
+            sorted((x for x in scored if x[2].deadline),
+                   key=lambda x: (x[2].deadline, -x[0]))
+        ),
+        buyers=tuple(sorted(tally.items(), key=lambda kv: (-kv[1], kv[0]))),
+    )
+    if len(_DIGESTS) >= _DIGEST_MAX:
+        _DIGESTS.clear()
+    _DIGESTS[key] = digest
+    return digest
+
+
+def hydrate(db: Session, ids) -> dict[int, Tender]:
+    """Fetch just the rows a page is about to print."""
+    ids = list(ids)
+    if not ids:
+        return {}
+    rows = db.execute(select(Tender).where(Tender.id.in_(ids))).scalars()
+    return {t.id: t for t in rows}
+
+
 def find_matches(
     db: Session,
     profile,
-    limit: int = 50,
+    limit: int | None = 50,
     today: date | None = None,
 ) -> list[tuple[int, list[str], Tender]]:
     """Rank open tenders for one profile, best first.
+
+    limit=None returns every match. Scoring already walks the whole
+    candidate set whatever the limit is, so the full list costs nothing
+    extra and is what a caller needs to report a true total rather than
+    its own cut-off.
 
     The cheap, index-friendly filters (deadline, duplicate, status) run in SQL so
     Python only scores tenders that are actually biddable.
@@ -392,4 +502,4 @@ def find_matches(
     # Sort by score, then by soonest deadline: among equally good matches the
     # one closing first is the one you need to act on first.
     scored.sort(key=lambda s: (-s[0], s[2].deadline, s[2].id))
-    return scored[:limit]
+    return scored if limit is None else scored[:limit]

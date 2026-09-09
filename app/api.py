@@ -9,7 +9,8 @@ from decimal import Decimal
 from pathlib import Path
 
 from fastapi import Body, Depends, FastAPI, HTTPException, Query, Request, Response
-from fastapi.responses import RedirectResponse
+from fastapi.openapi.docs import get_swagger_ui_html
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
@@ -45,8 +46,14 @@ from .web import router as web_router
 
 log = logging.getLogger(__name__)
 
+# Swagger's default page is served by FastAPI itself, which leaves no room for
+# our stylesheet or our nav. Turning the built-in route off and rendering the
+# same helper by hand gets both, without reimplementing anything Swagger does.
+DOCS_PATHS = {"/docs", "/redoc", "/docs/oauth2-redirect"}
+
 app = FastAPI(
-    title="Indian Public Tender Aggregator",
+    docs_url=None,
+    title="Tender OS",
     version="0.1.0",
     description=(
         "Aggregated public procurement notices from official Indian government "
@@ -70,9 +77,7 @@ async def harden(request: Request, call_next):
     response = await call_next(request)
     # Read off the app rather than hard-coded, so moving docs_url moves the
     # exemption with it.
-    is_docs = request.url.path in {
-        p for p in (app.docs_url, app.redoc_url, app.swagger_ui_oauth2_redirect_url) if p
-    }
+    is_docs = request.url.path in DOCS_PATHS
     policy = security.csp_docs() if is_docs else security.csp(nonce)
     response.headers.setdefault("Content-Security-Policy", policy)
     for header, value in security.SECURITY_HEADERS.items():
@@ -91,6 +96,42 @@ async def harden(request: Request, call_next):
 _STATIC = Path(__file__).resolve().parent.parent / "static"
 if _STATIC.is_dir():
     app.mount("/static", StaticFiles(directory=_STATIC), name="static")
+
+DOCS_BAR = """<div class=tos-bar><div class=wrap>
+ <a class=tos-brand href="/">
+  <svg class=tos-mark viewBox="0 0 32 32" aria-hidden="true">
+   <rect width="32" height="32" fill="#2A1608"/>
+   <g fill="#EFD7A5"><rect x="7" y="9" width="18" height="3"/>
+   <rect x="7" y="14.5" width="12" height="3"/></g>
+   <rect x="7" y="20" width="6" height="3" fill="#8EA439"/>
+  </svg>
+  <b>Tender</b><span>OS</span></a>
+ <nav class=tos-nav><a href="/">Home</a><a href="/matches">Matches</a>
+ <a href="/browse">Browse</a><a class=on href="/docs">API</a></nav>
+</div></div>"""
+
+
+@app.get("/docs", include_in_schema=False)
+def docs() -> HTMLResponse:
+    """Swagger UI wearing the site's stylesheet, plus the site's own nav.
+
+    swagger_css_url points at /static, which the docs CSP already allows under
+    'self' -- no new host, and the strict policy on every other page is
+    untouched.
+    """
+    # swagger_css_url REPLACES Swagger's own stylesheet rather than adding to
+    # it, which leaves the page with no layout at all. Ours goes in as a second
+    # sheet after it, so it overrides rather than removes.
+    page = get_swagger_ui_html(
+        openapi_url=app.openapi_url,
+        title=f"{app.title} API",
+        swagger_favicon_url="/static/favicon.svg",
+    ).body.decode()
+    page = page.replace(
+        "</head>", '<link rel="stylesheet" href="/static/docs.css"></head>', 1
+    )
+    return HTMLResponse(page.replace("<body>", "<body>" + DOCS_BAR, 1))
+
 
 app.include_router(web_router)
 

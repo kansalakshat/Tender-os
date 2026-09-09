@@ -43,6 +43,21 @@ def client(session_factory):
     app.dependency_overrides.clear()
 
 
+def test_signed_in_home_has_no_unfilled_placeholder(client):
+    """The personalised home fills a different template from the public one, so
+    it needs its own guard -- __NSOURCES__ shipped to the page once already."""
+    client.post("/auth/signup", json={"email": "ph@example.invalid",
+                                      "password": "coconut-husk-2026"})
+    client.post("/companies", json={
+        "name": "Placeholder Test Co", "sectors": ["civil_construction"],
+        "keywords": [], "states": [], "districts": [], "buyers": [],
+        "exclude_keywords": [], "exclude_buyers": [], "min_lead_days": 0,
+        "max_project_value": None,
+    })
+    html = client.get("/", follow_redirects=True).text
+    assert not re.findall(r"__[A-Z_]+__", html)
+
+
 @pytest.mark.parametrize("path", PAGES)
 def test_no_unfilled_placeholder(client, path):
     html = client.get(path, follow_redirects=True).text
