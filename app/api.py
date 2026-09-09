@@ -6,9 +6,11 @@ import os
 import time
 from datetime import date, timedelta
 from decimal import Decimal
+from pathlib import Path
 
 from fastapi import Body, Depends, FastAPI, HTTPException, Query, Request, Response
 from fastapi.responses import RedirectResponse
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
@@ -81,6 +83,14 @@ async def harden(request: Request, call_next):
         )
     return response
 
+
+# The font, the animation library and the icons are served from our own origin,
+# not a CDN. That is what keeps the strict CSP intact: script-src 'self' and the
+# default-src 'self' fallback for font-src already allow these, so nothing here
+# needs 'unsafe-inline' or a third-party host allow-listed.
+_STATIC = Path(__file__).resolve().parent.parent / "static"
+if _STATIC.is_dir():
+    app.mount("/static", StaticFiles(directory=_STATIC), name="static")
 
 app.include_router(web_router)
 

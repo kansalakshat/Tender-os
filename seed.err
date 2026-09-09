@@ -466,3 +466,940 @@ INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersne
 INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NDQ0 "HTTP/1.1 200 OK"
 INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NDQ1 "HTTP/1.1 200 OK"
 INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NDQ2 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NDQ3 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NDQ4 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NDQ5 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NDUw "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NDUx "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NDUy "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NDUz "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NDU0 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NDU1 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NDU2 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NDU3 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NDU4 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NDU5 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NDYw "HTTP/1.1 200 OK"
+INFO app.connectors.base: CPPP: committed 4600 records so far
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NDYx "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NDYy "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NDYz "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NDY0 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NDY1 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NDY2 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NDY3 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NDY4 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NDY5 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NDcw "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NDcx "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NDcy "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NDcz "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NDc0 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NDc1 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NDc2 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NDc3 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NDc4 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NDc5 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NDgw "HTTP/1.1 200 OK"
+INFO app.connectors.base: CPPP: committed 4800 records so far
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NDgx "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NDgy "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NDgz "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NDg0 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NDg1 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NDg2 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NDg3 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NDg4 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NDg5 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NDkw "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NDkx "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NDky "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NDkz "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NDk0 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NDk1 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NDk2 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NDk3 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NDk4 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NDk5 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTAw "HTTP/1.1 200 OK"
+INFO app.connectors.base: CPPP: committed 5000 records so far
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTAx "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTAy "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTAz "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTA0 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTA1 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTA2 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTA3 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTA4 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTA5 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTEw "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTEx "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTEy "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTEz "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTE0 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTE1 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTE2 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTE3 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTE4 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTE5 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTIw "HTTP/1.1 200 OK"
+INFO app.connectors.base: CPPP: committed 5200 records so far
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTIx "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTIy "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTIz "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTI0 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTI1 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTI2 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTI3 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTI4 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTI5 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTMw "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTMx "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTMy "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTMz "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTM0 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTM1 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTM2 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTM3 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTM4 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTM5 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTQw "HTTP/1.1 200 OK"
+INFO app.connectors.base: CPPP: committed 5400 records so far
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTQx "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTQy "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTQz "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTQ0 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTQ1 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTQ2 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTQ3 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTQ4 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTQ5 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTUw "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTUx "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTUy "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTUz "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTU0 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTU1 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTU2 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTU3 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTU4 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTU5 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTYw "HTTP/1.1 200 OK"
+INFO app.connectors.base: CPPP: committed 5600 records so far
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTYx "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTYy "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTYz "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTY0 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTY1 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTY2 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTY3 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTY4 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTY5 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTcw "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTcx "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTcy "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTcz "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTc0 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTc1 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTc2 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTc3 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTc4 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTc5 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTgw "HTTP/1.1 200 OK"
+INFO app.connectors.base: CPPP: committed 5800 records so far
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTgx "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTgy "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTgz "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTg0 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTg1 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTg2 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTg3 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTg4 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTg5 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTkw "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTkx "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTky "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTkz "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTk0 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTk1 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTk2 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTk3 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTk4 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NTk5 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjAw "HTTP/1.1 200 OK"
+INFO app.connectors.base: CPPP: committed 6000 records so far
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjAx "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjAy "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjAz "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjA0 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjA1 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjA2 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjA3 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjA4 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjA5 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjEw "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjEx "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjEy "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjEz "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjE0 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjE1 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjE2 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjE3 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjE4 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjE5 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjIw "HTTP/1.1 200 OK"
+INFO app.connectors.base: CPPP: committed 6200 records so far
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjIx "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjIy "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjIz "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjI0 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjI1 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjI2 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjI3 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjI4 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjI5 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjMw "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjMx "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjMy "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjMz "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjM0 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjM1 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjM2 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjM3 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjM4 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjM5 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjQw "HTTP/1.1 200 OK"
+INFO app.connectors.base: CPPP: committed 6400 records so far
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjQx "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjQy "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjQz "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjQ0 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjQ1 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjQ2 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjQ3 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjQ4 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjQ5 "HTTP/1.1 200 OK"
+WARNING app.connectors.base: CPPP: Server disconnected without sending a response. (attempt 1)
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjUw "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjUx "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjUy "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjUz "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjU0 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjU1 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjU2 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjU3 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjU4 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjU5 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjYw "HTTP/1.1 200 OK"
+INFO app.connectors.base: CPPP: committed 6600 records so far
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjYx "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjYy "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjYz "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjY0 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjY1 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjY2 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjY3 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjY4 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NjY5 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9Njcw "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9Njcx "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9Njcy "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9Njcz "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9Njc0 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9Njc1 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9Njc2 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9Njc3 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9Njc4 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9Njc5 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9Njgw "HTTP/1.1 200 OK"
+INFO app.connectors.base: CPPP: committed 6800 records so far
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9Njgx "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9Njgy "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9Njgz "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9Njg0 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9Njg1 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9Njg2 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9Njg3 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9Njg4 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9Njg5 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9Njkw "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9Njkx "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9Njky "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9Njkz "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9Njk0 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9Njk1 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9Njk2 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9Njk3 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9Njk4 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9Njk5 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzAw "HTTP/1.1 200 OK"
+INFO app.connectors.base: CPPP: committed 7000 records so far
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzAx "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzAy "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzAz "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzA0 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzA1 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzA2 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzA3 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzA4 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzA5 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzEw "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzEx "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzEy "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzEz "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzE0 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzE1 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzE2 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzE3 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzE4 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzE5 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzIw "HTTP/1.1 200 OK"
+INFO app.connectors.base: CPPP: committed 7200 records so far
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzIx "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzIy "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzIz "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzI0 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzI1 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzI2 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzI3 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzI4 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzI5 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzMw "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzMx "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzMy "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzMz "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzM0 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzM1 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzM2 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzM3 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzM4 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzM5 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzQw "HTTP/1.1 200 OK"
+INFO app.connectors.base: CPPP: committed 7400 records so far
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzQx "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzQy "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzQz "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzQ0 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzQ1 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzQ2 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzQ3 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzQ4 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzQ5 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzUw "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzUx "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzUy "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzUz "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzU0 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzU1 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzU2 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzU3 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzU4 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzU5 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzYw "HTTP/1.1 200 OK"
+INFO app.connectors.base: CPPP: committed 7600 records so far
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzYx "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzYy "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzYz "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzY0 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzY1 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzY2 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzY3 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzY4 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9NzY5 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9Nzcw "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9Nzcx "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9Nzcy "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9Nzcz "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9Nzc0 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9Nzc1 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9Nzc2 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9Nzc3 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9Nzc4 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9Nzc5 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9Nzgw "HTTP/1.1 200 OK"
+INFO app.connectors.base: CPPP: committed 7800 records so far
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9Nzgx "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9Nzgy "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9Nzgz "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9Nzg0 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9Nzg1 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9Nzg2 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9Nzg3 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9Nzg4 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9Nzg5 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9Nzkw "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9Nzkx "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9Nzky "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9Nzkz "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9Nzk0 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9Nzk1 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9Nzk2 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9Nzk3 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9Nzk4 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9Nzk5 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODAw "HTTP/1.1 200 OK"
+INFO app.connectors.base: CPPP: committed 8000 records so far
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODAx "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODAy "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODAz "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODA0 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODA1 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODA2 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODA3 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODA4 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODA5 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODEw "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODEx "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODEy "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODEz "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODE0 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODE1 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODE2 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODE3 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODE4 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODE5 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODIw "HTTP/1.1 200 OK"
+INFO app.connectors.base: CPPP: committed 8200 records so far
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODIx "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODIy "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODIz "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODI0 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODI1 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODI2 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODI3 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODI4 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODI5 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODMw "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODMx "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODMy "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODMz "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODM0 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODM1 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODM2 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODM3 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODM4 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODM5 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODQw "HTTP/1.1 200 OK"
+INFO app.connectors.base: CPPP: committed 8400 records so far
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODQx "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODQy "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODQz "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODQ0 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODQ1 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODQ2 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODQ3 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODQ4 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODQ5 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODUw "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODUx "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODUy "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODUz "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODU0 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODU1 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODU2 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODU3 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODU4 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODU5 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODYw "HTTP/1.1 200 OK"
+INFO app.connectors.base: CPPP: committed 8600 records so far
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODYx "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODYy "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODYz "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODY0 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODY1 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODY2 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODY3 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODY4 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODY5 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODcw "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODcx "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODcy "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODcz "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODc0 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODc1 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODc2 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODc3 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODc4 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODc5 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODgw "HTTP/1.1 200 OK"
+INFO app.connectors.base: CPPP: committed 8800 records so far
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODgx "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODgy "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODgz "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODg0 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODg1 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODg2 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODg3 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODg4 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODg5 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODkw "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODkx "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODky "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODkz "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODk0 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODk1 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODk2 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODk3 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODk4 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9ODk5 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTAw "HTTP/1.1 200 OK"
+INFO app.connectors.base: CPPP: committed 9000 records so far
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTAx "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTAy "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTAz "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTA0 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTA1 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTA2 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTA3 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTA4 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTA5 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTEw "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTEx "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTEy "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTEz "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTE0 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTE1 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTE2 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTE3 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTE4 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTE5 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTIw "HTTP/1.1 200 OK"
+INFO app.connectors.base: CPPP: committed 9200 records so far
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTIx "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTIy "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTIz "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTI0 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTI1 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTI2 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTI3 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTI4 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTI5 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTMw "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTMx "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTMy "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTMz "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTM0 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTM1 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTM2 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTM3 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTM4 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTM5 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTQw "HTTP/1.1 200 OK"
+INFO app.connectors.base: CPPP: committed 9400 records so far
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTQx "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTQy "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTQz "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTQ0 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTQ1 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTQ2 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTQ3 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTQ4 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTQ5 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTUw "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTUx "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTUy "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTUz "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTU0 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTU1 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTU2 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTU3 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTU4 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTU5 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTYw "HTTP/1.1 200 OK"
+INFO app.connectors.base: CPPP: committed 9600 records so far
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTYx "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTYy "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTYz "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTY0 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTY1 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTY2 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTY3 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTY4 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTY5 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTcw "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTcx "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTcy "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTcz "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTc0 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTc1 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTc2 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTc3 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTc4 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTc5 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTgw "HTTP/1.1 200 OK"
+INFO app.connectors.base: CPPP: committed 9800 records so far
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTgx "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTgy "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTgz "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTg0 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTg1 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTg2 "HTTP/1.1 200 OK"
+WARNING app.connectors.base: CPPP: Server disconnected without sending a response. (attempt 1)
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTg3 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTg4 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTg5 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTkw "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTkx "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTky "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTkz "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTk0 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTk1 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTk2 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTk3 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTk4 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9OTk5 "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTAwMA%3D%3D "HTTP/1.1 200 OK"
+INFO app.connectors.base: CPPP: committed 10000 records so far
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTAwMQ%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTAwMg%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTAwMw%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTAwNA%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTAwNQ%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTAwNg%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTAwNw%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTAwOA%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTAwOQ%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTAxMA%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTAxMQ%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTAxMg%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTAxMw%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTAxNA%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTAxNQ%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTAxNg%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTAxNw%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTAxOA%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTAxOQ%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTAyMA%3D%3D "HTTP/1.1 200 OK"
+INFO app.connectors.base: CPPP: committed 10200 records so far
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTAyMQ%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTAyMg%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTAyMw%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTAyNA%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTAyNQ%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTAyNg%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTAyNw%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTAyOA%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTAyOQ%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTAzMA%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTAzMQ%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTAzMg%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTAzMw%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTAzNA%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTAzNQ%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTAzNg%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTAzNw%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTAzOA%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTAzOQ%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTA0MA%3D%3D "HTTP/1.1 200 OK"
+INFO app.connectors.base: CPPP: committed 10400 records so far
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTA0MQ%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTA0Mg%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTA0Mw%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTA0NA%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTA0NQ%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTA0Ng%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTA0Nw%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTA0OA%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTA0OQ%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTA1MA%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTA1MQ%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTA1Mg%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTA1Mw%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTA1NA%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTA1NQ%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTA1Ng%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTA1Nw%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTA1OA%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTA1OQ%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTA2MA%3D%3D "HTTP/1.1 200 OK"
+INFO app.connectors.base: CPPP: committed 10600 records so far
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTA2MQ%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTA2Mg%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTA2Mw%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTA2NA%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTA2NQ%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTA2Ng%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTA2Nw%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTA2OA%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTA2OQ%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTA3MA%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTA3MQ%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTA3Mg%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTA3Mw%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTA3NA%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTA3NQ%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTA3Ng%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTA3Nw%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTA3OA%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTA3OQ%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTA4MA%3D%3D "HTTP/1.1 200 OK"
+INFO app.connectors.base: CPPP: committed 10800 records so far
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTA4MQ%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTA4Mg%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTA4Mw%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTA4NA%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTA4NQ%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTA4Ng%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTA4Nw%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTA4OA%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTA4OQ%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTA5MA%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTA5MQ%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTA5Mg%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTA5Mw%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTA5NA%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTA5NQ%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTA5Ng%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTA5Nw%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTA5OA%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTA5OQ%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTEwMA%3D%3D "HTTP/1.1 200 OK"
+INFO app.connectors.base: CPPP: committed 11000 records so far
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTEwMQ%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTEwMg%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTEwMw%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTEwNA%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTEwNQ%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTEwNg%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTEwNw%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTEwOA%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTEwOQ%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTExMA%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTExMQ%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTExMg%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTExMw%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTExNA%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTExNQ%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTExNg%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTExNw%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTExOA%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTExOQ%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTEyMA%3D%3D "HTTP/1.1 200 OK"
+INFO app.connectors.base: CPPP: committed 11200 records so far
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTEyMQ%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTEyMg%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTEyMw%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTEyNA%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTEyNQ%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTEyNg%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTEyNw%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTEyOA%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTEyOQ%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTEzMA%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTEzMQ%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTEzMg%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTEzMw%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTEzNA%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTEzNQ%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTEzNg%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTEzNw%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTEzOA%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTEzOQ%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTE0MA%3D%3D "HTTP/1.1 200 OK"
+INFO app.connectors.base: CPPP: committed 11400 records so far
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTE0MQ%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTE0Mg%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTE0Mw%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTE0NA%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTE0NQ%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTE0Ng%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTE0Nw%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTE0OA%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTE0OQ%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTE1MA%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTE1MQ%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTE1Mg%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTE1Mw%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTE1NA%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTE1NQ%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTE1Ng%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTE1Nw%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTE1OA%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTE1OQ%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTE2MA%3D%3D "HTTP/1.1 200 OK"
+INFO app.connectors.base: CPPP: committed 11600 records so far
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTE2MQ%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTE2Mg%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTE2Mw%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTE2NA%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTE2NQ%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTE2Ng%3D%3D "HTTP/1.1 200 OK"
+WARNING app.connectors.base: CPPP: Server disconnected without sending a response. (attempt 1)
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTE2Nw%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTE2OA%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTE2OQ%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTE3MA%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTE3MQ%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTE3Mg%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTE3Mw%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTE3NA%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTE3NQ%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTE3Ng%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTE3Nw%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTE3OA%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTE3OQ%3D%3D "HTTP/1.1 200 OK"
+INFO httpx: HTTP Request: GET https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata?url=aHR0cHM6Ly9lcHJvY3VyZS5nb3YuaW4vY3BwcC9sYXRlc3RhY3RpdmV0ZW5kZXJzbmV3L2NwcHBkYXRhP3BhZ2U9MTE4MA%3D%3D "HTTP/1.1 200 OK"
+ERROR app.connectors.base: CPPP: run failed
+Traceback (most recent call last):
+  File "C:\Users\Lenovo\OneDrive\Desktop\tender\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 1969, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Lenovo\OneDrive\Desktop\tender\.venv\Lib\site-packages\sqlalchemy\engine\default.py", line 952, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Lenovo\OneDrive\Desktop\tender\.venv\Lib\site-packages\psycopg\cursor.py", line 117, in execute
+    raise ex.with_traceback(None)
+psycopg.OperationalError: consuming input failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\Lenovo\OneDrive\Desktop\tender\app\connectors\base.py", line 254, in run
+    summary.new += self._upsert(db, src, record)
+                   ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\Lenovo\OneDrive\Desktop\tender\app\connectors\base.py", line 296, in _upsert
+    existing = db.execute(
+               ~~~~~~~~~~^
+        select(Tender).where(
+        ^^^^^^^^^^^^^^^^^^^^^
+            Tender.source_id == src.id, Tender.external_ref == rec.external_ref
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        )
+        ^
+    ).scalar_one_or_none()
+    ^
+  File "C:\Users\Lenovo\OneDrive\Desktop\tender\.venv\Lib\site-packages\sqlalchemy\orm\session.py", line 2373, in execute
+    return self._execute_internal(
+           ~~~~~~~~~~~~~~~~~~~~~~^
+        statement,
+        ^^^^^^^^^^
+    ...<4 lines>...
+        _add_event=_add_event,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Lenovo\OneDrive\Desktop\tender\.venv\Lib\site-packages\sqlalchemy\orm\session.py", line 2250, in _execute_internal
+    ) = compile_state_cls.orm_pre_session_exec(
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self,
+        ^^^^^
+    ...<4 lines>...
+        False,
+        ^^^^^^
+    )
+    ^
+  File "C:\Users\Lenovo\OneDrive\Desktop\tender\.venv\Lib\site-packages\sqlalchemy\orm\context.py", line 577, in orm_pre_session_exec
+    session._autoflush()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Lenovo\OneDrive\Desktop\tender\.venv\Lib\site-packages\sqlalchemy\orm\session.py", line 3073, in _autoflush
+    raise e.with_traceback(sys.exc_info()[2])
+  File "C:\Users\Lenovo\OneDrive\Desktop\tender\.venv\Lib\site-packages\sqlalchemy\orm\session.py", line 3062, in _autoflush
+    self.flush()
+    ~~~~~~~~~~^^
+  File "C:\Users\Lenovo\OneDrive\Desktop\tender\.venv\Lib\site-packages\sqlalchemy\orm\session.py", line 4353, in flush
+    self._flush(objects)
+    ~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\Lenovo\OneDrive\Desktop\tender\.venv\Lib\site-packages\sqlalchemy\orm\session.py", line 4488, in _flush
+    with util.safe_reraise():
+         ~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Lenovo\OneDrive\Desktop\tender\.venv\Lib\site-packages\sqlalchemy\util\langhelpers.py", line 122, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "C:\Users\Lenovo\OneDrive\Desktop\tender\.venv\Lib\site-packages\sqlalchemy\orm\session.py", line 4449, in _flush
+    flush_context.execute()
+    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Lenovo\OneDrive\Desktop\tender\.venv\Lib\site-packages\sqlalchemy\orm\unitofwork.py", line 465, in execute
+    rec.execute(self)
+    ~~~~~~~~~~~^^^^^^
+  File "C:\Users\Lenovo\OneDrive\Desktop\tender\.venv\Lib\site-packages\sqlalchemy\orm\unitofwork.py", line 641, in execute
+    util.preloaded.orm_persistence.save_obj(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self.mapper,
+        ^^^^^^^^^^^^
+        uow.states_for_mapper_hierarchy(self.mapper, False, False),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        uow,
+        ^^^^
+    )
+    ^
+  File "C:\Users\Lenovo\OneDrive\Desktop\tender\.venv\Lib\site-packages\sqlalchemy\orm\persistence.py", line 94, in save_obj
+    _emit_insert_statements(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        base_mapper,
+        ^^^^^^^^^^^^
+    ...<3 lines>...
+        insert,
+        ^^^^^^^
+    )
+    ^
+  File "C:\Users\Lenovo\OneDrive\Desktop\tender\.venv\Lib\site-packages\sqlalchemy\orm\persistence.py", line 1234, in _emit_insert_statements
+    result = connection.execute(
+        statement,
+        params,
+        execution_options=execution_options,
+    )
+  File "C:\Users\Lenovo\OneDrive\Desktop\tender\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 1421, in execute
+    return meth(
+        self,
+        distilled_parameters,
+        execution_options or NO_OPTIONS,
+    )
+  File "C:\Users\Lenovo\OneDrive\Desktop\tender\.venv\Lib\site-packages\sqlalchemy\sql\elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self, distilled_params, execution_options
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Lenovo\OneDrive\Desktop\tender\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 1643, in _execute_clauseelement
+    ret = self._execute_context(
+        dialect,
+    ...<8 lines>...
+        cache_hit=cache_hit,
+    )
+  File "C:\Users\Lenovo\OneDrive\Desktop\tender\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 1848, in _execute_context
+    return self._exec_single_context(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~^
+        dialect, context, statement, parameters
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Lenovo\OneDrive\Desktop\tender\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 1988, in _exec_single_context
+    self._handle_dbapi_exception(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        e, str_statement, effective_parameters, cursor, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Lenovo\OneDrive\Desktop\tender\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 2365, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "C:\Users\Lenovo\OneDrive\Desktop\tender\.venv\Lib\site-packages\sqlalchemy\engine\base.py", line 1969, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Lenovo\OneDrive\Desktop\tender\.venv\Lib\site-packages\sqlalchemy\engine\default.py", line 952, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Lenovo\OneDrive\Desktop\tender\.venv\Lib\site-packages\psycopg\cursor.py", line 117, in execute
+    raise ex.with_traceback(None)
+sqlalchemy.exc.OperationalError: (raised as a result of Query-invoked autoflush; consider using a session.no_autoflush block if this flush is occurring prematurely)
+(psycopg.OperationalError) consuming input failed: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+[SQL: INSERT INTO tenders (source_id, external_ref, title, organization, department, category, estimated_value, currency, published_date, deadline, status, document_url, source_url, raw_payload, duplicate_of) VALUES (%(source_id)s::INTEGER, %(external_ref)s::VARCHAR, %(title)s::VARCHAR, %(organization)s::VARCHAR, %(department)s::VARCHAR, %(category)s::VARCHAR, %(estimated_value)s, %(currency)s::VARCHAR, %(published_date)s::DATE, %(deadline)s::DATE, %(status)s::VARCHAR, %(document_url)s::VARCHAR, %(source_url)s::VARCHAR, %(raw_payload)s::JSONB, %(duplicate_of)s::INTEGER) RETURNING tenders.id, tenders.first_seen_at, tenders.last_updated_at]
+[parameters: {'source_id': 1, 'external_ref': '2026_MES_786629_1', 'title': 'SPECIAL REPAIR SINGLE JCOS ACCN BLDG. NO P-15 UNDER GE (NORTH) BATHINDA AT BATHINDA MIL STN', 'organization': 'E-IN-C BRANCH - MILITARY ENGINEER SERVICES', 'department': 'E-IN-C BRANCH - MILITARY ENGINEER SERVICES', 'category': None, 'estimated_value': None, 'currency': 'INR', 'published_date': datetime.date(2026, 8, 27), 'deadline': datetime.date(2026, 9, 10), 'status': 'open', 'document_url': 'https://eprocure.gov.in/cppp/tendersfullview/MTQwOTE3MjE=A13h1OGQ2NzAxYTMwZTJhNTIxMGNiNmEwM2EzNmNhYWZhODk=A13h1OGQ2NzAxYTMwZTJhNTIxMGNiNmEwM2EzNmNhYWZhODk=A13h1MTc4ODY1MjYzMA==A13h1ODk0MS9OSVQtMzkvMjYtMjcvRTg=A13h1MjAyNl9NRVNfNzg2NjI5XzE=', 'source_url': 'https://eprocure.gov.in/cppp/tendersfullview/MTQwOTE3MjE=A13h1OGQ2NzAxYTMwZTJhNTIxMGNiNmEwM2EzNmNhYWZhODk=A13h1OGQ2NzAxYTMwZTJhNTIxMGNiNmEwM2EzNmNhYWZhODk=A13h1MTc4ODY1MjYzMA==A13h1ODk0MS9OSVQtMzkvMjYtMjcvRTg=A13h1MjAyNl9NRVNfNzg2NjI5XzE=', 'raw_payload': Jsonb({'serial': '11790.', 'published': ' ... (664 chars)), 'duplicate_of': None}]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
