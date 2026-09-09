@@ -227,7 +227,19 @@ class BaseConnector(ABC):
 
     # ---- Orchestration ----
 
-    def run(self, since: datetime | None = None) -> RunSummary:
+    def run(
+        self, since: datetime | None = None, deadline: float | None = None
+    ) -> RunSummary:
+        """`deadline` is a time.monotonic() value to stop by, not a duration.
+
+        Needed because /cron/ingest runs against a hard 300s function ceiling and
+        a single connector can outlast it on its own -- CPPP alone is 3s a page.
+        Checking a budget only between connectors, which is what this did first,
+        never gets the chance to fire, and the function is killed mid-request
+        with no response at all. Stopping here costs nothing: rows commit in
+        batches as they arrive, and the next run's overlapping `since` window
+        re-reads whatever this one did not reach.
+        """
         summary = RunSummary(source=self.source_name)
         db = self.session_factory()
         src = None
@@ -257,6 +269,12 @@ class BaseConnector(ABC):
                 else cutoff_date(DEFAULT_RETENTION_DAYS)
             )
             for raw in self.fetch_batch(since):
+                if deadline is not None and time.monotonic() >= deadline:
+                    summary.message = (
+                        f"stopped at the time budget after {summary.fetched} records"
+                    )
+                    log.warning("%s: %s", self.source_name, summary.message)
+                    break
                 summary.fetched += 1
                 try:
                     record = self.normalize(raw)
