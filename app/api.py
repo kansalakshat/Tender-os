@@ -2,12 +2,14 @@ from __future__ import annotations
 
 import hmac
 import logging
-from datetime import date
+import os
+import time
+from datetime import date, timedelta
 from decimal import Decimal
 
 from fastapi import Body, Depends, FastAPI, HTTPException, Query, Request, Response
 from fastapi.responses import RedirectResponse
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
 from . import mailer, oauth, security
@@ -22,10 +24,12 @@ from .auth import (
     set_session_cookie,
     user_from_google,
 )
-from .db import get_db
+from .connectors import REGISTRY
+from .db import SessionLocal, get_db
 from .matching import MP_DISTRICTS, SECTOR_LABELS, STATES, find_matches
 from .models import Company, ConnectorRun, Source, Tender, User
 from .models import utcnow
+from .retention import DEFAULT_RETENTION_DAYS, purge_expired
 from .schemas import (
     CompanyIn,
     CompanyOut,
@@ -62,7 +66,13 @@ async def harden(request: Request, call_next):
     nonce = security.make_nonce()
     request.state.csp_nonce = nonce
     response = await call_next(request)
-    response.headers.setdefault("Content-Security-Policy", security.csp(nonce))
+    # Read off the app rather than hard-coded, so moving docs_url moves the
+    # exemption with it.
+    is_docs = request.url.path in {
+        p for p in (app.docs_url, app.redoc_url, app.swagger_ui_oauth2_redirect_url) if p
+    }
+    policy = security.csp_docs() if is_docs else security.csp(nonce)
+    response.headers.setdefault("Content-Security-Policy", policy)
     for header, value in security.SECURITY_HEADERS.items():
         response.headers.setdefault(header, value)
     if security.https_only():
@@ -104,6 +114,9 @@ def list_tenders(
     include_duplicates: bool = Query(
         False, description="Include rows already linked to an earlier duplicate"
     ),
+    include_closed: bool = Query(
+        False, description="Include tenders whose deadline has already passed"
+    ),
     limit: int = Query(50, ge=1, le=500),
     offset: int = Query(0, ge=0),
     sort: str = Query("deadline", pattern="^(deadline|published_date|first_seen_at)$"),
@@ -135,6 +148,15 @@ def list_tenders(
         filters.append(Tender.estimated_value <= max_value)
     if not include_duplicates:
         filters.append(Tender.duplicate_of.is_(None))
+    if not include_closed:
+        # Compared against today, not against Tender.status: status is derived
+        # once at ingest (schemas.py) and is therefore stale the morning after a
+        # tender closes. The deadline is the only field that stays true.
+        # A null deadline is unknown, not expired -- the same rule retention.py
+        # follows -- so those rows stay visible.
+        filters.append(
+            or_(Tender.deadline.is_(None), Tender.deadline >= date.today())
+        )
 
     total = db.execute(
         select(func.count()).select_from(Tender).where(*filters)
@@ -499,3 +521,106 @@ def list_runs(db: Session = Depends(get_db), limit: int = Query(20, ge=1, le=200
         }
         for r in rows
     ]
+
+
+def _require_cron_secret(request: Request) -> None:
+    """Shared by both cron endpoints -- one door, one lock.
+
+    No secret configured -> 503. An endpoint that writes to the database must
+    never be reachable by default because someone forgot a variable.
+    """
+    secret = os.getenv("CRON_SECRET", "").strip()
+    if not secret:
+        log.error("cron endpoint called but CRON_SECRET is not configured")
+        raise HTTPException(status_code=503, detail="CRON_SECRET is not configured")
+    if not hmac.compare_digest(
+        request.headers.get("authorization", ""), f"Bearer {secret}"
+    ):
+        log.warning("cron: rejected a request with a bad or missing secret")
+        raise HTTPException(status_code=401, detail="unauthorized")
+
+
+@app.get("/cron/ingest")
+def cron_ingest(request: Request):
+    """Fetch newly published tenders. Called daily by Vercel Cron.
+
+    A full backfill cannot run here -- 3,200 pages at 3s is hours, against a
+    300s function ceiling. An incremental run can: CPPP's listing is sorted by
+    publication date descending, so `since` makes fetch_batch stop as soon as it
+    reaches a record older than the window, which for one day is ~17 pages.
+
+    Two bounds keep it inside the ceiling rather than hoping:
+
+      * max_pages, so a connector whose listing is not date-sorted (the GePNIC
+        ones are ordered by closing date) cannot walk forever.
+      * a wall-clock budget checked between connectors, so the run returns a
+        partial answer instead of being killed mid-flight at 300s. Nothing is
+        lost when it stops early -- rows commit in batches, and the next run's
+        overlapping window re-reads whatever it did not reach.
+    """
+    _require_cron_secret(request)
+
+    budget = float(os.getenv("INGEST_BUDGET_SECONDS", "240"))
+    since_hours = int(os.getenv("INGEST_SINCE_HOURS", "48"))
+    max_pages = int(os.getenv("INGEST_MAX_PAGES", "40"))
+    since = utcnow() - timedelta(hours=since_hours)
+
+    started = time.monotonic()
+    results, unreached = [], []
+    for name, connector_cls in REGISTRY.items():
+        if time.monotonic() - started > budget:
+            unreached.append(name)
+            continue
+        connector = connector_cls()
+        if hasattr(connector, "max_pages"):
+            connector.max_pages = max_pages
+        try:
+            summary = connector.run(since=since)
+            results.append({
+                "source": name, "status": summary.status,
+                "fetched": summary.fetched, "new": summary.new,
+                "updated": summary.updated, "skipped": summary.skipped,
+                "errors": summary.errors, "message": summary.message,
+            })
+        except Exception as exc:                      # one source must not sink the run
+            log.exception("cron/ingest: %s failed", name)
+            results.append({"source": name, "status": "error", "message": str(exc)})
+        finally:
+            connector.close()
+
+    return {
+        "ran": results,
+        "not_reached": unreached,          # ran out of budget; next run picks them up
+        "seconds": round(time.monotonic() - started, 1),
+        "since_hours": since_hours,
+    }
+
+
+@app.get("/cron/purge")
+def cron_purge(request: Request):
+    """Delete expired tenders. Meant to be called once a day by Vercel Cron.
+
+    `app/scheduler.py` holds the same job on a timer, but serverless has no
+    always-on process to hold a timer in -- so on Vercel the trigger has to
+    arrive as an HTTP request. Vercel Cron sends `Authorization: Bearer
+    $CRON_SECRET` on every scheduled call; that shared secret is the only thing
+    standing between this URL and anyone who can guess a path, so:
+
+      * no secret configured -> refuse (503). An endpoint that deletes rows must
+        never be reachable by default just because someone forgot a variable.
+      * wrong secret -> 401, compared with hmac.compare_digest so a timing
+        difference cannot be used to feel out the right value.
+
+    The response says what it did, because a cron job whose only record is a
+    202 is a cron job nobody notices has stopped working.
+    """
+    _require_cron_secret(request)
+
+    if DEFAULT_RETENTION_DAYS is None:
+        return {
+            "deleted": 0,
+            "detail": "RETENTION_DAYS is unset, so nothing is deleted",
+        }
+    deleted = purge_expired(session_factory=SessionLocal)
+    log.info("cron/purge deleted %d tender(s)", deleted)
+    return {"deleted": deleted, "retention_days": DEFAULT_RETENTION_DAYS}

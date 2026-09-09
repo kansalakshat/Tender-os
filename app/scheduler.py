@@ -52,9 +52,11 @@ def build_scheduler() -> BlockingScheduler:
     scheduler.add_job(
         link_duplicates, "interval", hours=max(INTERVAL_HOURS, 6), id="dedup", coalesce=True
     )
-    # Runs daily, not every cycle: deleting is irreversible, so doing it less often
-    # leaves a longer window to notice a retention setting that is too aggressive.
-    scheduler.add_job(purge_expired, "interval", hours=24, id="purge", coalesce=True)
+    # Only when RETENTION_DAYS is set. Daily rather than every cycle: deleting is
+    # irreversible, so doing it less often leaves a longer window to notice a
+    # retention setting that is too aggressive.
+    if DEFAULT_RETENTION_DAYS is not None:
+        scheduler.add_job(purge_expired, "interval", hours=24, id="purge", coalesce=True)
     return scheduler
 
 
@@ -64,11 +66,14 @@ def main():
     )
     scheduler = build_scheduler()
     log.info("scheduler starting: %s every %sh", ", ".join(REGISTRY), INTERVAL_HOURS)
-    log.warning(
-        "expired tenders are PERMANENTLY DELETED daily, %d day(s) after their "
-        "deadline (RETENTION_DAYS). Set it higher to keep them longer.",
-        DEFAULT_RETENTION_DAYS,
-    )
+    if DEFAULT_RETENTION_DAYS is None:
+        log.info("retention: nothing is deleted; closed tenders are hidden, not purged")
+    else:
+        log.warning(
+            "expired tenders are PERMANENTLY DELETED daily, %d day(s) after their "
+            "deadline (RETENTION_DAYS). Unset it to keep them forever.",
+            DEFAULT_RETENTION_DAYS,
+        )
     try:
         scheduler.start()
     except (KeyboardInterrupt, SystemExit):

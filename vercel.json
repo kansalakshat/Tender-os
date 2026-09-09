@@ -1,9 +1,27 @@
 {
   "builds": [
-    { "src": "api/index.py", "use": "@vercel/python" }
+    {
+      "src": "api/index.py",
+      "use": "@vercel/python"
+    }
   ],
   "routes": [
-    { "src": "/(.*)", "dest": "api/index.py" }
+    {
+      "src": "/(.*)",
+      "dest": "api/index.py"
+    }
   ],
-  "regions": ["sin1"]
+  "regions": [
+    "iad1"
+  ],
+  "crons": [
+    {
+      "path": "/cron/ingest",
+      "schedule": "0 1 * * *"
+    },
+    {
+      "path": "/cron/purge",
+      "schedule": "0 2 * * *"
+    }
+  ]
 }

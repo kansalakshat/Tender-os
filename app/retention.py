@@ -1,4 +1,13 @@
-"""Permanent deletion of tenders whose deadline has passed.
+"""Permanent deletion of tenders whose deadline has passed. Off by default.
+
+Nothing calls this unless RETENTION_DAYS is set. There is deliberately no
+backup: it was asked for and then asked to be removed, and a half-kept one
+(Vercel writes to /tmp, which dies with the invocation) is worse than none --
+it reads like a safety net that is not there. Deletion here is final.
+
+Most expired rows never reach this function: connectors skip them at ingest
+(app/connectors/base.py). This stays as the catch for rows that expire while
+sitting in the table.
 
 This is destructive and irreversible. A closed tender cannot be re-fetched: CPPP
 and the GePNIC portals drop a tender off their listing once it closes, so a row
@@ -26,10 +35,12 @@ from .models import Tender
 
 log = logging.getLogger(__name__)
 
-# 0 = delete as soon as the deadline is in the past. Raise it to keep a cushion
-# for late corrigenda; see the module docstring.
-DEFAULT_RETENTION_DAYS = int(os.getenv("RETENTION_DAYS", "0"))
-
+# Unset (the default) means never delete anything. A closed tender cannot be
+# re-fetched, and the archive is worth more than the disk it costs; the API hides
+# past-deadline rows at query time instead (app/api.py, `include_closed`).
+# Set RETENTION_DAYS to a number of days after the deadline to re-enable purging.
+_RETENTION_ENV = os.getenv("RETENTION_DAYS", "").strip()
+DEFAULT_RETENTION_DAYS = int(_RETENTION_ENV) if _RETENTION_ENV else None
 
 def cutoff_date(days: int, today: date | None = None) -> date:
     """Tenders with a deadline strictly before this date are purged."""
@@ -48,6 +59,9 @@ def purge_expired(
     radius before an irreversible operation.
     """
     days = DEFAULT_RETENTION_DAYS if days is None else days
+    if days is None:
+        log.info("purge: RETENTION_DAYS is unset, keeping every tender")
+        return 0
     cutoff = cutoff_date(days, today)
     condition = and_(Tender.deadline.is_not(None), Tender.deadline < cutoff)
 

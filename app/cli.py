@@ -10,7 +10,6 @@ from .connectors import REGISTRY
 from .models import utcnow
 from .dedup import link_duplicates
 from .retention import DEFAULT_RETENTION_DAYS, cutoff_date, purge_expired
-from .retention import purge_expired
 
 
 def cmd_run(args) -> int:
@@ -88,18 +87,16 @@ def cmd_dedup(args) -> int:
 
 
 def cmd_purge(args) -> int:
-    """Delete expired tenders. Destructive and irreversible -- see app/retention.py."""
-    count, path = purge_expired(grace_days=args.grace_days, dry_run=args.dry_run)
-    if args.dry_run:
-        print(f"dry run: {count} tenders would be purged")
-    else:
-        print(f"purged {count} tenders" + (f"; backup written to {path}" if path else ""))
-    return 0
-
-
-def cmd_purge(args) -> int:
     """Permanently delete expired tenders. Irreversible -- a closed tender cannot
     be re-fetched from any source we are allowed to read."""
+    if args.days is None:
+        print(
+            "RETENTION_DAYS is unset, so expired tenders are kept and simply hidden "
+            "by GET /tenders. Pass --days N to delete the ones that closed more than "
+            "N days ago, or set RETENTION_DAYS to purge on a schedule.",
+            file=sys.stderr,
+        )
+        return 2
     cutoff = cutoff_date(args.days)
     doomed = purge_expired(days=args.days, dry_run=True)
     if args.dry_run:
@@ -149,18 +146,10 @@ def main(argv=None) -> int:
     p_dedup.set_defaults(func=cmd_dedup)
 
     p_purge = sub.add_parser(
-        "purge-expired",
-        help="DELETE tenders whose deadline has passed (writes a backup first)",
-    )
-    p_purge.add_argument("--grace-days", type=int, default=0,
-                         help="keep tenders that closed within the last N days")
-    p_purge.add_argument("--dry-run", action="store_true",
-                         help="report the count and delete nothing")
-    p_purge.set_defaults(func=cmd_purge)
-
-    p_purge = sub.add_parser(
         "purge", help="permanently delete tenders whose deadline has passed"
     )
+    # No default when RETENTION_DAYS is unset: an irreversible delete should not
+    # pick a blast radius on the operator's behalf.
     p_purge.add_argument("--days", type=int, default=DEFAULT_RETENTION_DAYS,
                          help=f"grace period after the deadline "
                               f"(default {DEFAULT_RETENTION_DAYS}, from RETENTION_DAYS)")

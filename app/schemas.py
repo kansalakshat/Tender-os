@@ -76,6 +76,7 @@ class RunSummary:
     fetched: int = 0
     new: int = 0
     updated: int = 0
+    skipped: int = 0
     errors: int = 0
     message: str | None = None
     started_at: datetime = field(default_factory=utcnow)
@@ -84,7 +85,7 @@ class RunSummary:
     def __str__(self) -> str:
         return (
             f"[{self.source}] {self.status}: fetched={self.fetched} new={self.new} "
-            f"updated={self.updated} errors={self.errors}"
+            f"updated={self.updated} skipped={self.skipped} errors={self.errors}"
             + (f" -- {self.message}" if self.message else "")
         )
 
