@@ -553,29 +553,35 @@ def cron_ingest(request: Request):
 
       * max_pages, so a connector whose listing is not date-sorted (the GePNIC
         ones are ordered by closing date) cannot walk forever.
-      * a wall-clock budget checked between connectors, so the run returns a
-        partial answer instead of being killed mid-flight at 300s. Nothing is
-        lost when it stops early -- rows commit in batches, and the next run's
-        overlapping window re-reads whatever it did not reach.
+      * a wall-clock deadline passed INTO each connector, so it stops mid-crawl
+        rather than only between sources. Checking between connectors was not
+        enough: CPPP is first in the registry and 40 pages at 3s is 120s on its
+        own, so the between-check never got the chance to fire and the function
+        was killed at the ceiling with no response body at all.
+
+    Nothing is lost when it stops early -- rows commit in batches as they
+    arrive, and the next run's overlapping `since` window re-reads whatever this
+    one did not reach.
     """
     _require_cron_secret(request)
 
     budget = float(os.getenv("INGEST_BUDGET_SECONDS", "240"))
     since_hours = int(os.getenv("INGEST_SINCE_HOURS", "48"))
-    max_pages = int(os.getenv("INGEST_MAX_PAGES", "40"))
+    max_pages = int(os.getenv("INGEST_MAX_PAGES", "25"))
     since = utcnow() - timedelta(hours=since_hours)
 
     started = time.monotonic()
+    deadline = started + budget
     results, unreached = [], []
     for name, connector_cls in REGISTRY.items():
-        if time.monotonic() - started > budget:
+        if time.monotonic() >= deadline:
             unreached.append(name)
             continue
         connector = connector_cls()
         if hasattr(connector, "max_pages"):
             connector.max_pages = max_pages
         try:
-            summary = connector.run(since=since)
+            summary = connector.run(since=since, deadline=deadline)
             results.append({
                 "source": name, "status": summary.status,
                 "fetched": summary.fetched, "new": summary.new,

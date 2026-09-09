@@ -199,7 +199,7 @@ def test_cron_ingest_reports_a_failing_source_without_sinking_the_run(client, mo
 
     class Boom:
         max_pages = 1
-        def run(self, since=None): raise RuntimeError("source is down")
+        def run(self, since=None, deadline=None): raise RuntimeError("source is down")
         def close(self): pass
 
     monkeypatch.setattr(api, "REGISTRY", {"boom": Boom})

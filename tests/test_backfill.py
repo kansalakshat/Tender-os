@@ -147,3 +147,38 @@ def test_archive_mode_still_keeps_expired_rows(session_factory, monkeypatch):
     monkeypatch.setattr(base, "DEFAULT_RETENTION_DAYS", None)
     summary = mixed(session_factory).run()
     assert (summary.new, summary.skipped) == (10, 0)
+
+
+# ---- the time budget must bite mid-connector, not only between them ---------
+
+def test_run_stops_at_the_deadline_mid_crawl(session_factory):
+    """The bug this fixes: /cron/ingest checked its budget only between sources,
+    so one long connector ran past the 300s function ceiling and the request was
+    killed with no response body at all."""
+    import time
+    conn = make(session_factory, total=250)
+    already_past = time.monotonic() - 1
+    summary = conn.run(deadline=already_past)
+
+    assert summary.status == "ok"                  # stopping early is not failing
+    assert summary.fetched == 0
+    assert "time budget" in (summary.message or "")
+    with session_factory() as db:
+        assert db.query(Tender).count() == 0
+
+
+def test_rows_fetched_before_the_deadline_are_kept(session_factory):
+    """Stopping early must keep what it already had, not roll it back."""
+    import time
+    conn = make(session_factory, total=250)
+    summary = conn.run(deadline=time.monotonic() + 3600)   # far away: runs to completion
+    assert summary.fetched == 250
+    assert summary.message is None
+    with session_factory() as db:
+        assert db.query(Tender).count() == 250
+
+
+def test_no_deadline_means_no_limit(session_factory):
+    """The scheduler and the CLI pass none, and must be unaffected."""
+    summary = make(session_factory, total=250).run()
+    assert (summary.fetched, summary.message) == (250, None)
