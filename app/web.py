@@ -548,8 +548,10 @@ function go(e,off){
   if(f.q.value.trim()) p.set('q', f.q.value.trim());
   if(f.source_id.value) p.set('source_id', f.source_id.value);
   p.set('sort', f.sort.value);
-  // Sorting by deadline with closed rows in would bury the useful ones.
-  if(f.open_only.checked) p.set('deadline_from', new Date().toISOString().slice(0,10));
+  // GET /tenders hides past-deadline rows by default, against the server's
+  // date. Reading the visitor's clock instead meant a wrong or simply
+  // differently-zoned device decided what counted as still open.
+  if(!f.open_only.checked) p.set('include_closed', 'true');
   p.set('limit', LIMIT); p.set('offset', offset);
   fetch('/tenders?'+p).then(r=>r.json()).then(d=>{
     document.getElementById('count').innerHTML =

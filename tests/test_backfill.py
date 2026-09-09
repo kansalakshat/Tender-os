@@ -3,6 +3,8 @@
 A full CPPP crawl is ~3,200 pages over a couple of hours. If that ran as a single
 transaction, a failure on the last page would discard every row before it.
 """
+from datetime import date, timedelta
+
 import httpx
 import pytest
 
@@ -90,3 +92,58 @@ def test_resuming_after_a_failure_fills_the_gap(session_factory):
         assert db.query(Tender).count() == 250
     # The rows already stored are updated, not duplicated.
     assert second.new == 250 - before
+
+
+# ---- expired rows are never written ----------------------------------------
+
+class Mixed(BaseConnector):
+    """Half open, half already closed -- what CPPP's deeper pages actually serve."""
+
+    source_name = "mixed"
+    base_url = "https://example.gov.in"
+    rate_limit_seconds = 0.0
+    paths = ("/",)
+
+    def fetch_batch(self, since):
+        for i in range(10):
+            yield {"id": f"T{i:02d}", "days": i - 5}   # -5..-1 closed, 0..4 open
+
+    def normalize(self, raw):
+        return TenderRecord(
+            external_ref=raw["id"], title=f"Tender {raw['id']}",
+            deadline=date.today() + timedelta(days=raw["days"]),
+            source_url=f"https://example.gov.in/{raw['id']}",
+        )
+
+
+def mixed(session_factory):
+    return Mixed(
+        session_factory=session_factory, client=transport(robots_responder("", status=404))
+    )
+
+
+def test_expired_rows_are_skipped_not_written(session_factory, monkeypatch):
+    """The whole point: the purge should have nothing left to do."""
+    monkeypatch.setattr(base, "DEFAULT_RETENTION_DAYS", 0)
+    summary = mixed(session_factory).run()
+
+    assert (summary.fetched, summary.new, summary.skipped) == (10, 5, 5)
+    with session_factory() as db:
+        deadlines = [t.deadline for t in db.query(Tender).all()]
+    assert len(deadlines) == 5
+    assert all(d >= date.today() for d in deadlines), "an expired row was written"
+
+
+def test_the_grace_period_is_respected_at_ingest(session_factory, monkeypatch):
+    """Skipping must mirror purge_expired, or the two disagree about "expired"."""
+    monkeypatch.setattr(base, "DEFAULT_RETENTION_DAYS", 30)
+    summary = mixed(session_factory).run()
+    # Nothing here closed more than 30 days ago, so nothing is skipped.
+    assert (summary.new, summary.skipped) == (10, 0)
+
+
+def test_archive_mode_still_keeps_expired_rows(session_factory, monkeypatch):
+    """RETENTION_DAYS unset means keep everything -- including closed tenders."""
+    monkeypatch.setattr(base, "DEFAULT_RETENTION_DAYS", None)
+    summary = mixed(session_factory).run()
+    assert (summary.new, summary.skipped) == (10, 0)

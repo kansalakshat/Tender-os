@@ -40,3 +40,9 @@ body.html
 headers.txt
 seed*.log
 seed*.err
+
+# purge backups are per-machine data, not source
+purged/
+
+# personal, machine-local Claude Code settings
+.claude/settings.local.json

@@ -3,6 +3,7 @@ from datetime import date, timedelta
 import pytest
 
 from app.models import Source, Tender
+from app import retention
 from app.retention import cutoff_date, purge_expired
 
 TODAY = date(2026, 9, 6)
@@ -63,6 +64,15 @@ def test_undated_tenders_are_never_purged(seeded):
     assert "undated" in refs(seeded)
 
 
+def test_unset_retention_deletes_nothing(seeded, monkeypatch):
+    """The default. Closed tenders are hidden by the API, not destroyed."""
+    monkeypatch.setattr(retention, "DEFAULT_RETENTION_DAYS", None)
+    assert retention.purge_expired(session_factory=seeded, today=TODAY) == 0
+    assert refs(seeded) == {
+        "long_gone", "week_old", "yesterday", "today", "future", "undated",
+    }
+
+
 def test_dry_run_counts_without_deleting(seeded):
     before = refs(seeded)
     assert purge_expired(days=0, dry_run=True, session_factory=seeded, today=TODAY) == 3
@@ -98,3 +108,17 @@ def test_duplicate_links_to_purged_rows_are_cleared_not_orphaned(session_factory
     with session_factory() as db:
         survivor = db.query(Tender).filter(Tender.external_ref == "live").one()
         assert survivor.duplicate_of is None
+
+
+def test_purge_cli_refuses_to_guess_a_blast_radius(capsys, monkeypatch):
+    """`tenders purge` with no --days and no RETENTION_DAYS used to crash on
+    timedelta(days=None). It must decline, not delete and not blow up.
+
+    The default is patched rather than read from the environment: otherwise this
+    test passes or fails depending on whether the developer's .env happens to set
+    RETENTION_DAYS, which is not what it is trying to prove.
+    """
+    from app import cli
+    monkeypatch.setattr(cli, "DEFAULT_RETENTION_DAYS", None)
+    assert cli.main(["purge", "--dry-run"]) == 2
+    assert "RETENTION_DAYS is unset" in capsys.readouterr().err

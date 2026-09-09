@@ -243,6 +243,78 @@ unique key absorbs the overlap.
 Rows already linked to an earlier duplicate are hidden by default; pass
 `include_duplicates=true` to see them.
 
+Tenders whose deadline has passed are hidden by default too; pass
+`include_closed=true` to see them. The comparison is against the server's date
+at query time, not against `tenders.status` -- that column is derived once at
+ingest and is stale the morning after a tender closes. A row with no deadline is
+unknown, not expired, and stays visible.
+
+`RETENTION_DAYS` controls deletion. Unset means nothing is ever deleted, which
+is the safe default: a closed tender cannot be re-fetched from any source we are
+allowed to read, so the only copy is ours. Set it to `<n>` to delete tenders `n`
+days after their deadline (`0` = the day after it closes).
+
+There is no backup. Deletion is final, by request -- see `app/retention.py`.
+
+Most expired rows never reach the purge at all: **connectors skip them at
+ingest** (`app/connectors/base.py`). CPPP's "latest active tenders" listing is
+not actually filtered to active ones on its deeper pages, so a backfill would
+otherwise write thousands of already-closed rows for the next purge to delete.
+The skip uses the same cutoff as `purge_expired`, grace period included, so the
+two can never disagree about what "expired" means. With `RETENTION_DAYS` unset
+nothing is skipped and nothing is deleted -- that is archive mode.
+
+### Function region
+
+`vercel.json` pins functions to the region the **database** is in, not the one
+users are in -- currently `iad1`, because the Neon store was provisioned in
+`us-east-1`. A page here runs several queries, so paying the cross-ocean trip
+once per query is worse than paying it once per request. Commit 5c7967b made
+the same call in the other direction when the database was in Singapore; if the
+database moves, move this with it.
+
+### Running the purge daily
+
+Three ways, pick one:
+
+| | How | Needs |
+|---|---|---|
+| Scheduler | `python -m app.scheduler` registers a daily purge job | a machine that stays on |
+| Vercel Cron | `vercel.json` `crons` calls `GET /cron/purge` at 02:00 UTC | nothing extra |
+| By hand | `tenders purge --days 0` (prompts; `--dry-run` first) | you, daily |
+
+### Fetching new tenders daily
+
+`GET /cron/ingest` (01:00 UTC, an hour before the purge) runs every connector
+with a `since` window instead of a full crawl. A backfill cannot run on Vercel
+-- 3,200 pages at 3s against a 300s ceiling -- but an incremental run can:
+CPPP's listing is sorted by publication date descending, so `fetch_batch` stops
+at the first record older than the window, which for one day is roughly 17
+pages.
+
+Bounded two ways, because "it should fit" is not a plan:
+
+- `INGEST_MAX_PAGES` (default 40) caps any one connector. The GePNIC listings
+  are ordered by *closing* date, so `since` does not stop them early.
+- `INGEST_BUDGET_SECONDS` (default 240) is checked between connectors, so the
+  run returns a partial answer and names what it skipped rather than being
+  killed at the ceiling. Nothing is lost: rows commit in batches and
+  `INGEST_SINCE_HOURS` (default 48) overlaps, so the next run re-reads whatever
+  it missed.
+
+Same `CRON_SECRET` as the purge.
+
+`GET /cron/purge` is the same job behind an authenticated URL, because
+serverless has no always-on process to hold a timer in. It requires
+`Authorization: Bearer $CRON_SECRET`, which Vercel Cron sends automatically once
+`CRON_SECRET` is set in the project's environment variables. With no secret
+configured the endpoint returns **503 rather than running** -- an endpoint that
+deletes rows must not be open by default because someone forgot a variable.
+
+Two things to know before relying on it:
+
+- Hobby projects are limited to one cron run per day, which is all this needs.
+
 
 ## Matching companies to tenders
 

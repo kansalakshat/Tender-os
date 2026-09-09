@@ -22,6 +22,7 @@ from ..compliance import (
 )
 from ..db import SessionLocal
 from ..models import ConnectorRun, Source, Tender, utcnow
+from ..retention import DEFAULT_RETENTION_DAYS, cutoff_date
 from ..schemas import RunSummary, TenderRecord
 
 log = logging.getLogger(__name__)
@@ -243,6 +244,18 @@ class BaseConnector(ABC):
                 return summary
 
             src.active = True
+            # A row the purge would delete the moment it lands is not worth
+            # writing. CPPP's "latest active tenders" listing is not actually
+            # filtered to active ones past roughly page 1000 -- one ten-minute
+            # stretch of backfilling produced 1,487 already-closed rows -- so
+            # without this the crawl writes rows for the next purge to delete.
+            # The condition mirrors purge_expired's exactly, grace period and
+            # all, so the two can never disagree about what "expired" means.
+            # Retention unset (archive mode) keeps everything, as before.
+            expiry_cutoff = (
+                None if DEFAULT_RETENTION_DAYS is None
+                else cutoff_date(DEFAULT_RETENTION_DAYS)
+            )
             for raw in self.fetch_batch(since):
                 summary.fetched += 1
                 try:
@@ -250,6 +263,13 @@ class BaseConnector(ABC):
                 except Exception as exc:  # one bad row must not kill the run
                     summary.errors += 1
                     log.warning("%s: normalize failed: %s", self.source_name, exc)
+                    continue
+                if (
+                    expiry_cutoff is not None
+                    and record.deadline is not None
+                    and record.deadline < expiry_cutoff
+                ):
+                    summary.skipped += 1
                     continue
                 summary.new += self._upsert(db, src, record)
                 # Commit as we go. A full CPPP backfill is ~3,200 pages over a
@@ -259,7 +279,9 @@ class BaseConnector(ABC):
                     db.commit()
                     log.info("%s: committed %d records so far", self.source_name,
                              summary.fetched)
-            summary.updated = summary.fetched - summary.new - summary.errors
+            summary.updated = (
+                summary.fetched - summary.new - summary.skipped - summary.errors
+            )
             db.commit()
         except (BlockedSourceError, RobotsDisallowedError) as exc:
             db.rollback()

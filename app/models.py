@@ -4,7 +4,7 @@ from datetime import date, datetime, timezone
 from decimal import Decimal
 
 from sqlalchemy import (
-    JSON, Boolean, Date, DateTime, ForeignKey, Index, Numeric, String, Text, UniqueConstraint, func,
+    JSON, Boolean, Date, DateTime, ForeignKey, Index, Numeric, String, Text, UniqueConstraint,
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
@@ -58,8 +58,14 @@ class Tender(Base):
     status: Mapped[str | None] = mapped_column(Text)  # open|closed|awarded|cancelled
     document_url: Mapped[str | None] = mapped_column(Text)
     source_url: Mapped[str] = mapped_column(Text, nullable=False)
-    first_seen_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
-    last_updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    # default=utcnow, not server_default=func.now(): func.now() is the DATABASE
+    # clock, which is server-local, while every other timestamp in this schema is
+    # Python UTC. Two naive columns on different clocks cannot be compared, and
+    # last_updated_at was the worse case -- server-local on insert (here) and UTC
+    # on update (BaseConnector._upsert), inside one column. Same reasoning as
+    # Company.created_at below.
+    first_seen_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+    last_updated_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
     raw_payload: Mapped[dict | None] = mapped_column(JSONType)
     # Cross-source duplicates stay as distinct rows; a periodic fuzzy job links them.
     duplicate_of: Mapped[int | None] = mapped_column(ForeignKey("tenders.id"))
