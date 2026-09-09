@@ -123,6 +123,32 @@ def csp(nonce: str) -> str:
     ])
 
 
+# Swagger UI and ReDoc are served from a CDN and bootstrap themselves with an
+# inline <script> that FastAPI generates -- we never see that markup, so we
+# cannot stamp our nonce onto it. Under the site policy above /docs returned 200
+# and rendered a blank page, because every asset and the bootstrap were blocked.
+#
+# The relaxation is scoped to the two documentation paths, which render our own
+# OpenAPI schema and no user-supplied data.
+# ponytail: vendoring swagger-ui-dist and serving it from /static would put the
+# docs back under the strict policy. Do that if /docs ever renders user input.
+def csp_docs() -> str:
+    cdn = "https://cdn.jsdelivr.net"
+    return "; ".join([
+        "default-src 'self'",
+        f"script-src 'self' 'unsafe-inline' {cdn} blob:",
+        f"style-src 'self' 'unsafe-inline' {cdn} https://fonts.googleapis.com",
+        "font-src 'self' data: https://fonts.gstatic.com",
+        "img-src 'self' data: https://fastapi.tiangolo.com",
+        "worker-src 'self' blob:",
+        "connect-src 'self'",
+        "form-action 'self'",
+        "frame-ancestors 'none'",
+        "base-uri 'none'",
+        "object-src 'none'",
+    ])
+
+
 SECURITY_HEADERS = {
     "X-Content-Type-Options": "nosniff",
     "X-Frame-Options": "DENY",

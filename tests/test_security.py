@@ -153,6 +153,31 @@ def test_csp_forbids_inline_script_and_framing(client):
     assert "nonce-" in csp
 
 
+def test_docs_pages_can_actually_load_their_assets(client):
+    """/docs returned 200 and rendered blank: Swagger UI ships from a CDN and
+    bootstraps itself with an inline <script> FastAPI generates, both of which the
+    site CSP blocked. Assert every external asset the docs HTML references is
+    permitted by the policy served with it."""
+    import re
+
+    for path, directive in (("/docs", "script-src"), ("/redoc", "script-src")):
+        response = client.get(path)
+        assert response.status_code == 200, path
+        csp = response.headers["Content-Security-Policy"]
+        assert "'unsafe-inline'" in csp.split(directive, 1)[1].split(";", 1)[0]
+        for host in set(re.findall(r"https://[a-z0-9.-]+", response.text)):
+            assert host in csp, f"{path} loads {host}, which its CSP blocks"
+
+
+def test_docs_relaxation_does_not_leak_into_the_site(client):
+    """The CDN exemption is scoped to the documentation paths. Every page that
+    renders data stays on the strict nonce policy."""
+    for path in ("/", "/login", "/signup", "/browse", "/openapi.json"):
+        csp = client.get(path).headers["Content-Security-Policy"]
+        assert "'unsafe-inline'" not in csp, path
+        assert "cdn.jsdelivr.net" not in csp, path
+
+
 def test_every_inline_script_carries_the_nonce(client):
     """A script without the nonce would be blocked by our own CSP -- that would
     be a broken page, and the fix must never be to weaken the policy."""
