@@ -333,3 +333,16 @@ def test_no_duplicate_top_level_js_declarations(client):
                     f"{seen[name]} and {i} -- that is a SyntaxError at runtime"
                 )
                 seen[name] = i
+
+
+def test_pages_are_not_cached_but_static_assets_still_are(client):
+    """The same URL is the signed-out pitch, your matches, or a redirect to go
+    finish answering -- whichever the session cookie says. A browser that
+    heuristically caches it re-shows the page from before you signed in."""
+    for path in ["/", "/login", "/signup", "/browse"]:
+        cc = client.get(path).headers.get("Cache-Control", "")
+        assert "no-store" in cc, f"{path} is cacheable: {cc!r}"
+    # Fonts and scripts are content-addressed by mtime and must keep caching.
+    css = client.get("/static/docs.css")
+    if css.status_code == 200:
+        assert "no-store" not in css.headers.get("Cache-Control", "")
