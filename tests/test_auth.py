@@ -232,6 +232,16 @@ def test_account_without_answers_is_sent_to_finish_them(client):
     assert landing.headers["location"] == "/profile"
 
 
+def test_home_asks_the_questions_when_the_account_has_no_answers(client):
+    """Signing up through Google never asks them, so landing on / straight after
+    sign-in used to show the signed-out pitch to someone who was signed in."""
+    client.post("/auth/signup", json=CREDS)
+    landing = client.get("/", follow_redirects=False)
+    assert landing.status_code == 303
+    assert landing.headers["location"] == "/profile"
+    assert "Finish your profile" in client.get("/profile").text
+
+
 def test_home_is_reachable_and_personal_once_you_have_an_account(client):
     """Having a profile used to redirect straight past the home page. It now
     stays reachable, and it is built from that profile's own matches."""

@@ -82,6 +82,14 @@ async def harden(request: Request, call_next):
     response.headers.setdefault("Content-Security-Policy", policy)
     for header, value in security.SECURITY_HEADERS.items():
         response.headers.setdefault(header, value)
+    # Every HTML page here is personalised by the session cookie -- the same URL
+    # is the signed-out pitch, a finished profile's matches, or a redirect to
+    # finish answering. With no Cache-Control at all a browser is free to fall
+    # back on heuristic caching and re-show a page from before you signed in,
+    # which reads as "it ignored my sign-in". Static assets keep their own
+    # caching; this is only for the rendered pages.
+    if response.headers.get("content-type", "").startswith("text/html"):
+        response.headers.setdefault("Cache-Control", "no-store, private")
     if security.https_only():
         response.headers.setdefault(
             "Strict-Transport-Security", "max-age=31536000; includeSubDomains"
