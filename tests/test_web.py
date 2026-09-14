@@ -156,5 +156,11 @@ def test_tender_page_shows_fit_duplicates_buyer_and_similar(client, session_fact
         "name": "Fit Co", "sectors": sectors, "keywords": [], "states": [],
         "districts": [], "buyers": [], "exclude_keywords": [], "exclude_buyers": [],
         "min_lead_days": 0, "max_project_value": None,
+        "years_in_business": 5, "registrations": ["mse"],
     })
-    assert "Matches your profile, score" in client.get(f"/t/{ids['a']}").text
+    html = client.get(f"/t/{ids['a']}").text
+    assert "Matches your profile, score" in html
+    assert "Checked against your answers" in html and "Yours: 5 years" in html
+    assert "MSE or startup benefits" in html
+    me = client.get("/me").json()["company"]
+    assert me["registrations"] == ["mse"] and me["years_in_business"] == 5

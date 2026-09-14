@@ -23,6 +23,7 @@ from decimal import Decimal
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
+from .districts import DISTRICTS
 from .models import Tender
 
 # ---- Sector taxonomy -------------------------------------------------------
@@ -100,15 +101,10 @@ SECTOR_LABELS = {key: label for key, (label, _) in SECTOR_PATTERNS.items()}
 # Districts, for the "where do you operate" question. Matched against the
 # organisation/department text, which is where GePNIC actually puts the place
 # ("District Excise Office Gwalior", "Chief Engineer(R and M)-Jabalpur").
-MP_DISTRICTS = (
-    "Bhopal", "Indore", "Jabalpur", "Gwalior", "Ujjain", "Sagar", "Rewa", "Satna",
-    "Ratlam", "Dewas", "Dhar", "Khargone", "Khandwa", "Chhindwara", "Sehore",
-    "Vidisha", "Neemuch", "Mandsaur", "Shivpuri", "Guna", "Katni", "Singrauli",
-    "Balaghat", "Betul", "Morena", "Bhind", "Datia", "Shahdol", "Chhatarpur",
-    "Damoh", "Tikamgarh", "Seoni", "Narsinghpur", "Harda",
-)
+# Every state and UT, grouped by state in app/districts.py.
+ALL_DISTRICTS = tuple(sorted({d for ds in DISTRICTS.values() for d in ds}))
 
-# States/UTs. MP_DISTRICTS alone was dead weight on the national corpus: 95% of
+# States/UTs. MP's districts alone were dead weight on the national corpus: 95% of
 # rows come from CPPP, whose buyers are ministries that never name an MP district.
 # Measured before this was added: 1 of 488 matches earned a district bonus.
 STATES = (
@@ -224,13 +220,29 @@ def _buyer_hits(wanted, *texts: str | None) -> list[str]:
     return sorted({b for b in (wanted or []) if (b or "").strip() and b.strip().lower() in blob})
 
 
-def derive_districts(*texts: str | None) -> set[str]:
-    """Word-bounded: bare containment would find 'Dhar' inside 'Dhariwal'."""
+def district_names(district: str) -> tuple[str, ...]:
+    """'Ballari (Bellary)' -> ('Ballari', 'Bellary'): tenders use either name."""
+    return tuple(p.strip() for p in re.split(r"[()]", district) if p.strip())
+
+
+@lru_cache(maxsize=None)
+def _district_re(district: str) -> re.Pattern:
+    names = "|".join(re.escape(n) for n in district_names(district))
+    return re.compile(rf"\b(?:{names})\b", re.I)
+
+
+def derive_districts(*texts: str | None, among=None) -> set[str]:
+    """Word-bounded: bare containment would find 'Dhar' inside 'Dhariwal'.
+
+    `among` limits the search to those districts. Matching passes the company's
+    own few, because testing all ~770 on every candidate row is the difference
+    between one regex and hundreds per tender.
+    """
     blob = " ".join(t for t in texts if t)
-    return {
-        d for d in MP_DISTRICTS
-        if re.search(rf"\b{re.escape(d)}\b", blob, re.I)
-    }
+    if not blob.strip():
+        return set()
+    return {d for d in (ALL_DISTRICTS if among is None else among)
+            if _district_re(d).search(blob)}
 
 
 def _keyword_hits(keywords, title: str) -> list[str]:
@@ -336,7 +348,7 @@ def match_score(
     places = []
     where = (tender.organization, tender.department, tender.title)
     if profile.districts:
-        places += sorted(derive_districts(*where) & set(profile.districts))
+        places += sorted(derive_districts(*where, among=profile.districts))
     if getattr(profile, "states", None):
         places += sorted(derive_states(*where) & set(profile.states))
     if places:
