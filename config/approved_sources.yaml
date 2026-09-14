@@ -55,6 +55,11 @@ sources:
       CAPTCHA-gated on this portal and are therefore off-limits (rule #3).
       This approval covers mptenders.gov.in ONLY -- every other state GePNIC
       instance is a separate domain needing its own verification.
+      Found 2026-09-14: this page's default view lists only tenders closing
+      TODAY, so it yields nothing late in the day. The "Closing within 7/14 days"
+      tabs on the same page are form submits and are NOT covered by this approval
+      until a human confirms in a browser that they carry no CAPTCHA and records
+      it here (see app/connectors/gepnic.py).
 
   - domain: hptenders.gov.in
     name: HP eProcurement

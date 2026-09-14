@@ -12,6 +12,16 @@ richer listings -- FrontEndLatestActiveTenders and FrontEndTendersByOrganisation
 both say "Provide Captcha and click on Search button to list ...". Those are
 permanently off-limits. FrontEndListTendersbyDate renders server-side with no
 CAPTCHA at all, and that is the only page this connector reads.
+
+Known ceiling, found 2026-09-14: that page's default view is "Tenders/Auctions
+Closing Today", so this connector only ever sees tenders closing on the day it
+runs -- and late in the evening, none ("No Tenders found."). The same page has
+"Closing within 7 days" / "Closing within 14 days" tabs, but they are Tapestry
+form submits (tapestry.form.submit), not links. One plain POST of the form's
+own hidden fields with submitname=LinkSubmit_1 was answered with the portal's
+home page, not the listing. Making that work means replaying the site's
+session and token flow; do it only after a human confirms in a browser that
+the 14-day tab carries no CAPTCHA and records that in approved_sources.yaml.
 """
 from __future__ import annotations
 
