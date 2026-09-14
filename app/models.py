@@ -42,6 +42,10 @@ class Tender(Base):
         Index("idx_tenders_deadline", "deadline"),
         Index("idx_tenders_category", "category"),
         Index("idx_tenders_status", "status"),
+        # Postgres does not index the referencing side of a foreign key. Without
+        # this, deleting one tender scans the table to check nothing points at it,
+        # and purging 5,335 rows ran for minutes. See migration 0008.
+        Index("idx_tenders_duplicate_of", "duplicate_of"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
