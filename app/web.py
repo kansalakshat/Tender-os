@@ -40,6 +40,7 @@ from .matching import (
     find_matches,
     hydrate,
     match_digest,
+    sector_terms,
 )
 from .models import Company, ConnectorRun, Source, Tender, User
 
@@ -416,6 +417,7 @@ HEAD = """<!doctype html><html lang=en><meta charset=utf-8><meta name=viewport
  .m{margin:.5rem 0 0;color:var(--muted);font-size:.97rem;max-width:none;
    font-family:var(--mono);font-weight:700;letter-spacing:0}
  .m time,.m .v{font-variant-numeric:tabular-nums}
+ .m.x{margin-top:.25rem;font-size:.88rem;font-weight:400}
  .tags{display:flex;flex-wrap:wrap;gap:.35rem;margin:.6rem 0 0;padding:0;
    list-style:none}
  .tag{font:700 .85rem/1 var(--mono);text-transform:uppercase;letter-spacing:.04em;
@@ -510,6 +512,13 @@ HEAD = """<!doctype html><html lang=en><meta charset=utf-8><meta name=viewport
  .rowsum{margin:.5rem 0 0;max-width:68ch;font-size:1.05rem;color:var(--muted);
    font-weight:600}
  .sectortags{margin-top:1.1rem}
+ .fit{margin:1.75rem 0 0;padding:1rem 1.2rem;border:var(--b2) solid var(--rule);
+   border-radius:var(--r-lg)}
+ .fit h2{font-size:1.1rem;margin:0}
+ .fit .hint{margin:.5rem 0 0}
+ .more{margin:2.75rem 0 0}
+ .more h2{font-size:1.15rem;margin:0 0 .9rem}
+ .more > p{margin:.9rem 0 0}
  .idval{font:700 1.02rem/1 var(--mono);background:var(--panel);
    border:var(--b) solid var(--rule);border-radius:var(--r);
    padding:.72rem .85rem;word-break:break-all}
@@ -708,6 +717,17 @@ __HERO__
 // address; this is the second line, for whatever validation ever misses.
 function esc(s){return String(s??'').replace(/[<>&"']/g,
   c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c]));}
+
+// Second meta line on a tender row. Mirrors extra_line() in web.py, for the rows
+// that arrive as JSON instead of server-rendered HTML.
+function extra(t){
+  const b=[];
+  if(t.external_ref) b.push('ID '+esc(t.external_ref));
+  if(t.published_date) b.push('published <time datetime="'+esc(t.published_date)+'">'
+    +esc(t.published_date)+'</time>');
+  if(t.department && t.department!==t.organization) b.push(esc(t.department));
+  return b.length ? '<p class="m x">'+b.join(' &middot; ')+'</p>' : '';
+}
 
 function flash(html, kind){
   document.getElementById('flash').innerHTML =
@@ -1163,9 +1183,23 @@ def row(gutter: str, rank: str, t: Tender, tags: str = "",
         f'<a class=t href="/t/{t.id}">{escape(t.title)}</a>'
         + (f"<p class=rowsum>{escape(summary_for(t))}</p>" if summary else "")
         + f"<p class=m>{escape(t.organization or 'unnamed buyer')} &middot; "
-        + f"closes <time datetime='{t.deadline}'>{t.deadline}</time></p>{tags}"
+        + f"closes <time datetime='{t.deadline}'>{t.deadline}</time></p>"
+        + extra_line(t) + tags
         + "</div></li>"
     )
+
+
+def extra_line(t: Tender) -> str:
+    """Tender ID, publication date and the buyer's office, under the main meta
+    line. Department is skipped when it only repeats the buyer, which is every
+    CPPP row. Mirrors extra() in the page script."""
+    bits = [f"ID {escape(t.external_ref)}"] if t.external_ref else []
+    if t.published_date:
+        bits.append(f"published <time datetime='{t.published_date}'>"
+                    f"{t.published_date}</time>")
+    if t.department and t.department != t.organization:
+        bits.append(escape(t.department))
+    return f"<p class='m x'>{' &middot; '.join(bits)}</p>" if bits else ""
 
 
 def rank_class(score: int, top: int) -> str:
@@ -1901,7 +1935,7 @@ function renderPreview(matches){
       + esc(m.tender.title) + '</a>'
       + '<p class=m>' + esc(m.tender.organization || 'unnamed buyer')
       + ' &middot; closes <time datetime="' + esc(m.tender.deadline) + '">'
-      + esc(m.tender.deadline) + '</time></p>'
+      + esc(m.tender.deadline) + '</time></p>' + extra(m.tender)
       + tags(m.reasons) + '</div></li>').join('')
     + '</ol><p class=hint>Nothing here was saved. '
     + '<a href="/signup">Create an account</a> to keep these answers.</p>';
@@ -2054,6 +2088,7 @@ DETAIL = """<div class=backlink><a href="__BACK__">__I_LEFT__Back to all tenders
 <h1 class=detailHead>__TITLE__</h1>
 <p class="lede summary">__SUMMARY__</p>
 __SECTORTAGS__
+__FIT__
 <dl class=facts>__FACTS__</dl>
 <div class=sourcebox>
  <h2>Find this notice on the source portal</h2>
@@ -2065,12 +2100,88 @@ __SECTORTAGS__
       href="__SEARCH__">Open __SOURCE_NAME____I_UPRIGHT__</a></p>
  <p class=hint>Licence: __LICENCE__. We store the notice, never the bid
  documents.</p>
-</div>"""
+</div>
+__MORE__"""
+
+
+def _more(heading: str, rows: list[Tender], today: date, link: str = "") -> str:
+    """A titled list of related tenders under the detail page. `link` is markup."""
+    if not rows:
+        return ""
+    items = "".join(row(*days_left(r.deadline, today), r) for r in rows)
+    return (f"<section class=more><h2>{escape(heading)}</h2>"
+            f"<ol class=rows>{items}</ol>{link}</section>")
+
+
+def _fit(db: Session, user: User | None, t: Tender, today: date) -> str:
+    """Whether this tender is one of the signed-in company's matches, and why.
+
+    Read from the cached digest, not a fresh match_score: a standalone score has
+    no corpus to weigh terms against, so it would disagree with the number the
+    matches page showed for the same row.
+    """
+    company = _profile_of(db, user)
+    if company is None:
+        return ""
+    d = match_digest(db, company, today)
+    hit = next(((s, r) for s, r, tid in d.scored if tid == t.id), None)
+    if hit is None:
+        return ("<div class=fit><h2>Not one of your matches</h2><p class=hint>"
+                "It misses your sectors and keywords, hits an exclusion, or closes "
+                'too soon to prepare. <a href="/profile">Edit answers</a></p></div>')
+    chips = "".join(f"<li class=tag>{escape(x)}</li>" for x in hit[1])
+    return (f"<div class=fit><h2>Matches your profile, score {hit[0]}</h2>"
+            f"<ul class=tags>{chips}</ul></div>")
+
+
+def _related(db: Session, t: Tender, today: date) -> str:
+    """Same tender on other sources, more from this buyer, and similar work."""
+    others = (Tender.id != t.id, Tender.duplicate_of.is_(None),
+              Tender.deadline >= today)
+
+    twin = Tender.duplicate_of == t.id
+    if t.duplicate_of:
+        twin = or_(twin, Tender.id == t.duplicate_of)
+    out = _more("Same tender on other sources",
+                db.scalars(select(Tender).where(twin, Tender.id != t.id)).all(), today)
+
+    if t.organization:
+        q = select(Tender).where(Tender.organization == t.organization, *others)
+        n = db.scalar(select(func.count()).select_from(q.subquery()))
+        out += _more(
+            f"More open tenders from this buyer ({n:,})",
+            db.scalars(q.order_by(Tender.deadline).limit(5)).all(), today,
+            f'<p><a href="/browse?organization={escape(quote(t.organization))}">'
+            "See all from this buyer</a></p>",
+        )
+
+    # The rarest sector term in the title, measured against open tenders. The
+    # commonest ones ("maintenance", "repair") appear in most notices and would
+    # make every tender "similar" to every other -- see build_idf.
+    terms = sorted({x for s in derive_sectors(t.title) for x in sector_terms(s, t.title)})
+    counts = {}
+    if terms:
+        # One query for every term: each round trip to the database costs more
+        # than the count itself.
+        got = db.execute(select(*(
+            func.count().filter(Tender.title.ilike(f"%{term}%")) for term in terms
+        )).where(*others)).one()
+        counts = {term: c for term, c in zip(terms, got) if c}
+    if counts:
+        term = min(counts, key=counts.get)
+        out += _more(
+            f"Other open tenders mentioning '{term}' ({counts[term]:,})",
+            db.scalars(select(Tender).where(Tender.title.ilike(f"%{term}%"), *others)
+                       .order_by(Tender.deadline).limit(5)).all(), today,
+            f'<p><a href="/browse?q={escape(quote(term))}">See all</a></p>',
+        )
+    return out
 
 
 @router.get("/t/{tender_id}", response_class=HTMLResponse)
 def tender_detail(
-    request: Request, tender_id: int, db: Session = Depends(get_db)
+    request: Request, tender_id: int, db: Session = Depends(get_db),
+    user: User | None = Depends(current_user),
 ) -> str:
     """Everything the aggregator holds for one notice, on our own page.
 
@@ -2090,7 +2201,11 @@ def tender_detail(
     sectors = sorted(SECTOR_LABELS[k] for k in derive_sectors(t.title))
     places = sorted(derive_states(t.title) | derive_districts(t.title))
 
-    label, _rank = days_left(t.deadline)
+    today = date.today()
+    label, _rank = days_left(t.deadline, today)
+    window = (t.deadline - t.published_date).days if t.published_date and t.deadline else None
+    # The stored status is set at ingest and goes stale once the deadline passes.
+    status = "closed" if t.deadline and t.deadline < today else (t.status or "")
     # the listing carries a closing *time*, which the deadline column drops
     closes = (
         f"<time datetime='{t.deadline}'>"
@@ -2111,6 +2226,10 @@ def tender_detail(
         _fact("Bids opened", escape(_clean(raw.get("opening"))), mono=True),
         _fact("Published", escape(_clean(raw.get("published"))
                                   or str(t.published_date or "not stated")), mono=True),
+        _fact("Bidding window",
+              f"{window} day{'s' if window != 1 else ''}" if window is not None else "",
+              mono=True),
+        _fact("Status", escape(status)),
         _fact("Corrigendum", escape(_clean(raw.get("corrigendum")))),
         _fact("Where", escape(", ".join(places))),
         _fact("Estimated value", escape(value), mono=True),
@@ -2120,6 +2239,10 @@ def tender_detail(
         _fact("First collected",
               escape(t.first_seen_at.strftime("%d %b %Y")) if t.first_seen_at else "",
               mono=True),
+        _fact("Last updated",
+              escape(t.last_updated_at.strftime("%d %b %Y")) if t.last_updated_at else "",
+              mono=True),
+        _fact("Portal record no.", escape(_clean(raw.get("internal_id"))), mono=True),
     ])
     body = (
         DETAIL.replace("__TITLE__", escape(t.title))
@@ -2136,6 +2259,8 @@ def tender_detail(
                  "<ul class='tags sectortags'>"
                  + "".join(f"<li class=tag>{escape(x)}</li>" for x in sectors)
                  + "</ul>" if sectors else "")
+        .replace("__FIT__", _fit(db, user, t, today))
+        .replace("__MORE__", _related(db, t, today))
     )
     return page(f"{t.title[:60]}", body, nonce_of(request))
 
@@ -2229,7 +2354,7 @@ function go(e,off){
         + '<p class=m>'+esc(t.organization||'unnamed buyer')+' &middot; closes '
         + '<time datetime="'+esc(t.deadline||'')+'">'
         + esc(t.deadline||'not stated')+'</time>'+inr(t.estimated_value)
-        + '</p></div></li>';
+        + '</p>'+extra(t)+'</div></li>';
     }).join('')
       || '<li class=empty><p>Nothing matched that search. Try a shorter word, or '
          + 'clear the source filter.</p></li>';
