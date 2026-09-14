@@ -160,6 +160,24 @@ class CompanyIn(BaseModel):
     # neither portal publishes it on a listing page. It starts working the moment
     # detail-page ingestion lands; until then the form says so.
     max_project_value: Decimal | None = Field(None, ge=0)
+    # Eligibility. Optional and never a filter -- see app/eligibility.py.
+    years_in_business: int | None = Field(None, ge=0, le=200)
+    annual_turnover: Decimal | None = Field(None, ge=0)
+    largest_similar_work: Decimal | None = Field(None, ge=0)
+    registrations: list[str] = Field(default_factory=list)
+
+    @field_validator("registrations")
+    @classmethod
+    def _known_registrations(cls, v: list[str]) -> list[str]:
+        from .eligibility import REGISTRATIONS
+
+        bad = [r for r in v if r not in REGISTRATIONS]
+        if bad:
+            raise ValueError(
+                f"unknown registration(s): {', '.join(bad)}. "
+                f"Valid: {', '.join(REGISTRATIONS)}"
+            )
+        return list(dict.fromkeys(v))
 
     @field_validator("name")
     @classmethod
@@ -186,9 +204,12 @@ class CompanyIn(BaseModel):
     @field_validator("districts")
     @classmethod
     def _known_districts(cls, v: list[str]) -> list[str]:
-        from .matching import MP_DISTRICTS
+        from .matching import ALL_DISTRICTS, district_names
 
-        by_lower = {d.lower(): d for d in MP_DISTRICTS}
+        # Either name of a renamed district is accepted and stored as the entry,
+        # so a profile saved as "Hoshangabad" re-saves as "Narmadapuram (Hoshangabad)".
+        by_lower = {n.lower(): d for d in ALL_DISTRICTS
+                    for n in (d, *district_names(d))}
         bad = [d for d in v if d.lower() not in by_lower]
         if bad:
             raise ValueError(f"unknown district(s): {', '.join(bad)}")
@@ -250,6 +271,10 @@ class CompanyOut(BaseModel):
     exclude_buyers: list[str]
     min_lead_days: int
     max_project_value: Decimal | None
+    years_in_business: int | None
+    annual_turnover: Decimal | None
+    largest_similar_work: Decimal | None
+    registrations: list[str] | None
     created_at: datetime | None
     updated_at: datetime | None
 

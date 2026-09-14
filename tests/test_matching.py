@@ -89,6 +89,13 @@ def test_derive_districts_is_word_bounded():
     assert derive_districts("Dhariwal Enterprises") == set()
 
 
+def test_derive_districts_covers_every_state_and_old_names():
+    assert derive_districts("EE Bellary Division") == {"Ballari (Bellary)"}
+    assert derive_districts("Collectorate, Prayagraj") == {"Prayagraj (Allahabad)"}
+    # `among` restricts the search to the company's own districts.
+    assert derive_districts("Patna and Gaya", among=["Gaya"]) == {"Gaya"}
+
+
 # ---- hard filters ----
 
 def test_no_signal_means_no_match():

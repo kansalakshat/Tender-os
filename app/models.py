@@ -99,6 +99,12 @@ class Company(Base):
     exclude_buyers: Mapped[list] = mapped_column(JSONType, default=list)
     min_lead_days: Mapped[int] = mapped_column(default=7)
     max_project_value: Mapped[Decimal | None] = mapped_column(Numeric)
+    # Eligibility. Optional, and checked against typical criteria rather than used
+    # to filter -- see app/eligibility.py.
+    years_in_business: Mapped[int | None] = mapped_column()
+    annual_turnover: Mapped[Decimal | None] = mapped_column(Numeric)
+    largest_similar_work: Mapped[Decimal | None] = mapped_column(Numeric)
+    registrations: Mapped[list] = mapped_column(JSONType, default=list)
     # default=utcnow, not server_default=func.now(): the DB clock is server-local
     # (IST here) while every timestamp we write in Python is naive UTC. Mixing the
     # two put created_at 5h30m *ahead* of updated_at on the same row.

@@ -29,7 +29,8 @@ from .auth import (
 )
 from .connectors import REGISTRY
 from .db import SessionLocal, get_db
-from .matching import MP_DISTRICTS, SECTOR_LABELS, STATES, find_matches
+from .districts import DISTRICTS
+from .matching import ALL_DISTRICTS, SECTOR_LABELS, STATES, find_matches
 from .models import Company, ConnectorRun, Source, Tender, User
 from .models import utcnow
 from .retention import DEFAULT_RETENTION_DAYS, purge_expired
@@ -267,7 +268,8 @@ def questionnaire(db: Session = Depends(get_db)) -> dict:
     ).all()
     return {
         "sectors": [{"key": k, "label": v} for k, v in sorted(SECTOR_LABELS.items())],
-        "districts": list(MP_DISTRICTS),
+        "districts": list(ALL_DISTRICTS),
+        "districts_by_state": {st: list(ds) for st, ds in DISTRICTS.items()},
         "states": list(STATES),
         "buyers": [{"name": name, "tenders": n} for name, n in buyers],
     }

@@ -56,6 +56,8 @@ def test_questionnaire_lists_sectors_and_districts(client):
     assert {"key": "electrical_power",
             "label": "Electrical & power infrastructure"} in body["sectors"]
     assert "Mandsaur" in body["districts"]
+    assert "Patna" in body["districts_by_state"]["Bihar"]
+    assert set(body["districts_by_state"]) == set(body["states"])
 
 
 def test_create_then_fetch_profile(client):

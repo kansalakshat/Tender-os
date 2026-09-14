@@ -30,8 +30,9 @@ from sqlalchemy.orm import Session
 from . import oauth
 from .auth import current_user
 from .db import get_db
+from .districts import DISTRICTS
+from .eligibility import REGISTRATIONS, checklist, needs_check
 from .matching import (
-    MP_DISTRICTS,
     SECTOR_LABELS,
     STATES,
     derive_districts,
@@ -516,6 +517,16 @@ HEAD = """<!doctype html><html lang=en><meta charset=utf-8><meta name=viewport
    border-radius:var(--r-lg)}
  .fit h2{font-size:1.1rem;margin:0}
  .fit .hint{margin:.5rem 0 0}
+ .elig{margin:2.25rem 0 0}
+ .elig h2{font-size:1.15rem;margin:0}
+ .elig > .hint{margin:.5rem 0 0;max-width:68ch}
+ .elig ul{list-style:none;margin:1rem 0 0;padding:0;border-top:var(--b2) solid var(--rule)}
+ .elig li{display:grid;grid-template-columns:4.5rem minmax(0,1fr);gap:1rem;
+   padding:.9rem 0;border-bottom:var(--b) solid var(--hair)}
+ .elig li > b{font:700 .82rem/1.6 var(--mono);text-transform:uppercase;letter-spacing:.05em}
+ .elig li.ok > b{color:var(--accent)}
+ .elig li.check > b{color:var(--muted)}
+ .elig li p{margin:.25rem 0 0;color:var(--muted);max-width:68ch}
  .more{margin:2.75rem 0 0}
  .more h2{font-size:1.15rem;margin:0 0 .9rem}
  .more > p{margin:.9rem 0 0}
@@ -563,6 +574,9 @@ HEAD = """<!doctype html><html lang=en><meta charset=utf-8><meta name=viewport
  .multilist label b{flex:none;font:700 .88rem/1 var(--mono);color:var(--muted);
    font-variant-numeric:tabular-nums}
  .nomatch{margin:0;padding:.9rem .6rem;color:var(--muted);font-size:1rem}
+ .dgroup[hidden]{display:none}
+ .dstate{margin:.7rem .6rem .2rem;font:700 .8rem/1.3 var(--mono);text-transform:uppercase;
+   letter-spacing:.06em;color:var(--muted)}
 
  .checks label,.chk label{display:flex;align-items:center;gap:.7rem;
    min-height:3.1rem;padding:0 .45rem;font-size:1.08rem;cursor:pointer;
@@ -865,7 +879,8 @@ function applyFilter(inp){
   list.querySelectorAll('label').forEach(l=>{
     const hit = !q || l.textContent.toLowerCase().includes(q);
     l.hidden = !hit;
-    if(hit) shown++;
+    // A label inside a hidden state group is not on screen, match or not.
+    if(hit && !l.parentNode.hidden) shown++;
   });
   let none = list.querySelector('.nomatch');
   if(!shown && !none){
@@ -882,20 +897,18 @@ document.addEventListener('input', function(e){
     applyFilter(e.target);
 });
 
-// The district list only covers Madhya Pradesh -- that is the whole list the
-// matcher can recognise in a tender title -- so asking for a district while
-// some other state is selected offers choices that could never match. Show the
-// question only when MP is one of the states, and drop any stale ticks with it.
+// Districts are grouped by state. Show the groups for every ticked state, and
+// untick anything in a group that goes away, so a hidden choice is never saved.
 function syncDistricts(){
   const box = document.getElementById('districtField');
   if(!box) return;
-  const mp = [...document.querySelectorAll('input[name="states"]')]
-    .some(c => c.checked && c.value === 'Madhya Pradesh');
-  box.hidden = !mp;
-  if(!mp){
-    box.querySelectorAll('input[name="districts"]:checked')
-       .forEach(c => { c.checked = false; });
-  }
+  const on = new Set([...document.querySelectorAll('input[name="states"]:checked')]
+    .map(c => c.value));
+  box.querySelectorAll('.dgroup').forEach(g => {
+    g.hidden = !on.has(g.dataset.state);
+    if(g.hidden) g.querySelectorAll('input:checked').forEach(c => { c.checked = false; });
+  });
+  box.hidden = on.size === 0;
 }
 document.addEventListener('change', function(e){
   if(e.target && e.target.name === 'states') syncDistricts();
@@ -1261,15 +1274,15 @@ PROFILE_FIELDS = """<fieldset><legend>What you do</legend>
 </div>
 
 <div class=f id=districtField hidden>
- <div class=fhead><span class=flabel>Madhya Pradesh districts</span>
+ <div class=fhead><span class=flabel>Districts</span>
   <button type=button class=clearbtn data-action=clear data-clear=districts>Clear</button></div>
  <div class=multi>
   <input class=multifilter type=search autocomplete=off
      aria-label="Filter districts" placeholder="Filter districts&hellip;">
   <div class=multilist>__DISTRICTS__</div>
  </div>
- <p class=fhint>Districts are Madhya Pradesh only for now, so this question
-    appears when you pick that state.</p>
+ <p class=fhint>Districts of every state you pick appear here, grouped by
+    state.</p>
 </div>
 </fieldset>
 
@@ -1321,6 +1334,36 @@ PROFILE_FIELDS = """<fieldset><legend>What you do</legend>
     so this answer has no effect yet. It starts working when detail-page ingest
     lands.</p>
 </div>
+</fieldset>
+
+<fieldset><legend>Eligibility</legend>
+<p class=fhint>Optional. Tenders often ask for past work, turnover and
+   registrations. Each tender page checks your answers against its typical
+   criteria. Nothing is hidden because of them.</p>
+
+<div class=f>
+ <div class=fhead><label for=f_years>Years in business</label>
+  <button type=button class=clearbtn data-action=clear data-clear=years_in_business>Clear</button></div>
+ <input id=f_years name=years_in_business autocomplete=off type=number min=0 max=200>
+</div>
+
+<div class=f>
+ <div class=fhead><label for=f_turn>Average annual turnover, last 3 years, INR</label>
+  <button type=button class=clearbtn data-action=clear data-clear=annual_turnover>Clear</button></div>
+ <input id=f_turn name=annual_turnover autocomplete=off type=number min=0>
+</div>
+
+<div class=f>
+ <div class=fhead><label for=f_similar>Largest similar work completed in the last 7 years, INR</label>
+  <button type=button class=clearbtn data-action=clear data-clear=largest_similar_work>Clear</button></div>
+ <input id=f_similar name=largest_similar_work autocomplete=off type=number min=0>
+</div>
+
+<div class=f>
+ <div class=fhead><span class=flabel>Registrations you hold</span>
+  <button type=button class=clearbtn data-action=clear data-clear=registrations>Clear</button></div>
+ <div class=checks>__REGISTRATIONS__</div>
+</div>
 </fieldset>"""
 
 
@@ -1345,7 +1388,11 @@ function collectProfile(f){
     exclude_keywords:csv('exclude_keywords'),
     exclude_buyers:picked('exclude_buyers'),
     min_lead_days:parseInt(v('min_lead_days')||'7',10),
-    max_project_value:v('max_project_value')||null
+    max_project_value:v('max_project_value')||null,
+    years_in_business:v('years_in_business')===''?null:parseInt(v('years_in_business'),10),
+    annual_turnover:v('annual_turnover')||null,
+    largest_similar_work:v('largest_similar_work')||null,
+    registrations:picked('registrations')
   };
 }
 function saveProfile(body){
@@ -1379,10 +1426,17 @@ def _fill(markup: str, db: Session) -> str:
         f"<span>{escape(v)}</span></label>"
         for k, v in sorted(SECTOR_LABELS.items(), key=lambda kv: kv[1])
     )
+    # One group per state; syncDistricts() shows the groups for ticked states.
     districts = "".join(
-        f'<label><input type=checkbox name=districts value="{escape(d)}">'
-        f"<span>{escape(d)}</span></label>"
-        for d in sorted(MP_DISTRICTS)
+        f'<div class=dgroup data-state="{escape(st)}" hidden>'
+        f"<p class=dstate>{escape(st)}</p>"
+        + "".join(
+            f'<label><input type=checkbox name=districts value="{escape(d)}">'
+            f"<span>{escape(d)}</span></label>"
+            for d in sorted(ds)
+        )
+        + "</div>"
+        for st, ds in DISTRICTS.items()
     )
     states = "".join(
         f'<label><input type=checkbox name=states value="{escape(st)}">'
@@ -1412,6 +1466,11 @@ def _fill(markup: str, db: Session) -> str:
         .replace("__STATES__", states)
         .replace("__BUYERS__", buyer_boxes("buyers"))
         .replace("__XBUYERS__", buyer_boxes("exclude_buyers"))
+        .replace("__REGISTRATIONS__", "".join(
+            f'<label><input type=checkbox name=registrations value="{k}">'
+            f"<span>{escape(label)}</span></label>"
+            for k, label in REGISTRATIONS.items()
+        ))
     )
 
 
@@ -1575,7 +1634,10 @@ def _welcome_signed_in(db: Session, company: Company) -> tuple[str, str]:
     if soon_ids:
         rows = "".join(
             row(*days_left(rows_by_id[i].deadline, today), rows_by_id[i],
-                f"<ul class=tags><li class=tag>Score {score_of.get(i, 0)}</li></ul>")
+                f"<ul class=tags><li class=tag>Score {score_of.get(i, 0)}</li>"
+                + ("<li class=tag>check eligibility</li>"
+                   if needs_check(rows_by_id[i], company) else "")
+                + "</ul>")
             for i in soon_ids if i in rows_by_id
         )
         closing = (
@@ -1907,8 +1969,12 @@ fetch('/me').then(r=>r.json()).then(d=>{
   f.exclude_keywords.value=(c.exclude_keywords||[]).join(', ');
   f.min_lead_days.value=c.min_lead_days??7;
   f.max_project_value.value=c.max_project_value??'';
+  f.years_in_business.value=c.years_in_business??'';
+  f.annual_turnover.value=c.annual_turnover??'';
+  f.largest_similar_work.value=c.largest_similar_work??'';
   [['sectors',c.sectors],['states',c.states],['districts',c.districts],
-   ['buyers',c.buyers],['exclude_buyers',c.exclude_buyers]].forEach(([n,vals])=>{
+   ['buyers',c.buyers],['exclude_buyers',c.exclude_buyers],
+   ['registrations',c.registrations]].forEach(([n,vals])=>{
     const want = new Set(vals||[]);
     f.querySelectorAll('input[name="'+n+'"]').forEach(b=>{ b.checked = want.has(b.value); });
   });
@@ -2016,6 +2082,8 @@ def results(
         if t is None:      # purged between scoring and this render
             continue
         chips = "".join(f"<li class=tag>{escape(r)}</li>" for r in reasons)
+        if needs_check(t, company):
+            chips += "<li class=tag>check eligibility</li>"
         rows.append(
             row(str(score), rank_class(score, top), t,
                 f"<ul class=tags>{chips}</ul>" if chips else "",
@@ -2113,14 +2181,37 @@ def _more(heading: str, rows: list[Tender], today: date, link: str = "") -> str:
             f"<ol class=rows>{items}</ol>{link}</section>")
 
 
-def _fit(db: Session, user: User | None, t: Tender, today: date) -> str:
+def _eligibility(company: Company | None, t: Tender) -> str:
+    """Typical criteria, checked against the company's answers where it gave any."""
+    items = "".join(
+        f"<li class={'ok' if i.ok else 'check'}><b>{'ok' if i.ok else 'check'}</b>"
+        f"<div><strong>{escape(i.label)}</strong><p>{escape(i.detail)}</p></div></li>"
+        for i in checklist(t, company)
+    )
+    if company is None:
+        ask = ('<a href="/signup">Create an account</a> and answer the eligibility '
+               "questions to check these against your company.")
+    elif (company.years_in_business is None and company.annual_turnover is None
+          and company.largest_similar_work is None and not company.registrations):
+        ask = ('<a href="/profile">Answer the eligibility questions</a> to check '
+               "these against your company.")
+    else:
+        ask = "Checked against your answers."
+    return (
+        "<section class=elig><h2>Eligibility</h2>"
+        "<p class=hint>Typical criteria for government tenders, plus clues from the "
+        "title. The real rules are in the tender document: confirm there before "
+        f"bidding. {ask}</p><ul>{items}</ul></section>"
+    )
+
+
+def _fit(db: Session, company: Company | None, t: Tender, today: date) -> str:
     """Whether this tender is one of the signed-in company's matches, and why.
 
     Read from the cached digest, not a fresh match_score: a standalone score has
     no corpus to weigh terms against, so it would disagree with the number the
     matches page showed for the same row.
     """
-    company = _profile_of(db, user)
     if company is None:
         return ""
     d = match_digest(db, company, today)
@@ -2202,6 +2293,7 @@ def tender_detail(
     places = sorted(derive_states(t.title) | derive_districts(t.title))
 
     today = date.today()
+    company = _profile_of(db, user)
     label, _rank = days_left(t.deadline, today)
     window = (t.deadline - t.published_date).days if t.published_date and t.deadline else None
     # The stored status is set at ingest and goes stale once the deadline passes.
@@ -2259,7 +2351,8 @@ def tender_detail(
                  "<ul class='tags sectortags'>"
                  + "".join(f"<li class=tag>{escape(x)}</li>" for x in sectors)
                  + "</ul>" if sectors else "")
-        .replace("__FIT__", _fit(db, user, t, today))
+        .replace("__FIT__", _fit(db, company, t, today)
+                 + _eligibility(company, t))
         .replace("__MORE__", _related(db, t, today))
     )
     return page(f"{t.title[:60]}", body, nonce_of(request))
