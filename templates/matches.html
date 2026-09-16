@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% from "_macros.html" import row %}
+{% block content %}<h1>Matches for {{ company.name }}</h1>
+<p class=lede>{{ total|num }} open tenders match your answers
+{%- if total > shown|length %}, best {{ shown|length }} shown. {% else %}. {% endif -%}
+<a href="/profile">Edit answers</a></p>
+{%- if shown %}<ol class=rows>
+{%- for t, score, reasons, check in shown -%}
+{{ row(score|string, rank_class(score, top), t, reasons + (["check eligibility"] if check else []), summary=true) }}
+{%- endfor -%}
+</ol>
+{%- else %}<div class=empty><p>No open tenders match this profile yet. Broaden the sectors, drop a state, or lower the preparation days on your <a href="/profile">answers</a>.</p></div>{% endif %}{% endblock %}

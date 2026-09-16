@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% from "_macros.html" import skeleton_row %}
+{#- Everything the aggregator holds for one notice. The match score and the
+    related lists load after the page shows (GET /t/<id>/extras), so the details
+    never wait on them; static/js/tender.js fills the slots. #}
+{% block content %}<div class=backlink><a href="/browse">{{ icon('caret-left') }}Back to all tenders</a></div>
+<p class=kicker>{{ t.organization or "unnamed buyer" }}</p>
+<h1 class=detailHead>{{ t.title }}</h1>
+<p class="lede summary">{{ summary }}</p>
+{% if sectors %}<ul class='tags sectortags'>{% for x in sectors %}<li class=tag>{{ x }}</li>{% endfor %}</ul>{% endif %}
+<div id=fitSlot>
+{%- if company %}<div class="fit sk" aria-busy=true>
+ <p class=hint role=status>Checking this tender against your profile&hellip;</p>
+ <div class=b></div><div class="b s"></div></div>{% endif -%}
+</div>
+<section class=elig><h2>Eligibility</h2><p class=hint>Typical criteria for government tenders, plus clues from the title. The real rules are in the tender document: confirm there before bidding.
+{% if company is none %}<a href="/signup">Create an account</a> and answer the eligibility questions to check these against your company.
+{%- elif not company_answered %}<a href="/profile">Answer the eligibility questions</a> to check these against your company.
+{%- else %}Checked against your answers.{% endif %}</p><ul>
+{%- for i in checklist %}<li class={{ 'ok' if i.ok else 'check' }}><b>{{ 'ok' if i.ok else 'check' }}</b><div><strong>{{ i.label }}</strong><p>{{ i.detail }}</p></div></li>{% endfor -%}
+</ul></section>
+<dl class=facts>
+{%- for label, value, mono in facts if value -%}
+<div><dt>{{ label }}</dt><dd{% if mono %} class=mono{% endif %}>
+{%- if label == "Bids close" and t.deadline -%}
+<time datetime='{{ t.deadline }}'>{{ value }}</time>{% if days_label %} <span class=chipish>{{ days_label }}</span>{% endif %}
+{%- else %}{{ value }}{% endif -%}
+</dd></div>
+{%- endfor -%}
+</dl>
+{#- Shown only when a document URL was recorded. Most portals hand out
+    session-bound links that expire, so there is usually no dead "Download"
+    button on a page that has nothing to download. #}
+{% if document %}<div class=docbox>
+ <h2>Bid document</h2>
+ <p>The buyer's own tender document, exactly as the portal publishes it.</p>
+ <p><a class="btn primary" href="{{ document.url }}" target=_blank rel="noopener noreferrer"
+    download>{{ icon('caret-down') }}Download document (PDF)</a></p>
+ <p class=hint>Served by {{ document.source }}, not stored or altered by us.</p>
+</div>{% endif %}
+{% if cppp_box %}
+{#- CPPP rows with a stored tender link: the CAPTCHA sits right here, so opening
+    the full notice is one click. The image is fetched by script after the page
+    loads, so crawlers that do not run script never cost CPPP a request. #}
+<div class=sourcebox>
+ <h2>Open the full notice on CPPP</h2>
+ <p>CPPP puts a CAPTCHA in front of every tender. Type the characters in the
+ image and CPPP's full page for tender <span class=mono>{{ ref }}</span> opens in a
+ new tab.</p>
+ <form method=post action="/t/{{ t.id }}/cppp" target=_blank id=cpppForm
+       data-captcha="/t/{{ t.id }}/cppp/captcha">
+  <input type=hidden name=state id=cpppState>
+  <p><span id=cpppSk class=skimg aria-hidden=true></span>
+     <img id=cpppImg alt="CAPTCHA image from CPPP" width=216 height=60 hidden>
+     <span id=cpppMsg class=hint role=status>Loading the CAPTCHA from CPPP&hellip;</span></p>
+  <div class=f><label for=captcha>CAPTCHA</label>
+   <input id=captcha name=captcha required maxlength=20 autocomplete=off
+          autocapitalize=off spellcheck=false></div>
+  <p><button class="btn primary" type=submit>Open CPPP{{ icon('arrow-up-right') }}</button>
+     <button class=ghost type=button id=cpppNew>New image</button></p>
+ </form>
+ <p class=hint>Licence: {{ licence }}. We store the notice, never the bid
+ documents.</p>
+</div>
+{%- else %}
+<div class=sourcebox>
+ <h2>Find this notice on the source portal</h2>
+ <p>{{ source_name }} does not allow other sites to link straight to a tender
+ page, so the link below opens its search form. Paste the tender ID into it
+ and type the CAPTCHA the portal shows.</p>
+ <p class=idrow><span class=idval id=tid>{{ ref }}</span>
+   <button class=ghost data-action=copy data-copy="{{ ref }}">Copy ID</button>
+   <a class=btn target=_blank rel="noopener noreferrer"
+      href="{{ search_url }}">Open {{ source_name }}{{ icon('arrow-up-right') }}</a></p>
+ <p class=hint>Licence: {{ licence }}. We store the notice, never the bid
+ documents.</p>
+</div>
+{%- endif %}
+<div id=moreSlot data-src="/t/{{ t.id }}/extras"><section class="more sk" aria-busy=true>
+ <p class=hint>Finding other tenders from this buyer and similar work&hellip;</p>
+ <ol class=rows>
+  {{ skeleton_row() }}
+  {{ skeleton_row() }}
+ </ol></section></div>
+<script src="{{ asset('js/tender.js') }}"></script>{% endblock %}

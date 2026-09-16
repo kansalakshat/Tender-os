@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}<h1>Sign in</h1>
+{% with alternative="sign in with a password" %}{% include "_google.html" %}{% endwith %}
+<form id=f>
+<label class=f><span>Email</span>
+   <input name=email type=email required autocomplete=username spellcheck=false></label>
+<label class=f><span>Password</span>
+   <input name=password type=password required autocomplete=current-password></label>
+<p class=hint>Takes you straight to your matches. Your answers are already saved.</p>
+<p class=actions><button>Sign in</button></p>
+</form>
+<pre id=err role=alert></pre>
+<p class=hint>No account yet? <a href="/signup">Create one</a>.</p>
+<script src="{{ asset('js/login.js') }}"></script>{% endblock %}

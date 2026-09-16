@@ -178,17 +178,20 @@ def test_docs_relaxation_does_not_leak_into_the_site(client):
         assert "cdn.jsdelivr.net" not in csp, path
 
 
-def test_every_inline_script_carries_the_nonce(client):
-    """A script without the nonce would be blocked by our own CSP -- that would
-    be a broken page, and the fix must never be to weaken the policy."""
+def test_every_script_is_a_same_origin_file(client):
+    """An inline script without the nonce would be blocked by our own CSP -- that
+    would be a broken page, and the fix must never be to weaken the policy. So
+    there are none: every script is a file under /static, allowed by 'self'."""
     import re
+    from tests.conftest import page_scripts
 
     body = client.get("/signup").text
     csp = client.get("/signup").headers["Content-Security-Policy"]
-    assert re.search(r"nonce-([\w-]+)", csp)
-    assert "<script>" not in body, "un-nonced <script> would be blocked"
-    assert "<style>" not in body
-    assert body.count("<script nonce=") >= 1
+    assert "script-src 'self'" in csp and "'unsafe-inline'" not in csp
+    assert "<style" not in body
+    tags = re.findall(r"<script\b[^>]*>", body)
+    assert tags and all('src="/static/' in t for t in tags)
+    assert len(page_scripts(body)) == len(tags)
 
 
 def test_pages_carry_no_inline_style_attributes(client):
@@ -300,9 +303,11 @@ def test_no_page_relies_on_inline_event_handlers(client):
 
 
 def test_every_form_binds_its_submit_handler_in_script(client):
+    from tests.conftest import page_scripts
+
     for path in ("/login", "/signup", "/profile", "/browse"):
-        html = client.get(path).text
-        assert "addEventListener('submit'" in html, path
+        js = "".join(page_scripts(client.get(path).text))
+        assert "addEventListener('submit'" in js, path
 
 
 def test_no_duplicate_top_level_js_declarations(client):
@@ -319,10 +324,14 @@ def test_no_duplicate_top_level_js_declarations(client):
     decl = re.compile(
         r"^\s*(?:function\s+(\w+)|const\s+(\w+)\s*=|let\s+(\w+)\s*=)", re.M
     )
-    for path in ("/", "/login", "/signup", "/profile", "/browse"):
+    from tests.conftest import page_scripts
+
+    for path in ("/", "/login", "/signup", "/profile", "/browse", "/t/1"):
         html = client.get(path).text
         seen: dict[str, int] = {}
-        for i, block in enumerate(re.findall(r"<script[^>]*>(.*?)</script>", html, re.S)):
+        blocks = page_scripts(html)
+        assert blocks, path
+        for i, block in enumerate(blocks):
             # Top level only: anything indented is inside a function or block.
             for m in decl.finditer(block):
                 name = next(g for g in m.groups() if g)

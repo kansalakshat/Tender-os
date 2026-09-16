@@ -1,0 +1,7 @@
+{#- Whether this tender is one of the signed-in company's matches, and why.
+    Rendered into the tender page's #fitSlot by GET /t/<id>/extras. -#}
+{% if company %}{% if hit is none -%}
+<div class=fit><h2>Not one of your matches</h2><p class=hint>It misses your sectors and keywords, hits an exclusion, or closes too soon to prepare. <a href="/profile">Edit answers</a></p></div>
+{%- else -%}
+<div class=fit><h2>Matches your profile, score {{ hit[0] }}</h2><ul class=tags>{% for x in hit[1] %}<li class=tag>{{ x }}</li>{% endfor %}</ul></div>
+{%- endif %}{% endif %}

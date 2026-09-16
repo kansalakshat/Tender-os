@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% from "_macros.html" import skeleton_row %}
+{#- Read-only view of the whole corpus. Filtering happens in GET /tenders; this
+    page is the form around it, not a second query path. #}
+{% block content %}<h1>All collected tenders</h1>
+<p class=lede>Every notice in the corpus, closing soonest first. No account needed.</p>
+<form id=f>
+<div class=filters>
+   <label class=f><span>Search titles</span>
+     <input name=q autocomplete=off spellcheck=false placeholder="e.g. transformer&hellip;"></label>
+   <label class=f><span>Buyer</span>
+     <input name=organization autocomplete=off spellcheck=false
+        placeholder="e.g. Railways&hellip;"></label>
+   <label class=f><span>Source</span>
+     <select name=source_id><option value="">Every source</option>
+     {%- for s in sources %}<option value="{{ s.id }}">{{ s.name }}</option>{% endfor -%}
+     </select></label>
+   <label class=f><span>Sort by</span>
+     <select name=sort>
+       <option value=deadline>Closing soonest</option>
+       <option value=first_seen_at>Most recently collected</option>
+       <option value=published_date>Most recently published</option>
+     </select></label>
+   <button>{{ icon('magnifying-glass') }}Search</button>
+</div>
+<p class=chk><label><input type=checkbox name=open_only checked>
+   Only tenders still open</label></p>
+</form>
+<p class=count id=count aria-live=polite>Loading tenders&hellip;</p>
+<ol class=rows id=rows>
+ {{ skeleton_row("row sk") }}
+ {{ skeleton_row("row sk") }}
+ {{ skeleton_row("row sk") }}
+</ol>
+<p class=pager><button class=ghost id=prev>{{ icon('caret-left') }}Previous</button>
+   <button class=ghost id=next>Next{{ icon('caret-right') }}</button></p>
+<pre id=err role=alert></pre>
+<script src="{{ asset('js/browse.js') }}"></script>{% endblock %}

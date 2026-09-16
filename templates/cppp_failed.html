@@ -1,0 +1,2 @@
+{% extends "base.html" %}
+{% block content %}<h1>{{ problem or "CPPP is not answering" }}</h1><p>Try again later, or <a href="{{ search_url }}" target=_blank rel="noopener noreferrer">open CPPP's search</a> and enter the tender ID <span class=mono>{{ t.external_ref }}</span> yourself.</p>{% endblock %}

@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% from "_macros.html" import row, buyer_grid %}
+{#- The hero is full-bleed, so it sits outside <main>. The search box is a plain
+    GET form to /browse: no JS, works before the script runs, and lands on a URL
+    the browse page already knows how to restore. #}
+{% block hero %}<section class=hero><div class=wrap>
+<p class=eyebrow><span class=badge>AI Smart Bidding</span>{{ n_sources }} official portals
+{%- if last %} &middot; last collected {{ last.strftime('%d %b %Y') }}{% endif %}</p>
+<div class=heroTop>
+ <h1>Find the tenders<br>worth your time</h1>
+ <p class=bignum><b>{{ n_open|num }}</b><em>Open right now</em></p>
+</div>
+<div class=heroCopy>
+ <p class=lede>Every open notice from Indian government procurement portals, in
+ one place, ranked by an AI relevance engine against what your company actually
+ does.</p>
+ <div>
+  <form class=search action="/browse" method=get>
+   <label class=sr for=hq>Search tender titles</label>
+   <input id=hq name=q autocomplete=off spellcheck=false
+      placeholder="Search titles, e.g. transformer&hellip;">
+   <button>{{ icon('magnifying-glass') }}Search</button>
+  </form>
+  <p class=hint>Or answer eight questions once and get every new tender scored
+  for you. <a class=nowrap href="/signup">Create a free account{{ icon('arrow-up-right') }}</a></p>
+ </div>
+</div>
+<dl class="stats big">
+ <div><dt>Tenders tracked</dt><dd>{{ n_open|num }}</dd></div>
+ <div><dt>Closing this week</dt><dd>{{ n_soon|num }}</dd></div>
+ <div><dt>Buyers listed</dt><dd>{{ n_buyers|num }}</dd></div>
+ <div><dt>Official portals</dt><dd>{{ n_sources }}</dd></div>
+</dl>
+</div></section>{% endblock %}
+
+{#- The hero lists nothing, so the closing-soonest panel lives here. Buyers are
+    the other axis people search on. #}
+{% block body %}<section class=sec><div class=wrap>
+<div class="secHead reveal">
+ <h2>Closing soonest</h2>
+ <p class=kicker>{{ n_soon|num }} close within seven days</p>
+</div>
+<div class="panel reveal">
+ <h2><span class=lbl>{{ icon('clock-countdown') }}Live from the corpus</span>
+ <span>{{ n_open|num }} open</span></h2>
+ <ol class=rows>{% for t in soonest %}{% set gutter, rank = days_left(t.deadline, today) %}{{ row(gutter, rank, t) }}{% endfor %}</ol>
+ <a class=more href="/browse">Browse every notice{{ icon('arrow-right') }}</a>
+</div>
+</div></section>
+
+<section class=sec><div class=wrap>
+<div class="secHead reveal">
+ <h2>Who is buying</h2>
+ <p class=kicker>Top buyers by open notices</p>
+</div>
+<p class="hint reveal">One buyer alone is over half the corpus, so starting from
+the ones you already sell to is the fastest way to cut the noise.</p>
+{{ buyer_grid(buyers) }}
+</div></section>{% include "_caps.html" %}{% endblock %}

@@ -1,0 +1,40 @@
+{#- The claims here are all things the code actually does; the numbers are read
+    from the live corpus rather than typed in. "Scored in milliseconds" is the
+    warm digest path measured on this machine, not a target. -#}
+<section class=sec><div class=wrap>
+<div class="secHead reveal">
+ <h2>AI Smart Bidding</h2>
+ <p class=kicker>The intelligence layer</p>
+</div>
+<ol class=capList>
+ <li class=reveal>
+  <p class=capnum>01</p>
+  <div><h3>AI-powered relevance engine</h3>
+  <p>Every one of {{ n_open|num }} open notices is scored against your answers on each
+  run. Terms are weighted by how rare they are across the live corpus, so a word
+  like &ldquo;maintenance&rdquo; that sits on most government tenders cannot fake
+  a match the way a rare one like &ldquo;transformer&rdquo; should.</p></div>
+ </li>
+ <li class=reveal>
+  <p class=capnum>02</p>
+  <div><h3>Always-on data intelligence</h3>
+  <p>{{ n_sources }} official portals on a scheduled crawl, with a time budget so a
+  slow source cannot stall the run. Notices republished across portals are
+  collapsed rather than counted twice.</p></div>
+ </li>
+ <li class=reveal>
+  <p class=capnum>03</p>
+  <div><h3>Full-chain provenance</h3>
+  <p>Each notice carries the portal it came from and that portal&rsquo;s licence.
+  robots.txt is checked per source and refused sources stay out, which is why GeM
+  is absent by design rather than by omission.</p></div>
+ </li>
+ <li class=reveal>
+  <p class=capnum>04</p>
+  <div><h3>Millisecond ranking at scale</h3>
+  <p>A full pass over the corpus is cached per profile and reused until your
+  answers or the data change, so a repeat load is a lookup rather than a
+  re-scoring of {{ n_open|num }} rows.</p></div>
+ </li>
+</ol>
+</div></section>

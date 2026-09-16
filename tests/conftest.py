@@ -14,6 +14,9 @@ os.environ["SMTP_HOST"] = ""
 os.environ.pop("GOOGLE_CLIENT_ID", None)
 os.environ.pop("GOOGLE_CLIENT_SECRET", None)
 
+import re
+from pathlib import Path
+
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -51,3 +54,27 @@ def never_send_real_email(monkeypatch, tmp_path):
     from app import security
 
     security.reset()
+
+
+STATIC = Path(__file__).resolve().parent.parent / "static"
+
+
+def page_scripts(html: str) -> list[str]:
+    """The source of every script a page runs, in page order.
+
+    Scripts are files under /static, so a check on "the page's JavaScript" has to
+    read those files. A src that is not under /static, or not on disk, fails here:
+    the CSP would block the first and the server would 404 the second.
+    """
+    out = []
+    for attrs, body in re.findall(r"<script\b([^>]*)>(.*?)</script>", html, re.S):
+        src = re.search(r'src="([^"]+)"', attrs)
+        if not src:
+            out.append(body)
+            continue
+        path = src.group(1).split("?", 1)[0]
+        assert path.startswith("/static/"), f"script from outside /static: {path}"
+        f = STATIC / path.removeprefix("/static/")
+        assert f.is_file(), f"page links {path}, which does not exist"
+        out.append(f.read_text(encoding="utf-8"))
+    return out
