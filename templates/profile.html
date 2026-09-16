@@ -2,6 +2,7 @@
 {#- Edit the answers given at signup. Signed out, this is the no-account preview. #}
 {% block content %}<h1>{{ heading }}</h1>
 <p class=lede id=savehint>{{ hint }}</p>
+<p class=hint>Fields marked <abbr class=req title=required>*</abbr> are compulsory. Everything else is optional.</p>
 <form id=f>
 {% include "_profile_fields.html" %}
 <fieldset><legend>Contact</legend>

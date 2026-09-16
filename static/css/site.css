@@ -500,6 +500,7 @@ pre#err{margin:1.5rem 0 0;padding:.9rem 1.1rem;overflow-x:auto;white-space:pre-w
   font:.98rem/1.55 var(--mono);color:var(--danger);background:var(--panel);
   border:var(--b) solid var(--danger)}
 pre#err:empty{display:none}
+abbr.req{color:var(--danger);text-decoration:none;cursor:help}
 .empty{padding:3rem 1.5rem;text-align:center;border:var(--b2) dashed var(--hair);
   border-radius:var(--r-lg)}
 .empty p{margin:0 auto;max-width:34ch;color:var(--muted);font-weight:600}

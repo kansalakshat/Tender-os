@@ -10,6 +10,9 @@ function go(e){
   const btn = f.querySelector('button');
   const body = collectProfile(f);
   body.contact_email = f.email.value.trim() || null;
+  const missing = missingRequired(body);
+  if(missing) return showErr(missing);
+  document.getElementById('err').textContent = '';
 
   btn.disabled = true;
   btn.textContent = 'Creating your account…';

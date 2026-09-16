@@ -12,6 +12,8 @@ from fastapi import Body, Depends, FastAPI, HTTPException, Query, Request, Respo
 from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.exceptions import HTTPException as StarletteHTTPException
+from fastapi.exception_handlers import http_exception_handler
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
@@ -43,7 +45,7 @@ from .schemas import (
     TenderDetailOut,
     TenderOut,
 )
-from .web import router as web_router
+from .web import render, router as web_router
 
 log = logging.getLogger(__name__)
 
@@ -96,6 +98,19 @@ async def harden(request: Request, call_next):
             "Strict-Transport-Security", "max-age=31536000; includeSubDomains"
         )
     return response
+
+
+@app.exception_handler(StarletteHTTPException)
+async def html_errors(request: Request, exc: StarletteHTTPException):
+    """A browser opening a page gets a page, not {"detail": ...}. fetch() and API
+    clients do not ask for text/html, so they keep the JSON they parse."""
+    if "text/html" not in request.headers.get("accept", ""):
+        return await http_exception_handler(request, exc)
+    heading = "Page not found" if exc.status_code == 404 else "Something went wrong"
+    message = ("This page does not exist, or it belongs to another account. "
+               "If it is yours, sign in first.") if exc.status_code == 404 else str(exc.detail)
+    return HTMLResponse(render("error.html", title=heading, heading=heading,
+                               message=message), status_code=exc.status_code)
 
 
 # The font, the animation library and the icons are served from our own origin,
