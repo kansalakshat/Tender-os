@@ -1,0 +1,5 @@
+{% extends "base.html" %}
+{#- Shown to browsers instead of FastAPI's raw {"detail": ...} JSON. -#}
+{% block content %}<h1>{{ heading }}</h1>
+<p class=lede>{{ message }}</p>
+<p class=actions><a href="/">Go home</a> &middot; <a href="/login">Sign in</a></p>{% endblock %}

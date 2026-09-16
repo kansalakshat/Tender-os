@@ -29,9 +29,22 @@ function saveProfile(body){
     body:JSON.stringify(body)})
    .then(r=>r.json().then(d=>{if(!r.ok) throw d.detail; return d;}));
 }
+// FastAPI's 422 detail is a list of {loc, msg}; a network failure or a non-JSON
+// 500 arrives as an Error. Neither should reach the user as raw JSON.
+function errText(e){
+  if(typeof e==='string') return e;
+  if(Array.isArray(e)) return e.map(x=>{
+    const field = (x.loc||[]).filter(k=>k!=='body').join(' ').replace(/_/g,' ');
+    return (field ? field+': ' : '') + String(x.msg||'').replace(/^Value error, /,'');
+  }).join('\n');
+  return 'Something went wrong. Please check your connection and try again.';
+}
+function missingRequired(body){
+  return body.sectors.length ? '' : 'Pick at least one sector you work in.';
+}
 function showErr(e){
   const box = document.getElementById('err');
-  box.textContent = typeof e==='string' ? e : JSON.stringify(e,null,1);
+  box.textContent = errText(e);
   box.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 // Same three weights as rank_class() on the server, so a scored preview and a

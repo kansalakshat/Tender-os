@@ -52,6 +52,9 @@ function go(e){
   e.preventDefault();
   const btn = e.target.querySelector('button');
   const body = collectProfile(e.target);
+  const missing = missingRequired(body);
+  if(missing) return showErr(missing);
+  document.getElementById('err').textContent = '';
   btn.disabled = true;
   document.getElementById('preview').innerHTML = '<div class=sk aria-busy=true>'
     + '<p class=hint role=status>' + (signedIn ? 'Saving your answers&hellip;'
