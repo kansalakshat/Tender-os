@@ -131,6 +131,7 @@ class GeMConnector(BaseConnector):
     license = "public-published"
     paths = (LISTING_PATH, DOCUMENT_PATH)
     rate_limit_seconds = 3.0
+    requires_browser = True
     # ~4,372 pages of 10. One run does not try to walk them all -- the 6-hourly
     # schedule and run()'s own time budget do the rest, and new bids land on page 1.
     max_pages = 40

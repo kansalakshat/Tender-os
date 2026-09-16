@@ -633,8 +633,13 @@ def cron_ingest(request: Request):
 
     started = time.monotonic()
     deadline = started + budget
-    results, unreached = [], []
+    results, unreached, skipped = [], [], []
     for name, connector_cls in REGISTRY.items():
+        if getattr(connector_cls, "requires_browser", False):
+            # Needs Chromium, which this function does not have. Runs from
+            # app/scheduler.py on a host with a browser instead.
+            skipped.append(name)
+            continue
         if time.monotonic() >= deadline:
             unreached.append(name)
             continue
@@ -657,6 +662,7 @@ def cron_ingest(request: Request):
 
     return {
         "ran": results,
+        "skipped": skipped,                # browser-driven; not runnable here
         "not_reached": unreached,          # ran out of budget; next run picks them up
         "seconds": round(time.monotonic() - started, 1),
         "since_hours": since_hours,

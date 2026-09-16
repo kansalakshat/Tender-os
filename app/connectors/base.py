@@ -59,6 +59,12 @@ class BaseConnector(ABC):
     rate_limit_seconds: float = 2.0
     paths: tuple[str, ...] = ("/",)  # paths robots.txt must permit for us to run
     max_retries: int = 4
+    # True when fetch_batch drives a real browser. Such a connector cannot run in
+    # a serverless function -- there is no Chromium there and no room in a 300s
+    # ceiling for one -- so /cron/ingest skips it rather than logging the same
+    # ImportError every night. It still runs from app/scheduler.py on a host that
+    # has a browser.
+    requires_browser: bool = False
 
     def __init_subclass__(cls, **kw):
         """Rule #1 at class-definition time: a GeM connector cannot even be declared."""
