@@ -158,41 +158,60 @@ class GePNICConnector(BaseConnector):
         )
 
 
-class MPTendersConnector(GePNICConnector):
-    """Madhya Pradesh -- https://mptenders.gov.in
+# Every verified GePNIC instance: class name -> (source_name, host).
+#
+# A domain listed here still does NOTHING on its own: BaseConnector.run looks it
+# up in config/approved_sources.yaml and refuses if it is absent. That file, not
+# this table, is the compliance gate -- this one only spares us 20 near-identical
+# class bodies. Each host below was verified by probe_sources.py, which fetches
+# robots.txt through the project's own checker first and only then confirms the
+# listing table parses server-side with no CAPTCHA over the data.
+STATE_INSTANCES: dict[str, tuple[str, str]] = {
+    # class name                   source_name                    host
+    "MPTendersConnector":          ("MP eProcurement",            "mptenders.gov.in"),
+    "HPTendersConnector":          ("HP eProcurement",            "hptenders.gov.in"),
+    "RajasthanTendersConnector":   ("Rajasthan eProcurement",     "eproc.rajasthan.gov.in"),
+    "WBTendersConnector":          ("WB eProcurement",            "wbtenders.gov.in"),
+    "TNTendersConnector":          ("TN eProcurement",            "tntenders.gov.in"),
+    "KeralaTendersConnector":      ("Kerala eProcurement",        "etenders.kerala.gov.in"),
+    "AssamTendersConnector":       ("Assam eProcurement",         "assamtenders.gov.in"),
+    "HaryanaTendersConnector":     ("Haryana eProcurement",       "etenders.hry.nic.in"),
+    "PunjabTendersConnector":      ("Punjab eProcurement",        "eproc.punjab.gov.in"),
+    "UPTendersConnector":          ("UP eProcurement",            "etender.up.nic.in"),
+    "UttarakhandTendersConnector": ("Uttarakhand eProcurement",   "uktenders.gov.in"),
+    "ManipurTendersConnector":     ("Manipur eProcurement",       "manipurtenders.gov.in"),
+    "TripuraTendersConnector":     ("Tripura eProcurement",       "tripuratenders.gov.in"),
+    "ArunachalTendersConnector":   ("Arunachal eProcurement",     "arunachaltenders.gov.in"),
+    "OdishaTendersConnector":      ("Odisha eProcurement",        "tendersodisha.gov.in"),
+    "JharkhandTendersConnector":   ("Jharkhand eProcurement",     "jharkhandtenders.gov.in"),
+    "DNHTendersConnector":         ("DNH eProcurement",           "dnhtenders.gov.in"),
+    "ChandigarhTendersConnector":  ("Chandigarh eProcurement",    "etenders.chd.nic.in"),
+    "DefenceProcConnector":        ("Defence Procurement",        "defproc.gov.in"),
+    "DelhiTendersConnector":       ("Delhi eProcurement",         "govtprocurement.delhi.gov.in"),
+}
 
-    Verified 2026-08-25: robots.txt returns HTTP 404 (no restrictions); the
-    Disclaimer page describes the portal as existing "to facilitate faster
-    dissemination and easy access to information related to Tenders" and places no
-    restriction on automated access; FrontEndListTendersbyDate renders with no
-    CAPTCHA anywhere on the page.
-    """
+# Portals deliberately NOT here, so nobody re-probes them hoping for a different
+# answer: mahatenders.gov.in and eproc.karnataka.gov.in (robots.txt disallows
+# /nicgep/app); nagaland, meghalaya, mizoram, sikkim (listing renders empty --
+# the data sits behind the CAPTCHA'd search, rule #3).
 
-    source_name = "MP eProcurement"
-    base_url = "https://mptenders.gov.in"
+for _name, (_source, _host) in STATE_INSTANCES.items():
+    globals()[_name] = type(
+        _name,
+        (GePNICConnector,),
+        {
+            "source_name": _source,
+            "base_url": f"https://{_host}",
+            "__module__": __name__,
+            "__doc__": (
+                f"{_source} -- https://{_host}. Verified by probe_sources.py; see "
+                "config/approved_sources.yaml for the robots.txt/disclaimer record "
+                "that actually gates it."
+            ),
+        },
+    )
 
-
-class HPTendersConnector(GePNICConnector):
-    """Himachal Pradesh -- https://hptenders.gov.in
-
-    Verified 2026-09-06 by probe_sources.py: robots.txt returns HTTP 404 (no
-    restrictions); the Disclaimer carries the standard NIC dissemination wording
-    with no automated-access restriction; FrontEndListTendersbyDate renders its
-    listing table server-side. The page does show a CAPTCHA, but on the search
-    form only -- the listing table itself parsed without one, exactly as on CPPP.
-    """
-
-    source_name = "HP eProcurement"
-    base_url = "https://hptenders.gov.in"
-
-
-class RajasthanTendersConnector(GePNICConnector):
-    """Rajasthan -- https://eproc.rajasthan.gov.in
-
-    Verified 2026-09-06 by probe_sources.py, same conditions as Himachal Pradesh:
-    robots.txt 404, NIC dissemination disclaimer, listing table rendered
-    server-side (10 rows on probe), CAPTCHA on the search form only.
-    """
-
-    source_name = "Rajasthan eProcurement"
-    base_url = "https://eproc.rajasthan.gov.in"
+__all__ = [
+    "GePNICConnector", "LISTING_PAGE", "LISTING_PATH", "STATE_INSTANCES",
+    "split_org_chain", *STATE_INSTANCES,
+]

@@ -9,6 +9,7 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 from .connectors import REGISTRY
 from .models import utcnow
 from .dedup import link_duplicates
+from .enrich import enrich_pending
 from .retention import DEFAULT_RETENTION_DAYS, purge_expired
 
 log = logging.getLogger(__name__)
@@ -49,6 +50,14 @@ def build_scheduler() -> BlockingScheduler:
             coalesce=True,
             misfire_grace_time=3600,
         )
+    # Enrich BEFORE dedup, every cycle. Order matters: dedup matches on title, and
+    # a GeM listing title is a truncated stub that matches nothing. Enrichment
+    # replaces it with the full item list from the bid PDF, so the dedup that
+    # follows can actually pair a GeM row with the same notice on CPPP.
+    scheduler.add_job(
+        enrich_pending, "interval", hours=INTERVAL_HOURS, id="enrich",
+        coalesce=True, max_instances=1, misfire_grace_time=3600,
+    )
     scheduler.add_job(
         link_duplicates, "interval", hours=max(INTERVAL_HOURS, 6), id="dedup", coalesce=True
     )

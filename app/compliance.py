@@ -11,12 +11,26 @@ from urllib.parse import urlsplit
 
 __version__ = "0.1.0"
 
-# Rule #1: GeM's robots.txt disallows automated access. We never build a connector
-# for it and we never let a request reach it -- not directly, not via a redirect,
-# not via a misconfigured allowlist entry. Getting GeM data legitimately requires a
-# data-sharing agreement with GeM: a business-development task, not an engineering
-# one. Do not "temporarily" remove a host from this tuple.
-BLOCKED_HOSTS = ("gem.gov.in",)
+# Rule #1: hosts we never touch, whatever else the config says. Currently empty.
+#
+# gem.gov.in was here until 2026-09-16, on the stated grounds that "GeM's robots.txt
+# disallows automated access". That was re-checked against the live file and is not
+# true. bidplus.gem.gov.in/robots.txt says:
+#
+#     User-agent: *
+#     Disallow: /resources/
+#     Disallow: /bg_emd/epbgservice/CallBG_Performance_Status
+#     Disallow: /bg_emd/epbgservice/PBGIntimation
+#     Disallow: /bg_emd/epbgservice/AddSellerIssuinginfo
+#
+# /all-bids and /showbidDocument/<id> -- the only two paths the GeM connector reads
+# -- are permitted; the four above are not. RobotFileParser enforces that per-path
+# in BaseConnector.check_robots_allowed, which runs before any connector fetches.
+# Removed on the operator's explicit instruction (nirmaanos35@gmail.com).
+#
+# Rule #3 is a SEPARATE rule and is unchanged: GeM's and CPPP's CAPTCHA-gated
+# pages stay off-limits, and nothing here solves or bypasses a CAPTCHA.
+BLOCKED_HOSTS: tuple[str, ...] = ()
 
 
 class BlockedSourceError(RuntimeError):
@@ -36,8 +50,7 @@ def assert_not_blocked(url: str) -> None:
     if host_is_blocked(url):
         raise BlockedSourceError(
             f"{urlsplit(url).hostname!r} is permanently blocked (compliance rule #1). "
-            "GeM disallows automated access; obtaining this data requires a formal "
-            "data-sharing agreement with GeM, not a scraper."
+            "See BLOCKED_HOSTS in app/compliance.py for why this host was added."
         )
 
 

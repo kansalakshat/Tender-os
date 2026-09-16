@@ -179,7 +179,11 @@ class CPPPConnector(BaseConnector):
             published_date=published.date() if published else None,
             deadline=closing.date() if closing else None,
             status=None,         # derived from the deadline in TenderRecord
-            document_url=raw.get("url") or None,
+            # NOT raw["url"]: that is a /cppp/tendersfullview/ link whose token
+            # expires, and it is a detail page rather than a document anyway. Stored
+            # here it rendered a "Download document" button on all 22,059 CPPP rows
+            # that led to "Invalid Url.Please Check". Same reasoning as gepnic.py.
+            document_url=None,
             source_url=raw.get("url") or (self.base_url + LISTING_PATH),
             raw_payload=raw,
         )

@@ -1,0 +1,118 @@
+[
+  {
+    "domain": "nagalandtenders.gov.in",
+    "state": "Nagaland",
+    "robots": "allowed",
+    "verdict": "captcha-gated",
+    "detail": "listing renders empty; the data is behind the CAPTCHA'd search",
+    "rows": 0,
+    "captcha_on_page": true
+  },
+  {
+    "domain": "tripuratenders.gov.in",
+    "state": "Tripura",
+    "robots": "allowed",
+    "verdict": "PASS",
+    "detail": "parsed 10 rows server-side (CAPTCHA present but only on the search form)",
+    "rows": 10,
+    "captcha_on_page": true,
+    "sample": "Hiring of a Consulting Firm for Livestock and Fishery Value Chain Analysis and Market Dema"
+  },
+  {
+    "domain": "meghalayatenders.gov.in",
+    "state": "Meghalaya",
+    "robots": "allowed",
+    "verdict": "captcha-gated",
+    "detail": "listing renders empty; the data is behind the CAPTCHA'd search",
+    "rows": 0,
+    "captcha_on_page": true
+  },
+  {
+    "domain": "mizoramtenders.gov.in",
+    "state": "Mizoram",
+    "robots": "allowed",
+    "verdict": "captcha-gated",
+    "detail": "listing renders empty; the data is behind the CAPTCHA'd search",
+    "rows": 0,
+    "captcha_on_page": true
+  },
+  {
+    "domain": "arunachaltenders.gov.in",
+    "state": "Arunachal Pradesh",
+    "robots": "allowed",
+    "verdict": "PASS",
+    "detail": "parsed 1 rows server-side (CAPTCHA present but only on the search form)",
+    "rows": 1,
+    "captcha_on_page": true,
+    "sample": "Construction of One Stop Centre (OSC) at Tato, Shi-Yomi District, Arunachal Pradesh"
+  },
+  {
+    "domain": "tendersodisha.gov.in",
+    "state": "Odisha",
+    "robots": "allowed",
+    "verdict": "PASS",
+    "detail": "parsed 5 rows server-side (CAPTCHA present but only on the search form)",
+    "rows": 5,
+    "captcha_on_page": true,
+    "sample": "Construction of 100 seated Girls Hostel  G 1 for Govt ITI Bhawanipatna and  100 seated Boy"
+  },
+  {
+    "domain": "jharkhandtenders.gov.in",
+    "state": "Jharkhand",
+    "robots": "allowed",
+    "verdict": "PASS",
+    "detail": "parsed 10 rows server-side (CAPTCHA present but only on the search form)",
+    "rows": 10,
+    "captcha_on_page": true,
+    "sample": "Construction of Drain in Balumath- Herhanj-Panki Road at Chainage in 2nd Km for the year 2"
+  },
+  {
+    "domain": "dnhtenders.gov.in",
+    "state": "Dadra & Nagar Haveli",
+    "robots": "allowed",
+    "verdict": "PASS",
+    "detail": "parsed 2 rows server-side (CAPTCHA present but only on the search form)",
+    "rows": 2,
+    "captcha_on_page": true,
+    "sample": "Procurement of Insulated Transformer Oil (2nd Call)"
+  },
+  {
+    "domain": "sikkimtender.gov.in",
+    "state": "Sikkim",
+    "robots": "allowed",
+    "verdict": "captcha-gated",
+    "detail": "listing renders empty; the data is behind the CAPTCHA'd search",
+    "rows": 0,
+    "captcha_on_page": true
+  },
+  {
+    "domain": "etenders.chd.nic.in",
+    "state": "Chandigarh",
+    "robots": "allowed",
+    "verdict": "PASS",
+    "detail": "parsed 10 rows server-side (CAPTCHA present but only on the search form)",
+    "rows": 10,
+    "captcha_on_page": true,
+    "sample": "REPLACEMENT OF ROLLING SHUTTER IN SUB REGISTRAR OFFICE, SECTOR 17, CHANDIGARH."
+  },
+  {
+    "domain": "defproc.gov.in",
+    "state": "Defence Procurement",
+    "robots": "allowed",
+    "verdict": "PASS",
+    "detail": "parsed 10 rows server-side (CAPTCHA present but only on the search form)",
+    "rows": 10,
+    "captcha_on_page": true,
+    "sample": "81203/LRC/BD 80 A12 CH/EEG/ENGR/0181"
+  },
+  {
+    "domain": "govtprocurement.delhi.gov.in",
+    "state": "Delhi",
+    "robots": "allowed",
+    "verdict": "PASS",
+    "detail": "parsed 10 rows server-side (CAPTCHA present but only on the search form)",
+    "rows": 10,
+    "captcha_on_page": true,
+    "sample": "E.I.U.S.(Capital)"
+  }
+]

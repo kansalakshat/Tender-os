@@ -1360,6 +1360,21 @@ PROFILE_FIELDS = """<fieldset><legend>What you do</legend>
 </div>
 
 <div class=f>
+ <div class=fhead><label for=f_cap>How much work can you run at once, INR</label>
+  <button type=button class=clearbtn data-action=clear data-clear=bid_capacity>Clear</button></div>
+ <input id=f_cap name=bid_capacity autocomplete=off type=number min=0>
+ <p class=hint>Checked against each tender's estimated value.</p>
+</div>
+
+<div class=f>
+ <div class=fhead><label for=f_emd>How much can you tie up in EMD at once, INR</label>
+  <button type=button class=clearbtn data-action=clear data-clear=emd_budget>Clear</button></div>
+ <input id=f_emd name=emd_budget autocomplete=off type=number min=0>
+ <p class=hint>Bid security is refunded, but it is locked up until the bid is
+ decided. Udyam and DPIIT holders are usually exempt.</p>
+</div>
+
+<div class=f>
  <div class=fhead><span class=flabel>Registrations you hold</span>
   <button type=button class=clearbtn data-action=clear data-clear=registrations>Clear</button></div>
  <div class=checks>__REGISTRATIONS__</div>
@@ -1392,6 +1407,8 @@ function collectProfile(f){
     years_in_business:v('years_in_business')===''?null:parseInt(v('years_in_business'),10),
     annual_turnover:v('annual_turnover')||null,
     largest_similar_work:v('largest_similar_work')||null,
+    bid_capacity:v('bid_capacity')||null,
+    emd_budget:v('emd_budget')||null,
     registrations:picked('registrations')
   };
 }
@@ -1972,6 +1989,8 @@ fetch('/me').then(r=>r.json()).then(d=>{
   f.years_in_business.value=c.years_in_business??'';
   f.annual_turnover.value=c.annual_turnover??'';
   f.largest_similar_work.value=c.largest_similar_work??'';
+  f.bid_capacity.value=c.bid_capacity??'';
+  f.emd_budget.value=c.emd_budget??'';
   [['sectors',c.sectors],['states',c.states],['districts',c.districts],
    ['buyers',c.buyers],['exclude_buyers',c.exclude_buyers],
    ['registrations',c.registrations]].forEach(([n,vals])=>{
@@ -2119,6 +2138,19 @@ def _clean(v: str | None) -> str:
     return "" if v in {"", "--", "-", "NA", "N/A"} else v
 
 
+def money(value) -> str:
+    """Rupees, in the units an Indian bidder actually reads them in."""
+    try:
+        n = float(value)
+    except (TypeError, ValueError):
+        return ""
+    if n >= 1e7:
+        return f"Rs {n / 1e7:.2f} crore".replace(".00 ", " ")
+    if n >= 1e5:
+        return f"Rs {n / 1e5:.2f} lakh".replace(".00 ", " ")
+    return f"Rs {n:,.0f}"
+
+
 def _summary(t: Tender, sectors: list[str], places: list[str], left: str) -> str:
     """One plain sentence, assembled from fields we already hold.
 
@@ -2134,7 +2166,25 @@ def _summary(t: Tender, sectors: list[str], places: list[str], left: str) -> str
         "closed": " Bidding has closed.",
         "today": " Bids close today.",
     }.get(left, f" Bids close in {left.replace('d', ' days')}.")
-    return f"A {trade} notice from {buyer}{where}.{when}"
+
+    # Enrichment reads these off the bid PDF (app/enrich.py). Most listings do not
+    # publish a value, so each part appears only when we actually have it rather
+    # than printing "not stated" three times.
+    raw = t.raw_payload if isinstance(t.raw_payload, dict) else {}
+    extra = ""
+    if t.estimated_value is not None:
+        extra += f" Worth about {money(t.estimated_value)}"
+        emd = raw.get("emd_amount")
+        if isinstance(emd, (int, float)):
+            extra += f", with an EMD of {money(emd)}"
+        extra += "."
+    qty = raw.get("quantity")
+    if qty and str(qty).strip().isdigit() and int(qty) > 1:
+        extra += f" {int(qty):,} units."
+    period = raw.get("contract_period")
+    if period:
+        extra += f" Contract runs {period}."
+    return f"A {trade} notice from {buyer}{where}.{when}{extra}"
 
 
 def summary_for(t: Tender) -> str:
@@ -2158,6 +2208,7 @@ DETAIL = """<div class=backlink><a href="__BACK__">__I_LEFT__Back to all tenders
 __SECTORTAGS__
 __FIT__
 <dl class=facts>__FACTS__</dl>
+__DOCBOX__
 <div class=sourcebox>
  <h2>Find this notice on the source portal</h2>
  <p>__SOURCE_NAME__ does not allow other sites to link straight to a tender
@@ -2170,6 +2221,18 @@ __FIT__
  documents.</p>
 </div>
 __MORE__"""
+
+# Shown only when the connector recorded a document URL. Most portals hand out
+# session-bound links that expire, so `document_url` stays None for them and this
+# whole block disappears -- no dead "Download" button on a page that has nothing
+# to download.
+DOCBOX = """<div class=docbox>
+ <h2>Bid document</h2>
+ <p>The buyer's own tender document, exactly as the portal publishes it.</p>
+ <p><a class="btn primary" href="__DOCURL__" target=_blank rel="noopener noreferrer"
+    download>__I_DOWN__Download document (PDF)</a></p>
+ <p class=hint>Served by __DOCSOURCE__, not stored or altered by us.</p>
+</div>"""
 
 
 def _more(heading: str, rows: list[Tender], today: date, link: str = "") -> str:
@@ -2192,7 +2255,8 @@ def _eligibility(company: Company | None, t: Tender) -> str:
         ask = ('<a href="/signup">Create an account</a> and answer the eligibility '
                "questions to check these against your company.")
     elif (company.years_in_business is None and company.annual_turnover is None
-          and company.largest_similar_work is None and not company.registrations):
+          and company.largest_similar_work is None and company.bid_capacity is None
+          and company.emd_budget is None and not company.registrations):
         ask = ('<a href="/profile">Answer the eligibility questions</a> to check '
                "these against your company.")
     else:
@@ -2269,6 +2333,42 @@ def _related(db: Session, t: Tender, today: date) -> str:
     return out
 
 
+def _document_for(db: Session, t: Tender) -> tuple[str, str] | None:
+    """(url, source_name) for a downloadable document, or None.
+
+    A tender's own document_url wins. Failing that, look at the cross-source
+    duplicates link_duplicates() found: CPPP and the state portals gate their
+    detail pages behind a CAPTCHA and so carry no document, but the very same
+    notice republished on GeM has a PDF that answers an ordinary GET. Showing
+    that twin's document is what lets a CPPP tender skip the copy-the-ID dance.
+    """
+    if t.document_url:
+        src = db.get(Source, t.source_id) if t.source_id else None
+        return t.document_url, (src.name if src else "the source portal")
+
+    twins = db.execute(
+        select(Tender).where(
+            or_(Tender.duplicate_of == t.id,
+                Tender.id == t.duplicate_of) if t.duplicate_of
+            else Tender.duplicate_of == t.id,
+            Tender.document_url.is_not(None),
+        ).limit(1)
+    ).scalars().first()
+    if twins is None:
+        return None
+    src = db.get(Source, twins.source_id) if twins.source_id else None
+    return twins.document_url, (src.name if src else "another portal")
+
+
+def _docbox(db: Session, t: Tender) -> str:
+    found = _document_for(db, t)
+    if found is None:
+        return ""
+    url, source_name = found
+    return (DOCBOX.replace("__DOCURL__", escape(url, quote=True))
+                  .replace("__DOCSOURCE__", escape(source_name)))
+
+
 @router.get("/t/{tender_id}", response_class=HTMLResponse)
 def tender_detail(
     request: Request, tender_id: int, db: Session = Depends(get_db),
@@ -2325,6 +2425,18 @@ def tender_detail(
         _fact("Corrigendum", escape(_clean(raw.get("corrigendum")))),
         _fact("Where", escape(", ".join(places))),
         _fact("Estimated value", escape(value), mono=True),
+        # Everything from here to "Source" is read off the bid document by
+        # app/enrich.py; no listing publishes any of it. Each _fact drops out on
+        # its own when absent, so an un-enriched tender simply shows fewer rows.
+        _fact("EMD (bid security)",
+              escape(money(raw.get("emd_amount"))) if raw.get("emd_amount") else "",
+              mono=True),
+        _fact("Quantity",
+              f"{int(raw['quantity']):,}" if str(raw.get("quantity", "")).isdigit()
+              and int(raw["quantity"]) > 1 else "", mono=True),
+        _fact("Contract period", escape(_clean(raw.get("contract_period")))),
+        _fact("Buying office", escape(_clean(raw.get("office")))),
+        _fact("Ministry", escape(_clean(raw.get("ministry")))),
         _fact("Source", escape(src.name if src else "unknown")),
         _fact("Listing position", escape(_clean(raw.get("serial")).rstrip(".")),
               mono=True),
@@ -2354,6 +2466,7 @@ def tender_detail(
         .replace("__FIT__", _fit(db, company, t, today)
                  + _eligibility(company, t))
         .replace("__MORE__", _related(db, t, today))
+        .replace("__DOCBOX__", _docbox(db, t))
     )
     return page(f"{t.title[:60]}", body, nonce_of(request))
 
