@@ -1,14 +1,14 @@
 {% extends "base.html" %}
 {% block content %}<h1>Create your account</h1>
 <p class=lede>Everything below is asked once. You will not be asked again.</p>
-<p class=hint>Fields marked <abbr class=req title=required>*</abbr> are compulsory. Everything else is optional.</p>
+<p class=hint>Questions labelled <span class=req>Required</span> must be answered. Everything else is optional.</p>
 {% with alternative="sign up with an email address" %}{% include "_google.html" %}{% endwith %}
 <form id=f>
 
 <fieldset><legend>Sign-in details</legend>
-<label class=f><span>Email <abbr class=req title=required>*</abbr></span>
+<label class=f><span>Email <span class=req>Required</span></span>
    <input name=email type=email required autocomplete=username spellcheck=false></label>
-<label class=f><span>Password <abbr class=req title=required>*</abbr></span>
+<label class=f><span>Password <span class=req>Required</span></span>
    <input name=password type=password required minlength=10
       autocomplete=new-password></label>
 <p class=hint>At least 10 characters. Stored as a salted scrypt hash, never in
