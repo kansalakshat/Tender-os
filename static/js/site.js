@@ -247,3 +247,10 @@ document.addEventListener('click', function(e){
   if(el.dataset.action === 'resend') resend();
   if(el.dataset.action === 'copy') copyId(el);
 });
+// Matches page: picking a new sort key applies it at once, in the direction
+// already selected, instead of waiting for Ascending/Descending to be clicked again.
+document.addEventListener('change', e => {
+  const s = e.target;
+  if (!s.matches('.sortbar select')) return;
+  s.form.requestSubmit(s.form.querySelector('button[aria-pressed="true"]'));
+});
