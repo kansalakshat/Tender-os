@@ -158,3 +158,26 @@ def test_results_page_escapes_scraped_titles(client, session_factory):
 
 def test_results_page_for_unknown_company_is_404(client):
     assert client.get("/c/999").status_code == 404
+
+
+def test_results_page_sorts_every_match_both_ways(client, session_factory):
+    with session_factory() as db:
+        src = db.query(Source).first()
+        db.add_all([
+            Tender(source_id=src.id, external_ref=f"emd{i}", title=f"transformer lot {i}",
+                   deadline=SOON + timedelta(days=i), status="open",
+                   raw_payload={"emd_amount": emd} if emd else None,
+                   source_url=f"https://mptenders.gov.in/emd{i}")
+            for i, emd in enumerate([5000, None, 90000, 200])
+        ])
+        db.commit()
+    company_id = create(client).json()["id"]
+
+    def lots(**q):
+        html = client.get(f"/c/{company_id}", params=q).text
+        return [int(x) for x in __import__("re").findall(r"transformer lot (\d)", html)]
+
+    assert lots(sort="emd", order="desc") == [2, 0, 3, 1]    # missing EMD last
+    assert lots(sort="emd", order="asc") == [3, 0, 2, 1]     # ...both ways
+    assert lots(sort="deadline", order="desc") == [3, 2, 1, 0]
+    assert lots(sort="nonsense") == lots()                   # unknown key = best match
