@@ -10,13 +10,13 @@
 <fieldset><legend>What you do</legend>
 
 <div class=f>
- <div class=fhead><label for=f_name>Company name <abbr class=req title=required>*</abbr></label>
+ <div class=fhead><label for=f_name>Company name <span class=req>Required</span></label>
   <button type=button class=clearbtn data-action=clear data-clear=name>Clear</button></div>
  <input id=f_name name=name required autocomplete=organization>
 </div>
 
 <div class=f>
- <div class=fhead><span class=flabel>Sectors you work in <abbr class=req title=required>*</abbr></span>
+ <div class=fhead><span class=flabel>Sectors you work in <span class=req>Required</span></span>
   <button type=button class=clearbtn data-action=clear data-clear=sectors>Clear</button></div>
  <div class=checks>{% for key, label in sectors %}<label><input type=checkbox name=sectors value="{{ key }}"><span>{{ label }}</span></label>{% endfor %}</div>
 </div>
