@@ -1,0 +1,8 @@
+{% from "_macros.html" import row %}
+{#- Same tender on other sources, more from this buyer, and similar work. Rendered
+    into the tender page's #moreSlot by GET /t/<id>/extras. -#}
+{% for s in sections if s.rows -%}
+<section class=more><h2>{{ s.heading }}</h2><ol class=rows>
+{%- for r in s.rows %}{% set gutter, rank = days_left(r.deadline, today) %}{{ row(gutter, rank, r) }}{% endfor -%}
+</ol>{% if s.link %}<p><a href="{{ s.link }}">{{ s.link_text }}</a></p>{% endif %}</section>
+{%- endfor %}

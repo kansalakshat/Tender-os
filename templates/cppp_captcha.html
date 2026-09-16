@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{#- The fallback CAPTCHA page: after a wrong answer, an expired one, or "New
+    image". The usual path is the box on the tender page itself. #}
+{% block content %}<div class=backlink><a href="/t/{{ t.id }}">{{ icon('caret-left') }}Back to this tender</a></div>
+<h1>Open on CPPP</h1>
+<p class=lede>{{ t.title }}</p>
+<p>Type the characters in the image. We send them to CPPP and show you its full
+page for tender <span class=mono>{{ t.external_ref }}</span>.</p>
+{% if captcha.message %}<p class=hint role=alert>{{ captcha.message }}</p>{% endif %}
+<form method=post action="/t/{{ t.id }}/cppp">
+ <input type=hidden name=state value="{{ captcha.state }}">
+ <p><img src="{{ captcha.image }}" alt="CAPTCHA image from CPPP" width=216 height=60></p>
+ <div class=f><label for=captcha>CAPTCHA</label>
+  <input id=captcha name=captcha required maxlength=20 autocomplete=off
+         autocapitalize=off spellcheck=false autofocus></div>
+ <p><button class="btn primary" type=submit>Open tender</button>
+    <a class="btn ghost" href="/t/{{ t.id }}/cppp">New image</a></p>
+</form>{% endblock %}

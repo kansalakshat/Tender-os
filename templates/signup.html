@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}<h1>Create your account</h1>
+<p class=lede>Everything below is asked once. You will not be asked again.</p>
+{% with alternative="sign up with an email address" %}{% include "_google.html" %}{% endwith %}
+<form id=f>
+
+<fieldset><legend>Sign-in details</legend>
+<label class=f><span>Email</span>
+   <input name=email type=email required autocomplete=username spellcheck=false></label>
+<label class=f><span>Password</span>
+   <input name=password type=password required minlength=10
+      autocomplete=new-password></label>
+<p class=hint>At least 10 characters. Stored as a salted scrypt hash, never in
+   plain text. We use your sign-in email as the contact address on the profile.</p>
+</fieldset>
+
+{% include "_profile_fields.html" %}
+
+<p class=actions><button>Create account and show my matches</button></p>
+</form>
+<pre id=err role=alert></pre>
+<p class=hint>Already have one? <a href="/login">Sign in</a>.</p>
+<script src="{{ asset('js/profile-form.js') }}"></script>
+<script src="{{ asset('js/signup.js') }}"></script>{% endblock %}

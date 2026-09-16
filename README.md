@@ -414,8 +414,13 @@ app/
   matching.py      sector taxonomy + company-profile scoring
   scheduler.py     apscheduler jobs
   api.py           FastAPI
-  web.py           the questionnaire form + results page (unstyled)
+  web.py           HTML page routes and the data behind them
+  cppp_relay.py    opens a CPPP tender after a visitor types its CAPTCHA
   cli.py           tenders run / check-robots / dedup
+templates/         Jinja2 page templates (autoescaped)
+static/
+  css/site.css     all site styling
+  js/              site.js (every page), one file per page, motion.js
 config/
   approved_sources.yaml        allowlist -- unlisted domains cannot run
                                (currently: CPPP, data.gov.in, MP)

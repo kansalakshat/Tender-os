@@ -9,6 +9,8 @@ pydantic>=2.9
 python-dotenv>=1.0
 selectolax>=0.3.21
 pyyaml>=6.0
+# Page templates (templates/). Autoescaped, so scraped titles cannot inject markup.
+jinja2>=3.1
 
 # Reading bid documents (app/bidpdf.py). Imported lazily, so a deploy without it
 # still serves; only enrichment stops.

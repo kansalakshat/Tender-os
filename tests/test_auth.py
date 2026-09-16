@@ -280,4 +280,5 @@ def test_edit_page_is_reachable_and_prefills_from_me(client):
     client.post("/companies", json=PROFILE)
     html = client.get("/profile").text
     assert "Edit your answers" in html
-    assert "fetch('/me')" in html
+    from tests.conftest import page_scripts
+    assert any("fetch('/me')" in js for js in page_scripts(html))

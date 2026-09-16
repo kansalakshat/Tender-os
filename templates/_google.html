@@ -1,0 +1,4 @@
+{#- Rendered only when GOOGLE_CLIENT_ID/SECRET are set. An always-visible button
+    that 404s is worse than no button, so unconfigured means absent, not broken. -#}
+{% if google_configured %}<p><a class="btn ghost" href="/auth/google">Continue with Google</a></p>
+<p class=divider>or {{ alternative }}</p>{% endif %}

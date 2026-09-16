@@ -1,0 +1,43 @@
+{#- Pieces shared by several pages. Everything printed here is autoescaped:
+    titles and buyer names come off scraped pages and go straight into HTML. -#}
+
+{#- Second meta line on a tender row: tender ID, publication date and the buyer's
+    office. Department is skipped when it only repeats the buyer, which is every
+    CPPP row. Mirrored by extra() in static/js/site.js for rows that arrive as JSON. -#}
+{% macro extra_line(t) -%}
+{%- set dept = t.department and t.department != t.organization -%}
+{%- if t.external_ref or t.published_date or dept -%}
+<p class='m x'>
+{%- if t.external_ref %}ID {{ t.external_ref }}{% endif %}
+{%- if t.published_date %}{% if t.external_ref %} &middot; {% endif %}published <time datetime='{{ t.published_date }}'>{{ t.published_date }}</time>{% endif %}
+{%- if dept %}{% if t.external_ref or t.published_date %} &middot; {% endif %}{{ t.department }}{% endif -%}
+</p>
+{%- endif -%}
+{%- endmacro %}
+
+{#- One list row. The title opens our own page rather than the source portal:
+    eprocure.gov.in serves "Invalid Url" for any tendersfullview link that arrives
+    without a Referer from its own domain, so linking out directly was a dead end
+    on every row. -#}
+{% macro row(gutter, rank, t, tags=(), summary=false) -%}
+<li class="row {{ rank }}"><div class=n>{{ gutter }}</div><div>
+{{- '' }}<a class=t href="/t/{{ t.id }}">{{ t.title }}</a>
+{%- if summary %}<p class=rowsum>{{ summary_for(t) }}</p>{% endif -%}
+<p class=m>{{ t.organization or 'unnamed buyer' }} &middot; closes <time datetime='{{ t.deadline }}'>{{ t.deadline }}</time></p>
+{{- extra_line(t) -}}
+{%- if tags %}<ul class=tags>{% for tag in tags %}<li class=tag>{{ tag }}</li>{% endfor %}</ul>{% endif -%}
+</div></li>
+{%- endmacro %}
+
+{#- A pulsing placeholder row, for lists that are still loading. -#}
+{% macro skeleton_row(cls="row") -%}
+<li class="{{ cls }}"><div class=n><div class="b g"></div></div>
+  <div><div class=b></div><div class="b s"></div></div></li>
+{%- endmacro %}
+
+{#- Buyers, numbered like an index. Each links to a filter GET /tenders supports. -#}
+{% macro buyer_grid(buyers) -%}
+<ul class=buyerGrid>
+{%- for name, n in buyers %}<li class=reveal><a href="/browse?organization={{ name|urlquote }}"><span>{{ name }}</span><b>{{ n|num }}</b></a></li>{% endfor -%}
+</ul>
+{%- endmacro %}

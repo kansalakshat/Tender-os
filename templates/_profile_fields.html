@@ -1,0 +1,153 @@
+{#- The questionnaire, asked once. Used by both signup and the edit page, so the
+    two can never drift apart. No <form>, no submit button, no script: the pages
+    that include this supply their own, because signup has to create the account
+    first and editing does not.
+
+    Every question carries its own Clear button, and the multi-value questions are
+    checkbox lists rather than <select multiple>: a native multi-select needs
+    Ctrl-click to add a second value, which is the single most common way people
+    lose answers on a form like this. -#}
+<fieldset><legend>What you do</legend>
+
+<div class=f>
+ <div class=fhead><label for=f_name>Company name (required)</label>
+  <button type=button class=clearbtn data-action=clear data-clear=name>Clear</button></div>
+ <input id=f_name name=name required autocomplete=organization>
+</div>
+
+<div class=f>
+ <div class=fhead><span class=flabel>Sectors you work in (required)</span>
+  <button type=button class=clearbtn data-action=clear data-clear=sectors>Clear</button></div>
+ <div class=checks>{% for key, label in sectors %}<label><input type=checkbox name=sectors value="{{ key }}"><span>{{ label }}</span></label>{% endfor %}</div>
+</div>
+
+<div class=f>
+ <div class=fhead><label for=f_keywords>Keywords, comma separated</label>
+  <button type=button class=clearbtn data-action=clear data-clear=keywords>Clear</button></div>
+ <input id=f_keywords name=keywords autocomplete=off spellcheck=false
+    placeholder="e.g. transformer, cable&hellip;">
+ <p class=fhint>A keyword must appear in the tender title as a whole word.</p>
+</div>
+</fieldset>
+
+<fieldset><legend>Where you work</legend>
+
+<div class=f>
+ <div class=fhead><span class=flabel>States and UTs</span>
+  <button type=button class=clearbtn data-action=clear data-clear=states>Clear</button></div>
+ <div class=multi>
+  <input class=multifilter type=search autocomplete=off
+     aria-label="Filter states" placeholder="Filter states&hellip;">
+  <div class=multilist>{% for st in states %}<label><input type=checkbox name=states value="{{ st }}"><span>{{ st }}</span></label>{% endfor %}</div>
+ </div>
+ <p class=fhint>Click as many as you like. No need to hold Ctrl.</p>
+</div>
+
+<div class=f id=districtField hidden>
+ <div class=fhead><span class=flabel>Districts</span>
+  <button type=button class=clearbtn data-action=clear data-clear=districts>Clear</button></div>
+ <div class=multi>
+  <input class=multifilter type=search autocomplete=off
+     aria-label="Filter districts" placeholder="Filter districts&hellip;">
+  <div class=multilist>{#- One group per state; syncDistricts() shows the groups for ticked states. -#}
+{% for st, ds in districts %}<div class=dgroup data-state="{{ st }}" hidden><p class=dstate>{{ st }}</p>{% for dname in ds %}<label><input type=checkbox name=districts value="{{ dname }}"><span>{{ dname }}</span></label>{% endfor %}</div>{% endfor %}</div>
+ </div>
+ <p class=fhint>Districts of every state you pick appear here, grouped by
+    state.</p>
+</div>
+</fieldset>
+
+<fieldset><legend>Who you want to work with</legend>
+
+<div class=f>
+ <div class=fhead><span class=flabel>Buyers you want</span>
+  <button type=button class=clearbtn data-action=clear data-clear=buyers>Clear</button></div>
+ <div class=multi>
+  <input class=multifilter type=search autocomplete=off
+     aria-label="Filter buyers" placeholder="Filter buyers&hellip;">
+  <div class=multilist>{% for name, n in top_buyers %}<label><input type=checkbox name=buyers value="{{ name }}"><span>{{ name }}</span><b>{{ n|num }}</b></label>{% endfor %}</div>
+ </div>
+</div>
+
+<div class=f>
+ <div class=fhead><span class=flabel>Buyers to never show</span>
+  <button type=button class=clearbtn data-action=clear data-clear=exclude_buyers>Clear</button></div>
+ <div class=multi>
+  <input class=multifilter type=search autocomplete=off
+     aria-label="Filter buyers to exclude" placeholder="Filter buyers&hellip;">
+  <div class=multilist>{% for name, n in top_buyers %}<label><input type=checkbox name=exclude_buyers value="{{ name }}"><span>{{ name }}</span><b>{{ n|num }}</b></label>{% endfor %}</div>
+ </div>
+ <p class=fhint>Excluding a buyer removes its tenders entirely. One buyer alone is
+    over half the corpus, so this is the fastest way to cut noise.</p>
+</div>
+</fieldset>
+
+<fieldset><legend>What to rule out</legend>
+
+<div class=f>
+ <div class=fhead><label for=f_xkw>Never show tenders whose title contains</label>
+  <button type=button class=clearbtn data-action=clear data-clear=exclude_keywords>Clear</button></div>
+ <input id=f_xkw name=exclude_keywords autocomplete=off spellcheck=false
+    placeholder="e.g. scrap, auction&hellip;">
+</div>
+
+<div class=f>
+ <div class=fhead><label for=f_lead>Days you need to prepare a bid</label>
+  <button type=button class=clearbtn data-action=clear data-clear=min_lead_days>Clear</button></div>
+ <input id=f_lead name=min_lead_days autocomplete=off type=number value=7 min=0 max=365>
+</div>
+
+<div class=f>
+ <div class=fhead><label for=f_val>Max project value you can execute, INR</label>
+  <button type=button class=clearbtn data-action=clear data-clear=max_project_value>Clear</button></div>
+ <input id=f_val name=max_project_value autocomplete=off type=number min=0>
+ <p class=fhint>Value is not published on any listing page we are allowed to read,
+    so this answer has no effect yet. It starts working when detail-page ingest
+    lands.</p>
+</div>
+</fieldset>
+
+<fieldset><legend>Eligibility</legend>
+<p class=fhint>Optional. Tenders often ask for past work, turnover and
+   registrations. Each tender page checks your answers against its typical
+   criteria. Nothing is hidden because of them.</p>
+
+<div class=f>
+ <div class=fhead><label for=f_years>Years in business</label>
+  <button type=button class=clearbtn data-action=clear data-clear=years_in_business>Clear</button></div>
+ <input id=f_years name=years_in_business autocomplete=off type=number min=0 max=200>
+</div>
+
+<div class=f>
+ <div class=fhead><label for=f_turn>Average annual turnover, last 3 years, INR</label>
+  <button type=button class=clearbtn data-action=clear data-clear=annual_turnover>Clear</button></div>
+ <input id=f_turn name=annual_turnover autocomplete=off type=number min=0>
+</div>
+
+<div class=f>
+ <div class=fhead><label for=f_similar>Largest similar work completed in the last 7 years, INR</label>
+  <button type=button class=clearbtn data-action=clear data-clear=largest_similar_work>Clear</button></div>
+ <input id=f_similar name=largest_similar_work autocomplete=off type=number min=0>
+</div>
+
+<div class=f>
+ <div class=fhead><label for=f_cap>How much work can you run at once, INR</label>
+  <button type=button class=clearbtn data-action=clear data-clear=bid_capacity>Clear</button></div>
+ <input id=f_cap name=bid_capacity autocomplete=off type=number min=0>
+ <p class=hint>Checked against each tender's estimated value.</p>
+</div>
+
+<div class=f>
+ <div class=fhead><label for=f_emd>How much can you tie up in EMD at once, INR</label>
+  <button type=button class=clearbtn data-action=clear data-clear=emd_budget>Clear</button></div>
+ <input id=f_emd name=emd_budget autocomplete=off type=number min=0>
+ <p class=hint>Bid security is refunded, but it is locked up until the bid is
+ decided. Udyam and DPIIT holders are usually exempt.</p>
+</div>
+
+<div class=f>
+ <div class=fhead><span class=flabel>Registrations you hold</span>
+  <button type=button class=clearbtn data-action=clear data-clear=registrations>Clear</button></div>
+ <div class=checks>{% for key, label in registrations %}<label><input type=checkbox name=registrations value="{{ key }}"><span>{{ label }}</span></label>{% endfor %}</div>
+</div>
+</fieldset>

@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% from "_macros.html" import row, buyer_grid %}
+{#- The home page for someone who has answered the questions. Everything on it is
+    their own result set: the notices closing soonest are their matches re-sorted
+    by deadline, and the buyer index counts only buyers in those matches. #}
+{% block hero %}<section class=hero><div class=wrap><div class=heroTop>
+<div>
+ <p class=eyebrow><span class=badge>AI Smart Bidding</span>
+ Signed in as {{ company.name }}{% if last %} &middot; collected {{ last.strftime('%d %b') }}{% endif %}</p>
+ <h1>Tenders that<br>fit {{ short }}</h1>
+</div>
+ <p class=bignum><b>{{ d.total|num }}</b><em>Matches for you</em></p>
+</div>
+<div class=heroCopy>
+ <p class=lede>AI-scored against the answers you gave.
+ {% if n_soon %}{{ n_soon|num }} of them close within seven days.{% else %}None of them close in the next seven days.{% endif %} Drawn from
+ <b>{{ n_open|num }}</b> tenders tracked across {{ n_sources }} official portals.</p>
+ <div>
+  <form class=search action="/browse" method=get>
+   <label class=sr for=hq>Search tender titles</label>
+   <input id=hq name=q autocomplete=off spellcheck=false
+      placeholder="Search all {{ n_open|num }} notices&hellip;">
+   <button>{{ icon('magnifying-glass') }}Search</button>
+  </form>
+  <p class=hint>Not the right things? <a class=nowrap href="/profile">Edit your
+  answers{{ icon('arrow-up-right') }}</a></p>
+ </div>
+</div>
+<dl class="stats big">
+ <div><dt>Tenders tracked</dt><dd>{{ n_open|num }}</dd></div>
+ <div><dt>Closing this week</dt><dd>{{ c_soon|num }}</dd></div>
+ <div class=mine><dt>Matched to you</dt><dd>{{ d.total|num }}</dd></div>
+ <div class=mine><dt>Yours closing in 7 days</dt><dd>{{ n_soon|num }}</dd></div>
+</dl>
+</div></section>{% endblock %}
+
+{% block body %}<section class=sec><div class=wrap>
+<div class="secHead reveal">
+ <h2>Closing soonest for you</h2>
+ <p class=kicker>{{ n_soon|num }} of your matches close within seven days</p>
+</div>
+{% if soon %}<div class="panel reveal"><h2><span class=lbl>{{ icon('clock-countdown') }}Your matches, by deadline</span><span>{{ d.total|num }} scored</span></h2><ol class=rows>
+{%- for t, score, check in soon -%}
+{%- set gutter, rank = days_left(t.deadline, today) -%}
+{{ row(gutter, rank, t, ["Score %d"|format(score)] + (["check eligibility"] if check else [])) }}
+{%- endfor -%}
+</ol><a class=more href="/matches">See all your matches{{ icon('arrow-right') }}</a></div>
+{%- else %}<div class="empty reveal"><p>Nothing matches your answers yet. Broaden the sectors, drop a state, or lower the preparation days on your <a href="/profile">answers</a>.</p></div>{% endif %}
+</div></section>
+
+<section class=sec><div class=wrap>
+<div class="secHead reveal">
+ <h2>Who is buying</h2>
+ <p class=kicker>The buyers behind your matches</p>
+</div>
+<p class="hint reveal">Counted across your matches only, not the whole corpus.</p>
+{{ buyer_grid(buyers) }}
+</div></section>{% include "_caps.html" %}{% endblock %}

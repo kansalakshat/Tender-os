@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{#- Edit the answers given at signup. Signed out, this is the no-account preview. #}
+{% block content %}<h1>{{ heading }}</h1>
+<p class=lede id=savehint>{{ hint }}</p>
+<form id=f>
+{% include "_profile_fields.html" %}
+<fieldset><legend>Contact</legend>
+<label class=f><span>Contact email</span>
+   <input name=contact_email type=email autocomplete=email spellcheck=false></label>
+</fieldset>
+<p class=actions><button>Save and show my matches</button></p>
+</form>
+<pre id=err role=alert></pre>
+<div id=preview></div>
+<script src="{{ asset('js/profile-form.js') }}"></script>
+<script src="{{ asset('js/profile.js') }}"></script>{% endblock %}
