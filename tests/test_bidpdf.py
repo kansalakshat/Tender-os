@@ -36,6 +36,25 @@ def test_contact_details_never_survive_extraction():
         assert "@" not in str(value)
 
 
+def test_item_list_stops_before_gem_search_dump_and_criteria():
+    """Regression: 11k GeM titles ran on into "GeMARPTS - . / - . / / Searched
+    Strings used in GeMARPTS ..." and the turnover/experience criteria."""
+    flat = _clean(
+        "/Item Category Water Tight hatch 9 GeMARPTS - . / - . / / Searched Strings "
+        "used in GeMARPTS BOLTED HATCHEs GeMARPTS 0 0 / Searched Result generated in "
+        "GeMARPTS Metal Pole / Relevant Categories selected for notification Bolt"
+    )
+    assert _field(flat, "Item Category") == "Water Tight hatch 9"
+    flat = _clean(
+        "/Item Category Guidewires V2 Q2 % % % % 3 3 1 1 /Minimum Average Annual "
+        "Turnover of the bidder For 3 Years 1 Lakh s % % % % 3 3 1 1 /OEM Average "
+        "Turnover Last 3 Years 6 Lakh s"
+    )
+    assert _field(flat, "Item Category") == "Guidewires V2 Q2"
+    flat = _clean("/Item Category Safes V3 Q2 + + / / ./ ./ % % /Years of Past Experience 3")
+    assert _field(flat, "Item Category") == "Safes V3 Q2"
+
+
 def test_clean_drops_control_characters_and_bracket_runs():
     assert _clean("Damodar\x01Valley [ [ ( ( Corporation") == "Damodar Valley Corporation"
 
