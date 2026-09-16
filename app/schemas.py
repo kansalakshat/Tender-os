@@ -164,6 +164,8 @@ class CompanyIn(BaseModel):
     years_in_business: int | None = Field(None, ge=0, le=200)
     annual_turnover: Decimal | None = Field(None, ge=0)
     largest_similar_work: Decimal | None = Field(None, ge=0)
+    bid_capacity: Decimal | None = Field(None, ge=0)
+    emd_budget: Decimal | None = Field(None, ge=0)
     registrations: list[str] = Field(default_factory=list)
 
     @field_validator("registrations")
@@ -274,6 +276,8 @@ class CompanyOut(BaseModel):
     years_in_business: int | None
     annual_turnover: Decimal | None
     largest_similar_work: Decimal | None
+    bid_capacity: Decimal | None
+    emd_budget: Decimal | None
     registrations: list[str] | None
     created_at: datetime | None
     updated_at: datetime | None

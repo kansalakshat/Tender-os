@@ -70,8 +70,91 @@ def is_duplicate(a: Tender, b: Tender) -> bool:
     )
 
 
+def survivor(a: Tender, b: Tender) -> tuple[Tender, Tender]:
+    """(keep, hide) for two rows that are the same notice on different portals.
+
+    A row whose document can actually be downloaded wins, whatever its age. The
+    same tender appears on CPPP and on GeM; CPPP gates its detail page behind a
+    CAPTCHA and so carries no document, while GeM serves the bid PDF to an
+    ordinary GET. Keeping the older row (which is usually CPPP, ingested first)
+    would hide the only copy a user can actually open.
+
+    Age breaks the tie, so the result is stable when neither has a document.
+    """
+    if bool(a.document_url) != bool(b.document_url):
+        return (a, b) if a.document_url else (b, a)
+    return (a, b) if a.id < b.id else (b, a)
+
+
+def _root(row: Tender, by_id: dict[int, Tender]) -> int:
+    """Follow a duplicate_of chain to the surviving row, so nothing points at a
+    row that is itself hidden. Guards against a cycle rather than trusting one
+    cannot form."""
+    seen: set[int] = set()
+    while row.duplicate_of is not None and row.duplicate_of not in seen:
+        seen.add(row.duplicate_of)
+        nxt = by_id.get(row.duplicate_of)
+        if nxt is None:
+            break
+        row = nxt
+    return row.id
+
+
+# Titles at or above TITLE_THRESHOLD necessarily share words, so a row only has
+# to be compared with rows that share one. Without this the scan is every pair in
+# a deadline bucket: at 26,330 rows in the window that is ~65 million
+# SequenceMatcher calls, which timed out at fifteen minutes and left the
+# scheduled dedup job unable to finish.
+#
+# This narrows the candidate set only. Any pair the old scan would have linked is
+# still compared, because a pair sharing no word cannot reach 0.88.
+_INDEX_CACHE: dict[int, dict[str, list[Tender]]] = {}
+
+
+def _tokens(row: Tender) -> set[str]:
+    return set(_canon(row.title).split())
+
+
+def _index(bucket: list[Tender]) -> dict[str, list[Tender]]:
+    """word -> rows in this bucket containing it. Built once per bucket."""
+    key = id(bucket)
+    hit = _INDEX_CACHE.get(key)
+    if hit is not None:
+        return hit
+    idx: dict[str, list[Tender]] = {}
+    for row in bucket:
+        for tok in _tokens(row):
+            idx.setdefault(tok, []).append(row)
+    _INDEX_CACHE[key] = idx
+    return idx
+
+
+def _candidates(row: Tender, buckets: dict[object, list[Tender]],
+                undated: list[Tender]) -> list[Tender]:
+    """Rows worth comparing with `row`: same deadline bucket, sharing a word."""
+    same = buckets.get(row.deadline, [])
+    pool: list[Tender] = []
+    seen: set[int] = set()
+    words = _tokens(row)
+    for bucket in (same, undated) if row.deadline is not None else (same,):
+        if not bucket:
+            continue
+        idx = _index(bucket)
+        for tok in words:
+            for other in idx.get(tok, ()):
+                if other.id not in seen:
+                    seen.add(other.id)
+                    pool.append(other)
+    return pool
+
+
 def link_duplicates(db: Session | None = None, window_days: int = 120) -> int:
-    """Point each duplicate at the oldest matching row. Returns links created.
+    """Point each duplicate at its surviving twin. Returns links created.
+
+    Which row survives is survivor()'s call, not id order: the downloadable copy
+    wins. Hiding is done with duplicate_of, never a DELETE -- every listing,
+    search and match query already filters duplicate_of IS NULL, so a hidden row
+    vanishes from the product while staying auditable and reachable by URL.
 
     ponytail: O(n^2) within a deadline bucket. Buckets keep that tolerable at the
     tens-of-thousands scale we are at; if it stops being tolerable, block on a
@@ -81,6 +164,7 @@ def link_duplicates(db: Session | None = None, window_days: int = 120) -> int:
     db = db or SessionLocal()
     linked = 0
     try:
+        _INDEX_CACHE.clear()
         cutoff = date.today() - timedelta(days=window_days)
         rows = list(
             db.execute(
@@ -98,18 +182,29 @@ def link_duplicates(db: Session | None = None, window_days: int = 120) -> int:
         # A row with no deadline can pair with any bucket, so it is always a candidate.
         undated = buckets.get(None, [])
         for row in rows:
-            candidates = buckets.get(row.deadline, [])
-            if row.deadline is not None:
-                candidates = candidates + undated
+            candidates = _candidates(row, buckets, undated)
+            if row.duplicate_of is not None:
+                continue  # already hidden by an earlier pairing
             for other in candidates:
-                # Link the newer row to the older one; same-source repeats are
-                # already handled by the (source_id, external_ref) unique key.
-                if other.id >= row.id or other.source_id == row.source_id:
+                # same-source repeats are already handled by the
+                # (source_id, external_ref) unique key.
+                if other.id == row.id or other.source_id == row.source_id:
+                    continue
+                if other.duplicate_of is not None:
                     continue
                 if is_duplicate(row, other):
-                    row.duplicate_of = other.duplicate_of or other.id
+                    keep, hide = survivor(row, other)
+                    hide.duplicate_of = keep.id
                     linked += 1
-                    break
+                    if hide is row:
+                        break
+        # Collapse any chain so a visible row never points at a hidden one.
+        by_id = {r.id: r for r in rows}
+        for row in rows:
+            if row.duplicate_of is not None:
+                root = _root(row, by_id)
+                if root != row.id:
+                    row.duplicate_of = root
         db.commit()
         log.info("dedup: linked %d duplicate tenders", linked)
     finally:

@@ -52,6 +52,16 @@ class Item:
     from_tender: bool = False  # grounded in this tender's data, not a general norm
 
 
+def _decimal(value) -> Decimal | None:
+    """raw_payload holds JSON, so a money field arrives as float, int or str."""
+    if value is None or isinstance(value, bool):
+        return None
+    try:
+        return Decimal(str(value))
+    except (ArithmeticError, ValueError):
+        return None
+
+
 def _inr(v: Decimal) -> str:
     return f"INR {v:,.0f}"
 
@@ -118,6 +128,62 @@ def checklist(tender, company=None) -> list[Item]:
         + (f" Yours: {years} years." if years is not None else
            " Add it to your profile."),
     ))
+    # These three read fields that only exist once app/enrich.py has been over the
+    # tender: the listing publishes neither the EMD nor the contract period, so
+    # before enrichment there was nothing here to check.
+    raw = getattr(tender, "raw_payload", None)
+    raw = raw if isinstance(raw, dict) else {}
+
+    emd = _decimal(raw.get("emd_amount"))
+    if emd is not None:
+        exempt = bool(regs & {"mse", "startup"})
+        budget = _decimal(getattr(company, "emd_budget", None))
+        if exempt:
+            detail = (f"This tender asks for {_inr(emd)} as EMD. Your Udyam/DPIIT "
+                      "registration normally exempts you -- claim the exemption in "
+                      "the bid rather than paying it.")
+            ok = True
+        elif budget is not None:
+            ok = budget >= emd
+            detail = (f"This tender asks for {_inr(emd)}, locked up until the bid is "
+                      f"decided. Your EMD budget: {_inr(budget)}."
+                      + ("" if ok else " This one would exceed it."))
+        else:
+            ok = False
+            detail = (f"This tender asks for {_inr(emd)} as EMD, payable up front and "
+                      "refunded after the bid is decided. Add your EMD budget to your "
+                      "profile to see whether it fits.")
+        items.append(Item(ok, "Earnest money deposit", detail, True))
+
+    capacity = _decimal(getattr(company, "bid_capacity", None))
+    if value is not None:
+        if capacity is not None:
+            fits = capacity >= Decimal(value)
+            items.append(Item(
+                fits, "Fits your bid capacity",
+                f"This tender is worth {_inr(Decimal(value))}. You can carry "
+                f"{_inr(capacity)} of work at once."
+                + ("" if fits else " This one alone is more than that."), True))
+        else:
+            items.append(Item(
+                False, "Fits your bid capacity",
+                f"This tender is worth {_inr(Decimal(value))}. Add how much work you "
+                "can run at once to your profile to see whether it fits.", True))
+
+    period = (raw.get("contract_period") or "").strip()
+    if period:
+        items.append(Item(
+            True, "Contract period",
+            f"Runs {period} from award. Check you can staff it for that long "
+            "alongside your current work.", True))
+
+    quantity = raw.get("quantity")
+    if quantity and str(quantity).isdigit() and int(quantity) > 1:
+        items.append(Item(
+            True, "Quantity", f"{int(quantity):,} units in one order. Confirm you "
+            "can supply the full quantity; most tenders do not allow part bids.",
+            True))
+
     if regs & {"mse", "startup"}:
         items.append(Item(True, "MSE or startup benefits",
                           "Registered MSEs are usually exempt from EMD (bid security), "

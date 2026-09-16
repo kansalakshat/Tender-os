@@ -1,0 +1,100 @@
+[
+  {
+    "domain": "mahatenders.gov.in",
+    "state": "Maharashtra",
+    "robots": "robots.txt disallows /nicgep/app",
+    "verdict": "robots-disallowed",
+    "detail": "robots.txt disallows /nicgep/app",
+    "rows": 0
+  },
+  {
+    "domain": "wbtenders.gov.in",
+    "state": "West Bengal",
+    "robots": "allowed",
+    "verdict": "PASS",
+    "detail": "parsed 10 rows server-side (CAPTCHA present but only on the search form)",
+    "rows": 10,
+    "captcha_on_page": true,
+    "sample": "SATURATION OF SEPARATE GIRLS TOILET FACILITY AT PALASHI P.S. UNDER INDAS EASTCIRCLE(UDISE "
+  },
+  {
+    "domain": "tntenders.gov.in",
+    "state": "Tamil Nadu",
+    "robots": "allowed",
+    "verdict": "PASS",
+    "detail": "parsed 10 rows server-side (CAPTCHA present but only on the search form)",
+    "rows": 10,
+    "captcha_on_page": true,
+    "sample": "leasing of fishery rights of t.palayam periya eri, Kurinjipadi Taluk  Cuddalore district."
+  },
+  {
+    "domain": "etenders.kerala.gov.in",
+    "state": "Kerala",
+    "robots": "allowed",
+    "verdict": "PASS",
+    "detail": "parsed 10 rows server-side (CAPTCHA present but only on the search form)",
+    "rows": 10,
+    "captcha_on_page": true,
+    "sample": "MIUP School Compound Wall Renovation"
+  },
+  {
+    "domain": "assamtenders.gov.in",
+    "state": "Assam",
+    "robots": "allowed",
+    "verdict": "PASS",
+    "detail": "parsed 10 rows server-side (CAPTCHA present but only on the search form)",
+    "rows": 10,
+    "captcha_on_page": true,
+    "sample": "Supply of 220/132/33kV, 200MVA Auto Transformers and Related Services for Tinsukia Substat"
+  },
+  {
+    "domain": "etenders.hry.nic.in",
+    "state": "Haryana",
+    "robots": "allowed",
+    "verdict": "PASS",
+    "detail": "parsed 10 rows server-side (CAPTCHA present but only on the search form)",
+    "rows": 10,
+    "captcha_on_page": true,
+    "sample": "Purchasing of 01 No. Riding Lawn Mower for Ward No. 21 in Municipal Corporation Panipat re"
+  },
+  {
+    "domain": "eproc.punjab.gov.in",
+    "state": "Punjab",
+    "robots": "allowed",
+    "verdict": "PASS",
+    "detail": "parsed 10 rows server-side (CAPTCHA present but only on the search form)",
+    "rows": 10,
+    "captcha_on_page": true,
+    "sample": "Estimate for Lining/Relining by laying UGPL of w/c of O/L RD  64670-L of Budhlada Br. of S"
+  },
+  {
+    "domain": "etender.up.nic.in",
+    "state": "Uttar Pradesh",
+    "robots": "allowed",
+    "verdict": "PASS",
+    "detail": "parsed 10 rows server-side (CAPTCHA present but only on the search form)",
+    "rows": 10,
+    "captcha_on_page": true,
+    "sample": "COMPETATIVE e-Bidding for Replacement of Worn Out 6 inches Pipelines"
+  },
+  {
+    "domain": "uktenders.gov.in",
+    "state": "Uttarakhand",
+    "robots": "allowed",
+    "verdict": "PASS",
+    "detail": "parsed 10 rows server-side (CAPTCHA present but only on the search form)",
+    "rows": 10,
+    "captcha_on_page": true,
+    "sample": "Procurement of Flexible Braided Copper Connector for Generator Transformers at  Dharasu Po"
+  },
+  {
+    "domain": "manipurtenders.gov.in",
+    "state": "Manipur",
+    "robots": "allowed",
+    "verdict": "PASS",
+    "detail": "parsed 2 rows server-side (CAPTCHA present but only on the search form)",
+    "rows": 2,
+    "captcha_on_page": true,
+    "sample": "Allotment of Office Space to IT and ITeS Companies at Manipur IT SEZ Building 1, Mantripuk"
+  }
+]

@@ -2,6 +2,7 @@
 import httpx
 import pytest
 
+from app import compliance
 from app.compliance import BlockedSourceError, assert_not_blocked, host_is_blocked, user_agent
 from app.connectors import REGISTRY
 from app.connectors.base import BaseConnector
@@ -41,34 +42,48 @@ def robots_responder(body: str, status: int = 200):
     return handler
 
 
-# ---- rule #1: GeM is permanently off-limits ----
+# ---- rule #1: the blocklist mechanism ----
+#
+# BLOCKED_HOSTS is empty as of 2026-09-16: gem.gov.in was removed after its stated
+# justification ("GeM's robots.txt disallows automated access") was checked against
+# the live file and found false. These tests therefore exercise the machinery with a
+# stand-in host, so it stays trustworthy for whatever gets added next, and separately
+# pin down what GeM is actually allowed to do now.
+
+BLOCKED = "blocked.example.gov.in"
+
+
+@pytest.fixture
+def blocklisted(monkeypatch):
+    monkeypatch.setattr(compliance, "BLOCKED_HOSTS", (BLOCKED,))
+    return BLOCKED
+
 
 @pytest.mark.parametrize(
     "url",
     [
-        "https://gem.gov.in/",
-        "https://bidplus.gem.gov.in/bidlists",
-        "http://GEM.GOV.IN/x",
-        "https://mkp.gem.gov.in/api",
+        f"https://{BLOCKED}/",
+        f"https://sub.{BLOCKED}/path",
+        f"http://{BLOCKED.upper()}/x",
     ],
 )
-def test_gem_hosts_are_blocked(url):
+def test_blocked_hosts_and_their_subdomains_are_refused(url, blocklisted):
     assert host_is_blocked(url)
     with pytest.raises(BlockedSourceError):
         assert_not_blocked(url)
 
 
-def test_lookalike_hosts_are_not_over_blocked():
-    # We block gem.gov.in and its subdomains, not any string containing "gem".
+def test_lookalike_hosts_are_not_over_blocked(blocklisted):
+    # Subdomains of the blocked host, not any string that merely contains it.
     assert not host_is_blocked("https://eprocure.gov.in/x")
-    assert not host_is_blocked("https://gem.gov.in.evil.example.com/x")
+    assert not host_is_blocked(f"https://{BLOCKED}.evil.example.com/x")
 
 
-def test_declaring_a_gem_connector_raises_at_import_time():
+def test_declaring_a_connector_for_a_blocked_host_raises_at_import_time(blocklisted):
     with pytest.raises(BlockedSourceError):
-        class GemConnector(BaseConnector):  # noqa: F811
-            source_name = "gem"
-            base_url = "https://bidplus.gem.gov.in"
+        class Blocked(BaseConnector):  # noqa: F811
+            source_name = "blocked"
+            base_url = f"https://{BLOCKED}"
 
             def fetch_batch(self, since):
                 yield {}
@@ -77,21 +92,21 @@ def test_declaring_a_gem_connector_raises_at_import_time():
                 raise NotImplementedError
 
 
-def test_no_gem_connector_is_registered():
+def test_no_registered_connector_points_at_a_blocked_host():
     assert not any(host_is_blocked(c.base_url) for c in REGISTRY.values())
 
 
-def test_requests_to_blocked_hosts_are_refused():
+def test_requests_to_blocked_hosts_are_refused(blocklisted):
     conn = DummyConnector(client=transport(robots_responder("")))
     with pytest.raises(BlockedSourceError):
-        conn.get("https://bidplus.gem.gov.in/bidlists")
+        conn.get(f"https://{BLOCKED}/anything")
 
 
-def test_redirect_to_blocked_host_is_refused():
-    """A source cannot launder a GeM request through a redirect."""
+def test_redirect_to_blocked_host_is_refused(blocklisted):
+    """A source cannot launder a blocked request through a redirect."""
     def handler(request):
         if request.url.host == "example.gov.in":
-            return httpx.Response(302, headers={"Location": "https://gem.gov.in/data"})
+            return httpx.Response(302, headers={"Location": f"https://{BLOCKED}/data"})
         return httpx.Response(200, text="should never get here")
 
     from app.connectors.base import _block_gem
@@ -103,6 +118,34 @@ def test_redirect_to_blocked_host_is_refused():
     conn = DummyConnector(client=client)
     with pytest.raises(BlockedSourceError):
         conn.get("https://example.gov.in/anything")
+
+
+def test_gem_is_no_longer_blocked():
+    """The ban is gone, deliberately -- not by accident. See app/compliance.py."""
+    assert compliance.BLOCKED_HOSTS == ()
+    assert not host_is_blocked("https://bidplus.gem.gov.in/all-bids")
+    assert_not_blocked("https://bidplus.gem.gov.in/showbidDocument/1")
+
+
+def test_gem_connector_reads_only_robots_permitted_paths():
+    """robots.txt disallows /resources/ and three /bg_emd/ endpoints. Stay out."""
+    from urllib.robotparser import RobotFileParser
+    from app.connectors.gem import GeMConnector
+
+    robots = RobotFileParser()
+    robots.parse(
+        [
+            "User-agent: *",
+            "Disallow: /resources/",
+            "Disallow: /bg_emd/epbgservice/CallBG_Performance_Status",
+            "Disallow: /bg_emd/epbgservice/PBGIntimation",
+            "Disallow: /bg_emd/epbgservice/AddSellerIssuinginfo",
+        ]
+    )
+    for path in GeMConnector.paths:
+        assert robots.can_fetch("*", path), f"{path} is disallowed by robots.txt"
+    assert not robots.can_fetch("*", "/resources/x")
+    assert not robots.can_fetch("*", "/bg_emd/epbgservice/PBGIntimation")
 
 
 # ---- rule #2: robots.txt is checked before the first request ----

@@ -8,8 +8,9 @@
 #      If one does, the source is out -- we do not solve, bypass, or evade (rule #3).
 #   5. Record the licence and who verified it, below.
 #
-# GeM (gem.gov.in and subdomains) must NEVER be added. It is blocked in code
-# (app/compliance.py BLOCKED_HOSTS) and an entry here will not override that.
+# GeM was previously banned outright here. That ban rested on a claim about its
+# robots.txt that was checked on 2026-09-16 and found false; see the BLOCKED_HOSTS
+# comment in app/compliance.py for the live file and what it actually permits.
 
 sources:
   - domain: api.data.gov.in
@@ -89,3 +90,284 @@ sources:
       carries the same NIC dissemination wording with no automated-access
       restriction. FrontEndListTendersbyDate parsed 10 rows server-side on probe;
       CAPTCHA is on the search form only, not over the listing table.
+
+  - domain: wbtenders.gov.in
+    name: WB eProcurement
+    license: public-published
+    robots_verified_on: 2026-09-15
+    verified_by: operator-authorised (nirmaanos35@gmail.com), probed by probe_sources.py
+    paths: ["/nicgep/app"]
+    notes: >
+      West Bengal GePNIC instance (NIC). Verified through the project's own
+      compliance path: robots.txt fetched and evaluated by
+      BaseConnector.check_robots_allowed (allowed), then
+      FrontEndListTendersbyDate parsed 10 rows server-side. The CAPTCHA on
+      this portal sits on the SEARCH FORM only, not over the listing table --
+      the same arrangement already accepted for CPPP, mptenders and hptenders.
+      FrontEndLatestActiveTenders and FrontEndTendersByOrganisation remain
+      off-limits here as everywhere (rule #3).
+  - domain: tntenders.gov.in
+    name: TN eProcurement
+    license: public-published
+    robots_verified_on: 2026-09-15
+    verified_by: operator-authorised (nirmaanos35@gmail.com), probed by probe_sources.py
+    paths: ["/nicgep/app"]
+    notes: >
+      Tamil Nadu GePNIC instance (NIC). Verified through the project's own
+      compliance path: robots.txt fetched and evaluated by
+      BaseConnector.check_robots_allowed (allowed), then
+      FrontEndListTendersbyDate parsed 10 rows server-side. The CAPTCHA on
+      this portal sits on the SEARCH FORM only, not over the listing table --
+      the same arrangement already accepted for CPPP, mptenders and hptenders.
+      FrontEndLatestActiveTenders and FrontEndTendersByOrganisation remain
+      off-limits here as everywhere (rule #3).
+  - domain: etenders.kerala.gov.in
+    name: Kerala eProcurement
+    license: public-published
+    robots_verified_on: 2026-09-15
+    verified_by: operator-authorised (nirmaanos35@gmail.com), probed by probe_sources.py
+    paths: ["/nicgep/app"]
+    notes: >
+      Kerala GePNIC instance (NIC). Verified through the project's own
+      compliance path: robots.txt fetched and evaluated by
+      BaseConnector.check_robots_allowed (allowed), then
+      FrontEndListTendersbyDate parsed 10 rows server-side. The CAPTCHA on
+      this portal sits on the SEARCH FORM only, not over the listing table --
+      the same arrangement already accepted for CPPP, mptenders and hptenders.
+      FrontEndLatestActiveTenders and FrontEndTendersByOrganisation remain
+      off-limits here as everywhere (rule #3).
+  - domain: assamtenders.gov.in
+    name: Assam eProcurement
+    license: public-published
+    robots_verified_on: 2026-09-15
+    verified_by: operator-authorised (nirmaanos35@gmail.com), probed by probe_sources.py
+    paths: ["/nicgep/app"]
+    notes: >
+      Assam GePNIC instance (NIC). Verified through the project's own
+      compliance path: robots.txt fetched and evaluated by
+      BaseConnector.check_robots_allowed (allowed), then
+      FrontEndListTendersbyDate parsed 10 rows server-side. The CAPTCHA on
+      this portal sits on the SEARCH FORM only, not over the listing table --
+      the same arrangement already accepted for CPPP, mptenders and hptenders.
+      FrontEndLatestActiveTenders and FrontEndTendersByOrganisation remain
+      off-limits here as everywhere (rule #3).
+  - domain: etenders.hry.nic.in
+    name: Haryana eProcurement
+    license: public-published
+    robots_verified_on: 2026-09-15
+    verified_by: operator-authorised (nirmaanos35@gmail.com), probed by probe_sources.py
+    paths: ["/nicgep/app"]
+    notes: >
+      Haryana GePNIC instance (NIC). Verified through the project's own
+      compliance path: robots.txt fetched and evaluated by
+      BaseConnector.check_robots_allowed (allowed), then
+      FrontEndListTendersbyDate parsed 10 rows server-side. The CAPTCHA on
+      this portal sits on the SEARCH FORM only, not over the listing table --
+      the same arrangement already accepted for CPPP, mptenders and hptenders.
+      FrontEndLatestActiveTenders and FrontEndTendersByOrganisation remain
+      off-limits here as everywhere (rule #3).
+  - domain: eproc.punjab.gov.in
+    name: Punjab eProcurement
+    license: public-published
+    robots_verified_on: 2026-09-15
+    verified_by: operator-authorised (nirmaanos35@gmail.com), probed by probe_sources.py
+    paths: ["/nicgep/app"]
+    notes: >
+      Punjab GePNIC instance (NIC). Verified through the project's own
+      compliance path: robots.txt fetched and evaluated by
+      BaseConnector.check_robots_allowed (allowed), then
+      FrontEndListTendersbyDate parsed 10 rows server-side. The CAPTCHA on
+      this portal sits on the SEARCH FORM only, not over the listing table --
+      the same arrangement already accepted for CPPP, mptenders and hptenders.
+      FrontEndLatestActiveTenders and FrontEndTendersByOrganisation remain
+      off-limits here as everywhere (rule #3).
+  - domain: etender.up.nic.in
+    name: UP eProcurement
+    license: public-published
+    robots_verified_on: 2026-09-15
+    verified_by: operator-authorised (nirmaanos35@gmail.com), probed by probe_sources.py
+    paths: ["/nicgep/app"]
+    notes: >
+      Uttar Pradesh GePNIC instance (NIC). Verified through the project's own
+      compliance path: robots.txt fetched and evaluated by
+      BaseConnector.check_robots_allowed (allowed), then
+      FrontEndListTendersbyDate parsed 10 rows server-side. The CAPTCHA on
+      this portal sits on the SEARCH FORM only, not over the listing table --
+      the same arrangement already accepted for CPPP, mptenders and hptenders.
+      FrontEndLatestActiveTenders and FrontEndTendersByOrganisation remain
+      off-limits here as everywhere (rule #3).
+  - domain: uktenders.gov.in
+    name: Uttarakhand eProcurement
+    license: public-published
+    robots_verified_on: 2026-09-15
+    verified_by: operator-authorised (nirmaanos35@gmail.com), probed by probe_sources.py
+    paths: ["/nicgep/app"]
+    notes: >
+      Uttarakhand GePNIC instance (NIC). Verified through the project's own
+      compliance path: robots.txt fetched and evaluated by
+      BaseConnector.check_robots_allowed (allowed), then
+      FrontEndListTendersbyDate parsed 10 rows server-side. The CAPTCHA on
+      this portal sits on the SEARCH FORM only, not over the listing table --
+      the same arrangement already accepted for CPPP, mptenders and hptenders.
+      FrontEndLatestActiveTenders and FrontEndTendersByOrganisation remain
+      off-limits here as everywhere (rule #3).
+  - domain: manipurtenders.gov.in
+    name: Manipur eProcurement
+    license: public-published
+    robots_verified_on: 2026-09-15
+    verified_by: operator-authorised (nirmaanos35@gmail.com), probed by probe_sources.py
+    paths: ["/nicgep/app"]
+    notes: >
+      Manipur GePNIC instance (NIC). Verified through the project's own
+      compliance path: robots.txt fetched and evaluated by
+      BaseConnector.check_robots_allowed (allowed), then
+      FrontEndListTendersbyDate parsed 2 rows server-side. The CAPTCHA on
+      this portal sits on the SEARCH FORM only, not over the listing table --
+      the same arrangement already accepted for CPPP, mptenders and hptenders.
+      FrontEndLatestActiveTenders and FrontEndTendersByOrganisation remain
+      off-limits here as everywhere (rule #3).
+  - domain: tripuratenders.gov.in
+    name: Tripura eProcurement
+    license: public-published
+    robots_verified_on: 2026-09-15
+    verified_by: operator-authorised (nirmaanos35@gmail.com), probed by probe_sources.py
+    paths: ["/nicgep/app"]
+    notes: >
+      Tripura GePNIC instance (NIC). Verified through the project's own
+      compliance path: robots.txt fetched and evaluated by
+      BaseConnector.check_robots_allowed (allowed), then
+      FrontEndListTendersbyDate parsed 10 rows server-side. The CAPTCHA on
+      this portal sits on the SEARCH FORM only, not over the listing table --
+      the same arrangement already accepted for CPPP, mptenders and hptenders.
+      FrontEndLatestActiveTenders and FrontEndTendersByOrganisation remain
+      off-limits here as everywhere (rule #3).
+  - domain: arunachaltenders.gov.in
+    name: Arunachal eProcurement
+    license: public-published
+    robots_verified_on: 2026-09-15
+    verified_by: operator-authorised (nirmaanos35@gmail.com), probed by probe_sources.py
+    paths: ["/nicgep/app"]
+    notes: >
+      Arunachal Pradesh GePNIC instance (NIC). Verified through the project's own
+      compliance path: robots.txt fetched and evaluated by
+      BaseConnector.check_robots_allowed (allowed), then
+      FrontEndListTendersbyDate parsed 1 rows server-side. The CAPTCHA on
+      this portal sits on the SEARCH FORM only, not over the listing table --
+      the same arrangement already accepted for CPPP, mptenders and hptenders.
+      FrontEndLatestActiveTenders and FrontEndTendersByOrganisation remain
+      off-limits here as everywhere (rule #3).
+  - domain: tendersodisha.gov.in
+    name: Odisha eProcurement
+    license: public-published
+    robots_verified_on: 2026-09-15
+    verified_by: operator-authorised (nirmaanos35@gmail.com), probed by probe_sources.py
+    paths: ["/nicgep/app"]
+    notes: >
+      Odisha GePNIC instance (NIC). Verified through the project's own
+      compliance path: robots.txt fetched and evaluated by
+      BaseConnector.check_robots_allowed (allowed), then
+      FrontEndListTendersbyDate parsed 5 rows server-side. The CAPTCHA on
+      this portal sits on the SEARCH FORM only, not over the listing table --
+      the same arrangement already accepted for CPPP, mptenders and hptenders.
+      FrontEndLatestActiveTenders and FrontEndTendersByOrganisation remain
+      off-limits here as everywhere (rule #3).
+  - domain: jharkhandtenders.gov.in
+    name: Jharkhand eProcurement
+    license: public-published
+    robots_verified_on: 2026-09-15
+    verified_by: operator-authorised (nirmaanos35@gmail.com), probed by probe_sources.py
+    paths: ["/nicgep/app"]
+    notes: >
+      Jharkhand GePNIC instance (NIC). Verified through the project's own
+      compliance path: robots.txt fetched and evaluated by
+      BaseConnector.check_robots_allowed (allowed), then
+      FrontEndListTendersbyDate parsed 10 rows server-side. The CAPTCHA on
+      this portal sits on the SEARCH FORM only, not over the listing table --
+      the same arrangement already accepted for CPPP, mptenders and hptenders.
+      FrontEndLatestActiveTenders and FrontEndTendersByOrganisation remain
+      off-limits here as everywhere (rule #3).
+  - domain: dnhtenders.gov.in
+    name: DNH eProcurement
+    license: public-published
+    robots_verified_on: 2026-09-15
+    verified_by: operator-authorised (nirmaanos35@gmail.com), probed by probe_sources.py
+    paths: ["/nicgep/app"]
+    notes: >
+      Dadra & Nagar Haveli and Daman & Diu GePNIC instance (NIC). Verified through the project's own
+      compliance path: robots.txt fetched and evaluated by
+      BaseConnector.check_robots_allowed (allowed), then
+      FrontEndListTendersbyDate parsed 2 rows server-side. The CAPTCHA on
+      this portal sits on the SEARCH FORM only, not over the listing table --
+      the same arrangement already accepted for CPPP, mptenders and hptenders.
+      FrontEndLatestActiveTenders and FrontEndTendersByOrganisation remain
+      off-limits here as everywhere (rule #3).
+  - domain: etenders.chd.nic.in
+    name: Chandigarh eProcurement
+    license: public-published
+    robots_verified_on: 2026-09-15
+    verified_by: operator-authorised (nirmaanos35@gmail.com), probed by probe_sources.py
+    paths: ["/nicgep/app"]
+    notes: >
+      Chandigarh GePNIC instance (NIC). Verified through the project's own
+      compliance path: robots.txt fetched and evaluated by
+      BaseConnector.check_robots_allowed (allowed), then
+      FrontEndListTendersbyDate parsed 10 rows server-side. The CAPTCHA on
+      this portal sits on the SEARCH FORM only, not over the listing table --
+      the same arrangement already accepted for CPPP, mptenders and hptenders.
+      FrontEndLatestActiveTenders and FrontEndTendersByOrganisation remain
+      off-limits here as everywhere (rule #3).
+  - domain: defproc.gov.in
+    name: Defence Procurement
+    license: public-published
+    robots_verified_on: 2026-09-15
+    verified_by: operator-authorised (nirmaanos35@gmail.com), probed by probe_sources.py
+    paths: ["/nicgep/app"]
+    notes: >
+      Ministry of Defence GePNIC instance (NIC). Verified through the project's own
+      compliance path: robots.txt fetched and evaluated by
+      BaseConnector.check_robots_allowed (allowed), then
+      FrontEndListTendersbyDate parsed 10 rows server-side. The CAPTCHA on
+      this portal sits on the SEARCH FORM only, not over the listing table --
+      the same arrangement already accepted for CPPP, mptenders and hptenders.
+      FrontEndLatestActiveTenders and FrontEndTendersByOrganisation remain
+      off-limits here as everywhere (rule #3).
+  - domain: govtprocurement.delhi.gov.in
+    name: Delhi eProcurement
+    license: public-published
+    robots_verified_on: 2026-09-15
+    verified_by: operator-authorised (nirmaanos35@gmail.com), probed by probe_sources.py
+    paths: ["/nicgep/app"]
+    notes: >
+      Delhi GePNIC instance (NIC). Verified through the project's own
+      compliance path: robots.txt fetched and evaluated by
+      BaseConnector.check_robots_allowed (allowed), then
+      FrontEndListTendersbyDate parsed 10 rows server-side. The CAPTCHA on
+      this portal sits on the SEARCH FORM only, not over the listing table --
+      the same arrangement already accepted for CPPP, mptenders and hptenders.
+      FrontEndLatestActiveTenders and FrontEndTendersByOrganisation remain
+      off-limits here as everywhere (rule #3).
+
+# Probed 2026-09-15 and REJECTED -- do not re-add without a fresh human check:
+#   mahatenders.gov.in       robots.txt disallows /nicgep/app
+#   eproc.karnataka.gov.in   robots.txt disallows /nicgep/app
+#   nagalandtenders.gov.in   listing empty; data behind the CAPTCHA'd search
+#   meghalayatenders.gov.in  listing empty; data behind the CAPTCHA'd search
+#   mizoramtenders.gov.in    listing empty; data behind the CAPTCHA'd search
+#   sikkimtender.gov.in      listing empty; data behind the CAPTCHA'd search
+
+  - domain: bidplus.gem.gov.in
+    name: GeM
+    license: public-published
+    robots_verified_on: 2026-09-16
+    verified_by: operator-authorised (nirmaanos35@gmail.com)
+    paths: ["/all-bids", "/showbidDocument/"]
+    notes: >
+      Government e-Marketplace bid listing. robots.txt (fetched on the date above)
+      disallows only /resources/ and three /bg_emd/epbgservice/ endpoints;
+      /all-bids and /showbidDocument/<id> are both permitted, confirmed with
+      RobotFileParser. Neither page carries a CAPTCHA: /all-bids renders its list
+      client-side and the bid PDF answers an unauthenticated GET. The listing is
+      read with Playwright because the rows arrive via an in-page POST that
+      carries its own CSRF token -- the browser issues that request itself, so no
+      token is replayed and no anti-bot measure is evaded. 43,646 bids live as of
+      the verification date.

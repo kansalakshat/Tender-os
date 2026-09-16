@@ -108,6 +108,11 @@ class Company(Base):
     years_in_business: Mapped[int | None] = mapped_column()
     annual_turnover: Mapped[Decimal | None] = mapped_column(Numeric)
     largest_similar_work: Mapped[Decimal | None] = mapped_column(Numeric)
+    # How much work can run at once, and how much cash can sit in bid securities.
+    # Checked against the estimated value and EMD that app/enrich.py reads off the
+    # bid document; before enrichment there was no per-tender figure to test.
+    bid_capacity: Mapped[Decimal | None] = mapped_column(Numeric)
+    emd_budget: Mapped[Decimal | None] = mapped_column(Numeric)
     registrations: Mapped[list] = mapped_column(JSONType, default=list)
     # default=utcnow, not server_default=func.now(): the DB clock is server-local
     # (IST here) while every timestamp we write in Python is naive UTC. Mixing the
