@@ -27,6 +27,11 @@ _STOP = (
     r"Contract Period|Total Quantity|EMD Amount|ePBG|MSE |Estimated Bid Value|"
     r"Splitting|Evaluation Method|Document required|Bid Details|Bid to RA|"
     r"Time allowed|Bid Participation|Past Performance|Startup|Primary product|"
+    # Sections that follow the item list. Without these the title swallowed GeM's
+    # category-search dump ("GeMARPTS ... Searched Strings used in ...") and the
+    # turnover and experience criteria.
+    r"GeMARPTS|Minimum Average Annual Turnover|OEM Average Turnover|"
+    r"Years of Past Experience|"
     # Rule #7: the document prints the buyer's grievance contacts. Stopping here
     # keeps them out of every field, so no personal data reaches the database.
     r"Contact details|Email id|email id|Grievance"
@@ -36,13 +41,14 @@ _STOP = (
 _CONTACT = re.compile(r"[\w.+-]+@[\w-]+\.[\w.]+|\b\d{10}\b", re.I)
 _MONEY = re.compile(r"^[\d,]+(?:\.\d+)?$")
 # Glyph noise left where Devanagari was, stripped from the end of a value. Two
-# shapes only, and both deliberately conservative: tokens holding no letter at all
-# ("% %", "4 4", ". ."), and a doubled single letter ("W W", "h h").
+# shapes only, and both deliberately conservative: tokens of pure punctuation
+# ("% %", ". .", "./") or a doubled number ("3 3 1 1"), and a doubled single
+# letter ("W W", "h h"). A lone number is kept: "Water Tight hatch 9" is a value.
 #
 # It used to strip any trailing run of one- and two-character tokens, which ate
 # real values: "Office Of Dg Ns M" became "Office", because every token in the
 # name is short. Abbreviated buyer names are common, so short != noise.
-_TRAILING_NOISE = re.compile(r"(?:\s+[^A-Za-z\s]{1,3})+\s*$")
+_TRAILING_NOISE = re.compile(r"(?:\s+(?:[^A-Za-z0-9\s]{1,3}|(\d{1,2})\s+\1(?!\S)))+\s*$")
 _DOUBLED_LETTER = re.compile(r"(?:\s+([A-Za-z])\s+\1\b)+\s*$")
 
 
