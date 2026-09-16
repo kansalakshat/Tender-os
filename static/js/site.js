@@ -17,6 +17,14 @@ function extra(t){
   return b.length ? '<p class="m x">'+b.join(' &middot; ')+'</p>' : '';
 }
 
+// Value, EMD, quantity, closing time... Mirrors fact_strip() in _macros.html;
+// the pairs arrive preformatted from app/facts.py.
+function facts(t){
+  if(!t.facts || !t.facts.length) return '';
+  return '<dl class=pf>'+t.facts.map(f=>'<div><dt>'+esc(f[0])+'</dt><dd>'
+    +esc(f[1])+'</dd></div>').join('')+'</dl>';
+}
+
 function flash(html, kind){
   document.getElementById('flash').innerHTML =
     '<div class="notice '+(kind||'warn')+'">'+html+'</div>';

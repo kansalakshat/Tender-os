@@ -125,6 +125,21 @@ class TenderOut(BaseModel):
     first_seen_at: datetime | None
     last_updated_at: datetime | None
     duplicate_of: int | None
+    # (label, value) pairs from app/facts.py: EMD, quantity, closing time and the
+    # rest, preformatted so the JSON rows show what the server-rendered rows do.
+    facts: list[tuple[str, str]] = Field(default_factory=list)
+
+    @model_validator(mode="before")
+    @classmethod
+    def _with_facts(cls, obj):
+        from .facts import preview_facts  # facts -> matching -> models; keep schemas light
+        from .models import Tender
+
+        if not isinstance(obj, Tender):
+            return obj
+        data = {name: getattr(obj, name) for name in cls.model_fields if hasattr(obj, name)}
+        data["facts"] = preview_facts(obj)
+        return data
 
 
 class TenderDetailOut(TenderOut):
