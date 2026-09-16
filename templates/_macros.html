@@ -15,6 +15,14 @@
 {%- endif -%}
 {%- endmacro %}
 
+{#- Everything else we know about the tender: value, EMD, quantity, contract
+    period, closing time... Built by app/facts.py; drawn the same way by facts()
+    in static/js/site.js for JSON rows. -#}
+{% macro fact_strip(t) -%}
+{%- set fs = preview_facts(t) -%}
+{%- if fs %}<dl class=pf>{% for label, value in fs %}<div><dt>{{ label }}</dt><dd>{{ value }}</dd></div>{% endfor %}</dl>{% endif -%}
+{%- endmacro %}
+
 {#- One list row. The title opens our own page rather than the source portal:
     eprocure.gov.in serves "Invalid Url" for any tendersfullview link that arrives
     without a Referer from its own domain, so linking out directly was a dead end
@@ -25,6 +33,7 @@
 {%- if summary %}<p class=rowsum>{{ summary_for(t) }}</p>{% endif -%}
 <p class=m>{{ t.organization or 'unnamed buyer' }} &middot; closes <time datetime='{{ t.deadline }}'>{{ t.deadline }}</time></p>
 {{- extra_line(t) -}}
+{{- fact_strip(t) -}}
 {%- if tags %}<ul class=tags>{% for tag in tags %}<li class=tag>{{ tag }}</li>{% endfor %}</ul>{% endif -%}
 </div></li>
 {%- endmacro %}

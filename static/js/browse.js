@@ -2,8 +2,6 @@ const LIMIT=25; let offset=0;
 // esc() comes from the shared chrome in HEAD. Re-declaring it with const here
 // threw "Identifier 'esc' has already been declared", which killed this whole
 // script block -- the listing never rendered and the page sat on "loading...".
-const inr=v=>v==null?'':' &middot; <span class=v>INR '
-  +Number(v).toLocaleString('en-IN')+'</span>';
 
 // The gutter carries the number the page is ranked by. Here that is time left,
 // which is what the default sort orders on. Display only: whether a tender still
@@ -52,8 +50,8 @@ function go(e,off){
         + '<a class=t href="/t/'+esc(t.id)+'">'+esc(t.title)+'</a>'
         + '<p class=m>'+esc(t.organization||'unnamed buyer')+' &middot; closes '
         + '<time datetime="'+esc(t.deadline||'')+'">'
-        + esc(t.deadline||'not stated')+'</time>'+inr(t.estimated_value)
-        + '</p>'+extra(t)+'</div></li>';
+        + esc(t.deadline||'not stated')+'</time>'
+        + '</p>'+extra(t)+facts(t)+'</div></li>';
     }).join('')
       || '<li class=empty><p>Nothing matched that search. Try a shorter word, or '
          + 'clear the source filter.</p></li>';

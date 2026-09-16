@@ -33,6 +33,7 @@ from .auth import current_user
 from .db import get_db
 from .districts import DISTRICTS
 from .eligibility import REGISTRATIONS, checklist, needs_check
+from .facts import money, preview_facts, tender_facts
 from .matching import (
     SECTOR_LABELS,
     STATES,
@@ -123,19 +124,6 @@ def rank_class(score: int, top: int) -> str:
     return "s3" if share >= 0.75 else "s2" if share >= 0.45 else "s1"
 
 
-def money(value) -> str:
-    """Rupees, in the units an Indian bidder actually reads them in."""
-    try:
-        n = float(value)
-    except (TypeError, ValueError):
-        return ""
-    if n >= 1e7:
-        return f"Rs {n / 1e7:.2f} crore".replace(".00 ", " ")
-    if n >= 1e5:
-        return f"Rs {n / 1e5:.2f} lakh".replace(".00 ", " ")
-    return f"Rs {n:,.0f}"
-
-
 def _summary(t: Tender, sectors: list[str], places: list[str], left: str) -> str:
     """One plain sentence, assembled from fields we already hold.
 
@@ -188,7 +176,7 @@ _env = Environment(
 )
 _env.globals.update(
     icon=icon, asset=asset, favicon=FAVICON, days_left=days_left,
-    rank_class=rank_class, summary_for=summary_for,
+    rank_class=rank_class, summary_for=summary_for, preview_facts=preview_facts,
 )
 _env.filters["num"] = lambda n: f"{n:,}"
 _env.filters["urlquote"] = quote
@@ -426,12 +414,6 @@ CPPP_SEARCH = ("https://eprocure.gov.in/eprocure/app"
                "?page=FrontEndAdvancedSearch&service=page")
 
 
-def _clean(v: str | None) -> str:
-    """The listing prints an em-dash placeholder in empty cells."""
-    v = (v or "").strip()
-    return "" if v in {"", "--", "-", "NA", "N/A"} else v
-
-
 def _fit(db: Session, company: Company | None, t: Tender, today: date) -> str:
     """Whether this tender is one of the signed-in company's matches, and why.
 
@@ -531,9 +513,6 @@ def tender_detail(
         raise HTTPException(status_code=404, detail="tender not found")
     src = db.get(Source, t.source_id) if t.source_id else None
 
-    # The connector keeps the whole scraped listing row, so the closing *time*,
-    # the bid-opening date, the corrigendum flag and the buyer's own reference
-    # number are already here -- they just never had a column of their own.
     raw = t.raw_payload if isinstance(t.raw_payload, dict) else {}
     sectors = sorted(SECTOR_LABELS[k] for k in derive_sectors(t.title))
     places = sorted(derive_states(t.title) | derive_districts(t.title))
@@ -541,46 +520,7 @@ def tender_detail(
     today = date.today()
     company = _profile_of(db, user)
     label, _rank = days_left(t.deadline, today)
-    window = (t.deadline - t.published_date).days if t.published_date and t.deadline else None
-    # The stored status is set at ingest and goes stale once the deadline passes.
-    status = "closed" if t.deadline and t.deadline < today else (t.status or "")
-    # (label, value, mono). A fact with no value is dropped by the template, so an
-    # un-enriched tender simply shows fewer rows.
-    facts = [
-        ("Tender ID", t.external_ref or "", True),
-        ("Buyer's reference", _clean(raw.get("reference_no")), True),
-        ("Buyer", t.organization or "unnamed buyer", False),
-        ("Department", t.department or "", False),
-        # the listing carries a closing *time*, which the deadline column drops
-        ("Bids close", (_clean(raw.get("closing")) or str(t.deadline))
-         if t.deadline else "not stated", True),
-        ("Bids opened", _clean(raw.get("opening")), True),
-        ("Published", _clean(raw.get("published"))
-         or str(t.published_date or "not stated"), True),
-        ("Bidding window",
-         f"{window} day{'s' if window != 1 else ''}" if window is not None else "", True),
-        ("Status", status, False),
-        ("Corrigendum", _clean(raw.get("corrigendum")), False),
-        ("Where", ", ".join(places), False),
-        ("Estimated value", f"INR {t.estimated_value:,.0f}" if t.estimated_value is not None
-         else "not published on the listing", True),
-        # Everything from here to "Source" is read off the bid document by
-        # app/enrich.py; no listing publishes any of it.
-        ("EMD (bid security)", money(raw.get("emd_amount")) if raw.get("emd_amount") else "",
-         True),
-        ("Quantity", f"{int(raw['quantity']):,}" if str(raw.get("quantity", "")).isdigit()
-         and int(raw["quantity"]) > 1 else "", True),
-        ("Contract period", _clean(raw.get("contract_period")), False),
-        ("Buying office", _clean(raw.get("office")), False),
-        ("Ministry", _clean(raw.get("ministry")), False),
-        ("Source", src.name if src else "unknown", False),
-        ("Listing position", _clean(raw.get("serial")).rstrip("."), True),
-        ("First collected",
-         t.first_seen_at.strftime("%d %b %Y") if t.first_seen_at else "", True),
-        ("Last updated",
-         t.last_updated_at.strftime("%d %b %Y") if t.last_updated_at else "", True),
-        ("Portal record no.", _clean(raw.get("internal_id")), True),
-    ]
+    facts = tender_facts(t, today)
     found = _document_for(db, t)
     return render(
         "tender.html", title=t.title[:60], t=t, company=company,
