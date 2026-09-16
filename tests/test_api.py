@@ -189,7 +189,12 @@ def test_cron_ingest_stops_when_the_time_budget_is_spent(client, monkeypatch):
         "/cron/ingest", headers={"Authorization": "Bearer right-secret"}
     ).json()
     assert body["ran"] == []
-    assert set(body["not_reached"]) == set(api.REGISTRY)
+    # Browser-driven connectors are never attempted here, so they are reported
+    # as skipped rather than merely unreached; together the two cover the registry.
+    browser = {n for n, c in api.REGISTRY.items()
+               if getattr(c, "requires_browser", False)}
+    assert set(body["skipped"]) == browser
+    assert set(body["not_reached"]) == set(api.REGISTRY) - browser
 
 
 def test_cron_ingest_reports_a_failing_source_without_sinking_the_run(client, monkeypatch):
@@ -209,3 +214,39 @@ def test_cron_ingest_reports_a_failing_source_without_sinking_the_run(client, mo
     assert body["ran"] == [
         {"source": "boom", "status": "error", "message": "source is down"}
     ]
+
+
+def test_cron_ingest_never_starts_a_browser_driven_connector(client, monkeypatch):
+    """Vercel has no Chromium and a 300s ceiling; GeM must not be attempted there.
+
+    Regression guard: before this, the cron ran every registry entry, so GeM
+    raised ImportError on playwright every single night.
+    """
+    from app import api
+
+    monkeypatch.setenv("CRON_SECRET", "right-secret")
+    monkeypatch.setenv("INGEST_BUDGET_SECONDS", "600")
+
+    started = []
+
+    class Browsery:
+        source_name = "browsery"
+        base_url = "https://example.gov.in"
+        requires_browser = True
+
+        def __init__(self, *a, **kw):
+            started.append(self.source_name)
+
+        def run(self, **kw):
+            raise AssertionError("a browser-driven connector must not run here")
+
+        def close(self):
+            pass
+
+    monkeypatch.setattr(api, "REGISTRY", {"browsery": Browsery})
+    body = client.get(
+        "/cron/ingest", headers={"Authorization": "Bearer right-secret"}
+    ).json()
+    assert started == [], "the connector was instantiated despite requiring a browser"
+    assert body["skipped"] == ["browsery"]
+    assert body["ran"] == []
