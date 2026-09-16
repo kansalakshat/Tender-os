@@ -2,8 +2,17 @@
 {% from "_macros.html" import row %}
 {% block content %}<h1>Matches for {{ company.name }}</h1>
 <p class=lede>{{ total|num }} open tenders match your answers
-{%- if total > shown|length %}, best {{ shown|length }} shown. {% else %}. {% endif -%}
+{%- if total > shown|length %}, first {{ shown|length }} shown. {% else %}. {% endif -%}
 <a href="/profile">Edit answers</a></p>
+{%- if shown %}
+<form class=sortbar method=get>
+ <label class=f><span>Sort by</span>
+  <select name=sort>{% for key, label in sorts %}<option value="{{ key }}"{% if key == sort %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
+ <button name=order value=asc class="{{ '' if order == 'asc' else 'ghost' }}" aria-pressed="{{ 'true' if order == 'asc' else 'false' }}">Ascending &uarr;</button>
+ <button name=order value=desc class="{{ '' if order == 'desc' else 'ghost' }}" aria-pressed="{{ 'true' if order == 'desc' else 'false' }}">Descending &darr;</button>
+</form>
+<p class=hint>Tenders missing the value you sort by go to the end.{% if sort == 'distance' %} Distance: your districts first, then your states, then tenders that name neither.{% endif %}</p>
+{%- endif %}
 {%- if shown %}<ol class=rows>
 {%- for t, score, reasons, check in shown -%}
 {{ row(score|string, rank_class(score, top), t, reasons + (["check eligibility"] if check else []), summary=true) }}

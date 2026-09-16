@@ -380,11 +380,86 @@ def profile_page(db: Session = Depends(get_db),
 
 # ---- matches ---------------------------------------------------------------
 
+# key -> (label, the order it starts in). Every key sorts the whole match list,
+# not just the 50 rows printed, so "highest EMD" really is the highest.
+MATCH_SORTS = {
+    "score": ("Best match", "desc"),
+    "deadline": ("Closing date", "asc"),
+    "published": ("Published date", "desc"),
+    "window": ("Days given to bid", "desc"),
+    "value": ("Estimated value", "desc"),
+    "emd": ("EMD amount", "desc"),
+    "quantity": ("Quantity", "desc"),
+    "distance": ("Distance from you", "asc"),
+    "buyer": ("Buyer name", "asc"),
+    "title": ("Title", "asc"),
+}
+
+
+def _number(v):
+    try:
+        return float(str(v).replace(",", ""))
+    except (TypeError, ValueError):
+        return None
+
+
+def sort_matches(db: Session, company: Company, scored, key: str, order: str):
+    """Re-order (score, reasons, id) triples. Rows with no value for the key go
+    last in both directions; ties keep best-match order.
+
+    Distance has no coordinates behind it: a named district of yours is nearest,
+    then a state of yours, then everything that names neither.
+    """
+    if key == "score":
+        return list(scored) if order == "desc" else list(reversed(scored))
+    ids = [tid for _s, _r, tid in scored]
+    cols = {}
+    if key != "distance" and ids:
+        cols = {r.id: r for r in db.execute(
+            select(Tender.id, Tender.deadline, Tender.published_date, Tender.title,
+                   Tender.estimated_value, Tender.organization, Tender.raw_payload)
+            .where(Tender.id.in_(ids))
+        )}
+    mine = set(company.districts or [])
+
+    def value(reasons, tid):
+        if key == "distance":
+            loc = next((r for r in reasons if r.startswith("location: ")), "")
+            places = set(loc.removeprefix("location: ").split(", ")) if loc else set()
+            return 2 if not places else 0 if places & mine else 1
+        r = cols.get(tid)
+        if r is None:
+            return None
+        raw = r.raw_payload if isinstance(r.raw_payload, dict) else {}
+        if key == "deadline":
+            return r.deadline
+        if key == "published":
+            return r.published_date
+        if key == "window":
+            return (r.deadline - r.published_date).days if r.deadline and r.published_date else None
+        if key == "value":
+            return _number(r.estimated_value)
+        if key == "emd":
+            return _number(raw.get("emd_amount")) or None
+        if key == "quantity":
+            return _number(raw.get("quantity")) or None
+        if key == "buyer":
+            return (r.organization or "").strip().lower() or None
+        return (r.title or "").strip().lower() or None
+
+    keyed = [(value(reasons, tid), item) for item in scored for _s, reasons, tid in [item]]
+    have = sorted((kv for kv in keyed if kv[0] is not None), key=lambda kv: kv[0],
+                  reverse=order == "desc")
+    return [item for _v, item in have] + [item for v, item in keyed if v is None]
+
+
 @router.get("/c/{company_id}", response_class=HTMLResponse)
 def results(
     company_id: int,
     db: Session = Depends(get_db),
     user: User | None = Depends(current_user),
+    sort: str = "score",
+    order: str = "",
 ) -> str:
     company = db.get(Company, company_id)
     if company is None:
@@ -393,8 +468,10 @@ def results(
     # existence of an id is not confirmed to a stranger.
     if user is None or company.user_id is None or company.user_id != user.id:
         raise HTTPException(status_code=404, detail="company not found")
+    sort = sort if sort in MATCH_SORTS else "score"
+    order = order if order in ("asc", "desc") else MATCH_SORTS[sort][1]
     d = match_digest(db, company)
-    scored = d.scored[:50]
+    scored = sort_matches(db, company, d.scored, sort, order)[:50]
     rows_by_id = hydrate(db, [tid for _s, _r, tid in scored])
     shown = [
         (rows_by_id[tid], score, list(reasons), needs_check(rows_by_id[tid], company))
@@ -402,7 +479,9 @@ def results(
         if tid in rows_by_id      # purged between scoring and this render
     ]
     return render("matches.html", title="Matches", company=company, total=d.total,
-                  shown=shown, top=scored[0][0] if scored else 0)
+                  shown=shown, top=max((sc for sc, _r, _t in scored), default=0),
+                  sorts=[(k, v[0]) for k, v in MATCH_SORTS.items()],
+                  sort=sort, order=order)
 
 
 # ---- one tender --------------------------------------------------------

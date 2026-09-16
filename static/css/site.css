@@ -487,6 +487,8 @@ legend{padding:0 .8rem 0 0;font:700 1.08rem/1 var(--display);text-transform:uppe
   grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) auto auto auto}
 .filters .f{margin:0;max-width:none}
 @media (max-width:52rem){.filters{grid-template-columns:1fr;align-items:stretch}}
+.sortbar{display:flex;flex-wrap:wrap;gap:.75rem;align-items:end;margin:1rem 0 .25rem}
+.sortbar .f{margin:0}
 
 /* --- states ---------------------------------------------------------------- */
 .notice{margin:1.25rem 0 0;padding:.95rem 1.15rem;font-size:1rem;max-width:none;
