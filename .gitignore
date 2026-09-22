@@ -47,3 +47,4 @@ purged/
 # personal, machine-local Claude Code settings
 .claude/settings.local.json
 ingest.log
+gem_catchup*.log
