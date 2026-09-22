@@ -1,0 +1,122 @@
+"""Run a connector from the dashboard, in this process.
+
+This is the "my machine is the server" button. There is no trick to it and no
+trick is possible: a browser cannot crawl GeM on the page's behalf, because
+bidplus.gem.gov.in sends no CORS headers, so script on our origin may not read
+its responses. What the button actually does is start the crawl *here*, in the
+process serving the request -- so whose IP is used is decided by where this app
+is running, not by who clicked.
+
+That is exactly what is wanted when the operator runs the app on their own
+machine, which is the only place GeM answers: Vercel has no browser at all, and
+GitHub's runner ranges are refused at the socket.
+
+One job at a time, in a thread, with its log kept in memory. In memory because
+this is a live view of something happening now, and a job that outlives the
+process has nothing to show anyway -- the thread died with it.
+"""
+from __future__ import annotations
+
+import os
+import threading
+from collections import deque
+from datetime import datetime
+
+from .models import utcnow
+
+# Bounded: a full GeM walk emits thousands of lines and this is a status panel,
+# not an archive. The interesting end is the recent one.
+_MAX_LINES = 300
+
+
+class Job:
+    def __init__(self, name: str):
+        self.name = name
+        self.started_at: datetime = utcnow()
+        self.finished_at: datetime | None = None
+        self.status = "running"
+        self.lines: deque[str] = deque(maxlen=_MAX_LINES)
+        self.summary: str | None = None
+
+    def log(self, line: str) -> None:
+        self.lines.append(f"{utcnow().strftime('%H:%M:%S')}  {line}")
+
+    def as_dict(self) -> dict:
+        return {
+            "name": self.name,
+            "status": self.status,
+            "started_at": self.started_at.isoformat(),
+            "finished_at": self.finished_at.isoformat() if self.finished_at else None,
+            "summary": self.summary,
+            "lines": list(self.lines),
+        }
+
+
+_lock = threading.Lock()
+_current: Job | None = None
+
+
+def current() -> Job | None:
+    return _current
+
+
+def _run(job: Job, name: str, max_pages: int | None, since_hours: float | None) -> None:
+    global _current
+    from datetime import timedelta
+
+    from .connectors import REGISTRY
+
+    try:
+        connector = REGISTRY[name]()
+        if max_pages is not None and hasattr(connector, "max_pages"):
+            connector.max_pages = max_pages
+        since = utcnow() - timedelta(hours=since_hours) if since_hours else None
+        job.log(f"starting {name}"
+                + (f", {max_pages} pages" if max_pages else "")
+                + (f", last {since_hours:g}h" if since_hours else ", full walk"))
+        try:
+            summary = connector.run(since=since)
+        finally:
+            connector.close()
+        job.summary = str(summary)
+        job.status = "ok" if summary.status == "ok" else summary.status
+        job.log(job.summary)
+    except Exception as exc:                    # the panel must show the failure
+        job.status = "error"
+        job.summary = f"{type(exc).__name__}: {exc}"
+        job.log(job.summary)
+    finally:
+        job.finished_at = utcnow()
+        with _lock:
+            if _current is job:
+                pass            # keep it: the panel shows the last run's outcome
+
+
+def start(name: str, max_pages: int | None = None,
+          since_hours: float | None = None) -> tuple[bool, str]:
+    """Begin a run. False when one is already going."""
+    global _current
+    from .connectors import REGISTRY
+
+    if name not in REGISTRY:
+        return False, f"unknown connector {name!r}"
+    with _lock:
+        if _current is not None and _current.status == "running":
+            return False, f"{_current.name} is still running"
+        job = Job(name)
+        _current = job
+    # daemon: this must never hold up an interpreter that is trying to exit.
+    threading.Thread(
+        target=_run, args=(job, name, max_pages, since_hours),
+        name=f"adminjob-{name}", daemon=True,
+    ).start()
+    return True, "started"
+
+
+def can_run_browser_jobs() -> bool:
+    """False where a browser-driven connector cannot work at all.
+
+    Serverless has no Chromium, and saying so in the panel is kinder than a
+    button that always fails. VERCEL is set by Vercel's own runtime.
+    """
+    return not os.getenv("VERCEL")

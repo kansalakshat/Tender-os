@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{#- Operator dashboard. Nothing links here and /admin is a 404 for everyone who
+    is not on the admin list, so this page is only ever reached deliberately. -#}
+{% block content %}
+<h1>Operations</h1>
+<p class=summary>Serving from <span class=mono>{{ host }}</span>. A fetch started
+here runs in this process, so it uses this machine's connection.</p>
+
+{#- Live ticker. Counts the table rather than this process's job, so a backfill
+    running in a terminal shows up here too. -#}
+<div class=live id=live>
+ <div><span class=livenum id=livetotal>{{ totals.tenders | num }}</span>
+  <span class=livelabel>rows held</span></div>
+ <div><span class=livenum id=liveopen>{{ totals.open | num }}</span>
+  <span class=livelabel>open now</span></div>
+ <div><span class=livenum id=livedelta>&plusmn;0</span>
+  <span class=livelabel>since you opened this</span></div>
+ <div><span class=livenum id=liverate>&ndash;</span>
+  <span class=livelabel>rows / min</span></div>
+</div>
+<ul class=livesources id=livesources></ul>
+
+<div class=adminbox>
+ <h2>Fetch now</h2>
+ {%- if can_browser %}
+ <p class=hint>GeM needs a real browser and answers a home connection. It refuses
+ datacenter addresses, which is why this button exists rather than a cron job
+ somewhere else.</p>
+ <form id=fetchform class=adminform>
+  <label>Portal
+   <select name=connector>
+    {%- for c in connectors %}<option value="{{ c }}"{% if c == 'GeM' %} selected{% endif %}>{{ c }}</option>{% endfor %}
+   </select></label>
+  <label>Pages <input name=pages type=number min=1 max=5000 placeholder="connector default"></label>
+  <label>Since hours <input name=since_hours type=number min=1 placeholder="full walk"></label>
+  <button class="btn primary" type=submit>Fetch</button>
+ </form>
+ {%- else %}
+ <p class=hint>This host has no browser, so browser-driven portals cannot run
+ here. Open this dashboard from a machine that has one.</p>
+ {%- endif %}
+ <pre id=joblog class=joblog>{% if job %}{{ job.lines | join('\n') }}{% else %}No run started yet.{% endif %}</pre>
+</div>
+
+<h2>Last 7 days</h2>
+<ul class=bars>
+ {#- Square-root scale, not linear. A one-off backfill of 20,957 against
+     ordinary days of ~180 makes every other bar a sub-pixel sliver on a linear
+     axis -- six of seven days invisible, which is the opposite of the point.
+     Order and rough magnitude survive the compression, and the exact count is
+     printed beside each bar anyway. -#}
+ {%- set most = daily | map(attribute='count') | max -%}
+ {%- for d in daily %}
+ <li><span class=barlabel>{{ d.label }}</span>
+  <span class=bartrack><span class=barfill style="width: {{ '%.1f' | format(100 * (d.count / most) ** 0.5) if most and d.count else 0 }}%"></span></span>
+  <span class=barnum>{{ d.count | num }}</span></li>
+ {%- endfor %}
+</ul>
+
+<h2>Portals</h2>
+<table class=admintable>
+ <thead><tr><th>Portal</th><th>Held</th><th>Open</th><th>Last new row</th></tr></thead>
+ <tbody>
+ {%- for s in sources %}
+ <tr><td>{{ s.name }}</td><td class=mono>{{ s.total | num }}</td>
+  <td class=mono>{{ s.open | num }}</td>
+  <td class=mono>{{ s.last_seen.strftime('%d %b %H:%M') if s.last_seen else 'never' }}</td></tr>
+ {%- endfor %}
+ </tbody>
+</table>
+
+<h2>Portals failing</h2>
+{%- if failing %}
+<table class=admintable>
+ <thead><tr><th>Portal</th><th>Status</th><th>When</th><th>Why</th></tr></thead>
+ <tbody>
+ {%- for f in failing %}
+ <tr><td>{{ f.source }}</td><td class=bad>{{ f.status }}</td>
+  <td class=mono>{{ f.at.strftime('%d %b %H:%M') }}</td><td>{{ f.message }}</td></tr>
+ {%- endfor %}
+ </tbody>
+</table>
+{%- else %}<p class=hint>Every portal's most recent run succeeded.</p>{% endif %}
+
+<h2>The corpus</h2>
+<dl class=pf>
+ <div><dt>Open tenders</dt><dd>{{ totals.open | num }}</dd></div>
+ <div><dt>Rows held</dt><dd>{{ totals.tenders | num }}</dd></div>
+ <div><dt>Duplicates linked</dt><dd>{{ totals.duplicates | num }}</dd></div>
+ <div><dt>With a document</dt><dd>{{ totals.with_documents | num }}</dd></div>
+ <div><dt>Read already</dt><dd>{{ totals.enriched | num }}</dd></div>
+ <div><dt>With a value</dt><dd>{{ totals.valued | num }}</dd></div>
+ <div><dt>Users</dt><dd>{{ totals.users | num }}</dd></div>
+ <div><dt>Company profiles</dt><dd>{{ totals.companies | num }}</dd></div>
+</dl>
+<p class=hint>&ldquo;Read already&rdquo; is how many bid documents have been
+parsed. Every EMD, value and document link comes from that pass, so a low number
+here is why the site can look thin.</p>
+
+<h2>Recent runs</h2>
+<table class=admintable>
+ <thead><tr><th>Portal</th><th>Started</th><th>Status</th><th>Fetched</th><th>New</th><th>Updated</th></tr></thead>
+ <tbody>
+ {%- for r in runs %}
+ <tr><td>{{ r.source_name }}</td>
+  <td class=mono>{{ r.started_at.strftime('%d %b %H:%M') }}</td>
+  <td class="{{ 'bad' if r.status != 'ok' else '' }}">{{ r.status }}</td>
+  <td class=mono>{{ r.fetched | num }}</td><td class=mono>{{ r.new | num }}</td>
+  <td class=mono>{{ r.updated | num }}</td></tr>
+ {%- endfor %}
+ </tbody>
+</table>
+<script src="{{ asset('js/admin.js') }}"></script>
+{% endblock %}

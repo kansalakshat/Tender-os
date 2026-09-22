@@ -18,6 +18,7 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
 from . import mailer, oauth, security
+from .admin import is_admin
 from .auth import (
     AuthError,
     authenticate,
@@ -419,7 +420,11 @@ def google_callback(
     except (oauth.OAuthError, AuthError) as exc:
         log.warning("google sign-in failed: %s", exc)
         return RedirectResponse("/login?error=google", status_code=303)
-    response = RedirectResponse("/", status_code=303)
+    # An operator signing in goes straight to the dashboard. Everyone else lands
+    # on the home page and never learns the dashboard exists.
+    response = RedirectResponse(
+        "/admin" if is_admin(user) else "/", status_code=303
+    )
     set_session_cookie(response, user.id)
     response.delete_cookie("oauth_state")
     return response

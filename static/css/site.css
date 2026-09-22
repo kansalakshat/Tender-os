@@ -623,3 +623,53 @@ main h2{display:flex;align-items:center}
  *{animation-duration:.01ms !important;animation-iteration-count:1 !important;
    transition-duration:.01ms !important}
 }
+
+
+/* ---- operator dashboard ------------------------------------------------- */
+/* Deliberately plainer than the public pages: this is an instrument panel, and
+   the numbers matter more than the styling. */
+.adminbox{margin:1.5rem 0;padding:1.1rem 1.25rem;border:var(--b2) solid var(--rule);
+  border-radius:var(--r-lg)}
+.adminbox h2{margin:0 0 .4rem}
+.adminform{display:flex;flex-wrap:wrap;gap:.75rem 1rem;align-items:flex-end;margin:.9rem 0}
+.adminform label{display:flex;flex-direction:column;gap:.25rem;font-size:.8rem;
+  text-transform:uppercase;letter-spacing:.05em;font-weight:700;color:var(--muted)}
+.adminform input,.adminform select{padding:.45rem .6rem;border:var(--b) solid var(--rule);
+  border-radius:var(--r-sm);background:var(--bg);color:var(--fg);font:inherit;min-width:11ch}
+.joblog{margin:.8rem 0 0;padding:.75rem;max-height:17rem;overflow:auto;
+  background:var(--bg2,rgba(127,127,127,.08));border-radius:var(--r-sm);
+  font:.78rem/1.5 var(--mono);white-space:pre-wrap;word-break:break-word}
+
+/* Day-wise intake. A bar chart in CSS because it is eight numbers -- a charting
+   library for that is more code to load than the page it would sit on. */
+.bars{list-style:none;padding:0;margin:.8rem 0 0;display:flex;flex-direction:column;gap:.3rem}
+.bars li{display:grid;grid-template-columns:8.5rem 1fr 4rem;gap:.6rem;align-items:center}
+.barlabel{font:.78rem/1.4 var(--mono);color:var(--muted)}
+.bartrack{background:rgba(127,127,127,.15);border-radius:999px;height:.7rem;overflow:hidden}
+.barfill{display:block;height:100%;background:var(--accent,currentColor);border-radius:999px;
+  min-width:2px}
+.barnum{font:700 .8rem/1.4 var(--mono);text-align:right}
+
+.admintable{width:100%;border-collapse:collapse;margin:.8rem 0 0;font-size:.88rem}
+.admintable th{text-align:left;font:700 .72rem/1.3 var(--mono);text-transform:uppercase;
+  letter-spacing:.06em;color:var(--muted);padding:.4rem .5rem;border-bottom:var(--b) solid var(--rule)}
+.admintable td{padding:.4rem .5rem;border-bottom:1px solid rgba(127,127,127,.18);
+  vertical-align:top}
+.admintable .bad{color:#c0392b;font-weight:700}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .admintable .bad{color:#ff8a7a}}
+:root[data-theme="dark"] .admintable .bad{color:#ff8a7a}
+@media (max-width:40rem){
+  .bars li{grid-template-columns:6.5rem 1fr 3rem}
+  .admintable{font-size:.8rem}
+}
+
+/* Live ticker on the dashboard. */
+.live{display:grid;grid-template-columns:repeat(auto-fit,minmax(8.5rem,1fr));gap:.75rem;
+  margin:1.2rem 0 .6rem}
+.live>div{padding:.8rem .9rem;border:var(--b) solid var(--rule);border-radius:var(--r-lg)}
+.livenum{display:block;font:700 1.6rem/1.15 var(--mono);font-variant-numeric:tabular-nums}
+.livelabel{display:block;margin-top:.15rem;font-size:.72rem;text-transform:uppercase;
+  letter-spacing:.06em;color:var(--muted)}
+.livesources{list-style:none;display:flex;flex-wrap:wrap;gap:.4rem .9rem;padding:0;
+  margin:0 0 .4rem;font:.8rem/1.5 var(--mono);color:var(--muted)}
+.livesources b{color:var(--fg);font-weight:700}
