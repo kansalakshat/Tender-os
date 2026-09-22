@@ -14,6 +14,7 @@ icon set are all served from our own origin under /static.
 from __future__ import annotations
 
 import logging
+import platform
 import re
 from datetime import date, timedelta
 from pathlib import Path
@@ -28,7 +29,9 @@ from markupsafe import Markup, escape
 from sqlalchemy import distinct, func, or_, select
 from sqlalchemy.orm import Session
 
-from . import cppp_relay, oauth, security
+from .connectors import REGISTRY
+from . import admin as admin_data
+from . import adminjobs, cppp_relay, oauth, security
 from .auth import current_user
 from .db import get_db
 from .districts import DISTRICTS
@@ -739,3 +742,80 @@ def browse(db: Session = Depends(get_db)) -> str:
     this page is the form around it, not a second query path."""
     sources = db.execute(select(Source).order_by(Source.name)).scalars().all()
     return render("browse.html", title="Browse tenders", sources=sources)
+
+
+# ---- operator dashboard -----------------------------------------------------
+# Not linked from anywhere a visitor can see, and 404 rather than 403 for
+# everyone else: a 403 confirms the page exists, which is the one thing a
+# stranger probing for an admin panel is trying to learn.
+
+
+def _require_admin(user) -> None:
+    if not admin_data.is_admin(user):
+        raise HTTPException(status_code=404, detail="Not found")
+
+
+@router.get("/admin", response_class=HTMLResponse)
+def admin_home(request: Request, db: Session = Depends(get_db), user=Depends(current_user)):
+    _require_admin(user)
+    job = adminjobs.current()
+    return render(
+        "admin.html",
+        title="Operations",
+        totals=admin_data.totals(db),
+        daily=admin_data.daily_intake(db, days=7),
+        sources=admin_data.by_source(db),
+        failing=admin_data.failing_sources(db),
+        runs=admin_data.recent_runs(db),
+        connectors=list(REGISTRY),
+        job=job.as_dict() if job else None,
+        # The panel says which machine would do the fetching, because that is
+        # the whole question with GeM: it answers a home connection and refuses
+        # a datacenter one.
+        host=platform.node(),
+        can_browser=adminjobs.can_run_browser_jobs(),
+    )
+
+
+@router.get("/admin/stats")
+def admin_stats(db: Session = Depends(get_db), user=Depends(current_user)):
+    """The same numbers as JSON, so the page can refresh without a reload."""
+    _require_admin(user)
+    job = adminjobs.current()
+    return JSONResponse({
+        "totals": admin_data.totals(db),
+        "daily": admin_data.daily_intake(db, days=7),
+        "sources": [
+            {**s, "last_seen": s["last_seen"].isoformat() if s["last_seen"] else None}
+            for s in admin_data.by_source(db)
+        ],
+        "failing": [{**f, "at": f["at"].isoformat()} for f in admin_data.failing_sources(db)],
+        "job": job.as_dict() if job else None,
+    })
+
+
+@router.get("/admin/live")
+def admin_live(db: Session = Depends(get_db), user=Depends(current_user)):
+    """Cheap counters for the ticker. Polled, so it stays two counts wide."""
+    _require_admin(user)
+    job = adminjobs.current()
+    return JSONResponse({
+        **admin_data.live_counts(db),
+        "job": job.as_dict() if job else None,
+    })
+
+
+@router.post("/admin/fetch")
+async def admin_fetch(request: Request, user=Depends(current_user)):
+    """Start a connector in THIS process, using THIS machine's connection."""
+    _require_admin(user)
+    form = await request.form()
+    name = str(form.get("connector") or "GeM")
+    pages = str(form.get("pages") or "").strip()
+    hours = str(form.get("since_hours") or "").strip()
+    ok, message = adminjobs.start(
+        name,
+        max_pages=int(pages) if pages.isdigit() else None,
+        since_hours=float(hours) if hours.replace(".", "", 1).isdigit() else None,
+    )
+    return JSONResponse({"ok": ok, "message": message}, status_code=200 if ok else 409)
