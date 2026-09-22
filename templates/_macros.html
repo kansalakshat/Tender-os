@@ -23,17 +23,27 @@
 {%- if fs %}<dl class=pf>{% for label, value in fs %}<div><dt>{{ label }}</dt><dd>{{ value }}</dd></div>{% endfor %}</dl>{% endif -%}
 {%- endmacro %}
 
+{#- Documents the bid points at, read off the PDF's link annotations by
+    app/enrich.py. Mirrored by docLinks() in static/js/site.js. These leave the
+    site for a third-party host, hence target/rel; the scheme was already
+    checked in app/facts.py links(). -#}
+{% macro doc_links(t) -%}
+{%- set ls = tender_links(t) -%}
+{%- if ls %}<ul class=docs>{% for l in ls %}<li><a href="{{ l.url }}" target=_blank rel="noopener noreferrer">{{ l.label }}</a></li>{% endfor %}</ul>{% endif -%}
+{%- endmacro %}
+
 {#- One list row. The title opens our own page rather than the source portal:
     eprocure.gov.in serves "Invalid Url" for any tendersfullview link that arrives
     without a Referer from its own domain, so linking out directly was a dead end
     on every row. -#}
-{% macro row(gutter, rank, t, tags=(), summary=false) -%}
+{% macro row(gutter, rank, t, tags=(), summary=true) -%}
 <li class="row {{ rank }}"><div class=n>{{ gutter }}</div><div>
 {{- '' }}<a class=t href="/t/{{ t.id }}">{{ t.title }}</a>
 {%- if summary %}<p class=rowsum>{{ summary_for(t) }}</p>{% endif -%}
 <p class=m>{{ t.organization or 'unnamed buyer' }} &middot; closes <time datetime='{{ t.deadline }}'>{{ t.deadline }}</time></p>
 {{- extra_line(t) -}}
 {{- fact_strip(t) -}}
+{{- doc_links(t) -}}
 {%- if tags %}<ul class=tags>{% for tag in tags %}<li class=tag>{{ tag }}</li>{% endfor %}</ul>{% endif -%}
 </div></li>
 {%- endmacro %}

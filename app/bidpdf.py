@@ -16,6 +16,7 @@ from __future__ import annotations
 import io
 import logging
 import re
+from urllib.parse import urlsplit
 
 log = logging.getLogger(__name__)
 
@@ -32,6 +33,13 @@ _STOP = (
     # turnover and experience criteria.
     r"GeMARPTS|Minimum Average Annual Turnover|OEM Average Turnover|"
     r"Years of Past Experience|"
+    # Labels that follow the terms read below. The ministry boundary has to be
+    # the whole label: the ministry itself is found by searching the tail of it
+    # ("State Name"), so a bare "Ministry" here ends that value before it
+    # starts -- which is a covered regression, tests/test_bidpdf.py.
+    r"Ministry/State Name|Type of Bid|RA Quali|Advisory Bank|Financial Document|"
+    r"Arbitration Clause|Mediation Clause|Do you want|Minimum number of bids|"
+    r"Number of|Relevant Categories|Searched|Bid Opening Date|"
     # Rule #7: the document prints the buyer's grievance contacts. Stopping here
     # keeps them out of every field, so no personal data reaches the database.
     r"Contact details|Email id|email id|Grievance"
@@ -80,6 +88,14 @@ def _field(flat: str, label: str) -> str | None:
     return val or None
 
 
+def _yes_no(value: str | None) -> str | None:
+    """These fields are a yes or a no; everything after it is glyph residue."""
+    if not value:
+        return None
+    m = re.match(r"\s*(Yes|No)\b", value, re.I)
+    return m.group(1).capitalize() if m else None
+
+
 def _money(value: str | None) -> float | None:
     """GeM writes plain integers; anything wordy is boilerplate, not a number."""
     if not value:
@@ -91,6 +107,71 @@ def _money(value: str | None) -> float | None:
         return float(m.group(1).replace(",", ""))
     except ValueError:
         return None
+
+
+# The attachments a bid document points at. They are never in the extracted
+# text -- pypdf reads visible glyphs, and these live in /Annots link objects, so
+# a text regex finds nothing. Six sampled documents carried 4 to 26 links each.
+#
+# Host and path, because the same host serves several kinds of file: the label
+# is what a bidder needs to decide whether to open it.
+_LINK_LABELS = (
+    ("mkp.gem.gov.in", "catalog_support_document", "Technical specification"),
+    ("fulfilment.gem.gov.in", "slafds", "SLA / annexure"),
+    ("admin.gem.gov.in", "gtc", "General terms & conditions"),
+    ("bidplus.gem.gov.in", "downloadOmppdfile", "Bid attachment"),
+)
+# Rule #7 again, and it is not theoretical: one sampled URL was
+# ".../ANNEXBK_<uuid>_poa3@dpsdae.gov.in.pdf" -- the buyer's address in the
+# filename. A URL carrying one is dropped whole rather than rewritten, because a
+# link with the address snipped out no longer resolves anyway.
+_URL_CONTACT = re.compile(r"[\w.+-]+@[\w-]+\.[\w.]+")
+
+
+def _label_for(url: str) -> str:
+    host = urlsplit(url).hostname or ""
+    for want_host, marker, label in _LINK_LABELS:
+        if host == want_host and marker in url:
+            return label
+    return host or "Attachment"
+
+
+def extract_links(data: bytes) -> list[dict]:
+    """[{label, url}] for the documents this bid points at, in page order.
+
+    Deduplicated on the URL: a multi-page document repeats the same terms link
+    on every page, and twelve identical rows is not information.
+    """
+    try:
+        from pypdf import PdfReader
+
+        reader = PdfReader(io.BytesIO(data))
+    except Exception as exc:
+        log.warning("bid pdf unreadable for links: %s", exc)
+        return []
+
+    out: list[dict] = []
+    seen: set[str] = set()
+    for page in reader.pages:
+        try:
+            annots = page.get("/Annots") or []
+        except Exception:
+            continue
+        for ref in annots:
+            try:
+                uri = (ref.get_object().get("/A") or {}).get("/URI")
+            except Exception:
+                continue
+            if not uri or not isinstance(uri, str):
+                continue
+            uri = uri.strip()
+            if not uri.startswith(("http://", "https://")) or uri in seen:
+                continue
+            if _URL_CONTACT.search(uri):
+                continue
+            seen.add(uri)
+            out.append({"label": _label_for(uri), "url": uri})
+    return out
 
 
 def parse_bid_pdf(data: bytes) -> dict:
@@ -141,4 +222,29 @@ def parse_bid_pdf(data: bytes) -> dict:
     value = _money(_field(flat, "Estimated Bid Value"))
     if value is not None:
         out["estimated_value"] = value
+
+    # Terms a bidder decides on before reading anything else. All of these are
+    # plain labelled fields in the same text; none has a column, so they ride in
+    # raw_payload like emd_amount does. Sampling showed EMD and the estimated
+    # value are absent from most documents -- GeM simply does not print them for
+    # every bid -- so these are often the only hard terms on offer.
+    for key, label in (
+        ("bid_type", "Type of Bid"),
+        # The full label, not a prefix: "Bid Opening Date" alone leaves the
+        # "/Time" half of the label at the front of the value.
+        ("offer_validity", "Bid Offer Validity From End Date"),
+        ("bid_opening", "Bid Opening Date/Time"),
+    ):
+        val = _field(flat, label)
+        if val:
+            out[key] = val
+    for key, label in (
+        ("mse_relaxation", "MSE Relaxation for Turnover"),
+        ("startup_relaxation", "Startup Relaxation for Turnover"),
+    ):
+        val = _yes_no(_field(flat, label))
+        if val:
+            out[key] = val
+
+    out["links"] = extract_links(data)
     return out
