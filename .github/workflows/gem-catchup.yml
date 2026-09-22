@@ -1,0 +1,112 @@
+# One-off full walk of the GeM listing. Manual only -- this is not a thing to
+# leave on a timer.
+#
+# The daily job crawls the newest N pages, which keeps pace with new bids but
+# never reaches back to ones published while nothing was fetching. After a gap
+# this walks the whole listing once, and the daily job holds it from there.
+#
+# Sharded because a single pass is ~4,400 pages at ~7s each -- about nine hours,
+# past the job ceiling. Each shard takes its own page range: gem.py's _open
+# jumps straight to any page with the listing's own loadBids(), which is exactly
+# what start_page exists for.
+#
+# NOTE ON LOAD: shards run at the same time, so N shards means N times the
+# request rate GeM sees, even though each one honours the connector's 3s limit.
+# Six is already brisk for a government portal. Do not raise it casually, and
+# prefer a slower full pass over a faster one.
+name: gem-catchup
+
+on:
+  workflow_dispatch:
+    inputs:
+      shards:
+        description: "Parallel shards (each adds to the load GeM sees)"
+        default: "6"
+      pages_per_shard:
+        description: "Pages per shard; shards x pages must cover the listing"
+        default: "750"
+
+concurrency:
+  # Same group as daily-ingest, so this waits rather than crawling GeM twice
+  # over at once. cancel-in-progress stays false: a half-done shard is a gap.
+  group: ingest
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.build.outputs.matrix }}
+    steps:
+      - id: build
+        run: |
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json, os
+          n = int("${{ inputs.shards }}")
+          per = int("${{ inputs.pages_per_shard }}")
+          print("matrix=" + json.dumps({"include":
+              [{"shard": i, "start": 1 + i * per} for i in range(n)]}))
+          PY
+
+  backfill:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    strategy:
+      fail-fast: false          # one shard dying must not orphan the others
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: playwright install --with-deps chromium
+      - name: "GeM pages ${{ matrix.start }}+"
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          CONTACT_EMAIL: ${{ secrets.CONTACT_EMAIL }}
+        # app/cli.py reads DATABASE_URL from the environment via app/db.py, so no
+        # .env.production is needed. Only GeM: the other connectors have nothing
+        # to backfill.
+        run: >
+          python -u -m app.cli run GeM
+          --start-page ${{ matrix.start }}
+          --max-pages ${{ inputs.pages_per_shard }}
+
+  # The listing walk only creates rows; every EMD, value, link and full title
+  # comes from the bid document, one ~125 KB fetch each. 20,957 of those is
+  # hours single-file, so it shards the same way -- needs_enrichment(shard=)
+  # exists for this and keeps the shards disjoint with no coordination.
+  enrich:
+    needs: backfill
+    if: ${{ always() }}      # a failed shard above must not skip enrichment
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: "Enrich shard ${{ matrix.shard }} of 6"
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          CONTACT_EMAIL: ${{ secrets.CONTACT_EMAIL }}
+          SHARD: ${{ matrix.shard }}
+        run: |
+          python -u - <<'PY'
+          import logging, os
+          logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
+          from app.enrich import enrich_pending
+          n = enrich_pending(limit=20000, shard=(int(os.environ["SHARD"]), 6))
+          print(f"enriched {n}")
+          PY
+        # Passed as an env var rather than interpolated into the script, so the
+        # matrix value is never substituted into source text.
