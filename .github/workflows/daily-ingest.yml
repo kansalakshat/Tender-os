@@ -1,0 +1,53 @@
+# Daily ingest, including the connectors a serverless function cannot run.
+#
+# Why this exists: GeM is browser-driven, so Vercel's /cron/ingest skips it, and
+# the only other runner was a scheduled task on one laptop -- which fetches
+# nothing on a day the laptop is off. GeM publishes ~3,100 bids a day and they
+# close in ~14, so a missed day is a hole that never fills. A hosted runner has
+# both a browser and an uptime guarantee.
+name: daily-ingest
+
+on:
+  schedule:
+    # 03:00 UTC / 08:30 IST. Deliberately not 01:00 UTC, which is when Vercel's
+    # own /cron/ingest runs CPPP -- two crawls of the same listing at once earns
+    # a rate limit and gains nothing.
+    - cron: "0 3 * * *"
+  workflow_dispatch:      # so a missed day can be made up without waiting
+
+concurrency:
+  # Two ingests writing at once would crawl the same pages twice for no gain.
+  # Never cancel a run in flight: rows commit in batches, but a half-finished
+  # GeM crawl leaves the deepest pages unread.
+  group: ingest
+  cancel-in-progress: false
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    # GeM alone is ~25 minutes at its 3s rate limit; the rest and enrichment add
+    # to that. Well under the 6h ceiling, but bounded so a hung browser cannot
+    # burn a whole runner day.
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      # apscheduler is not in requirements.txt on purpose (Vercel must not
+      # install it), but app/scheduler.py imports it even for a one-shot run.
+      - run: pip install -r requirements.txt apscheduler
+
+      - run: playwright install --with-deps chromium
+
+      - name: Ingest
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          CONTACT_EMAIL: ${{ secrets.CONTACT_EMAIL }}
+          # Matches production. app/retention.py deletes nothing when unset, so
+          # leaving it out would quietly stop the purge this job is meant to run.
+          RETENTION_DAYS: "0"
+        run: python -u run_prod_worker.py --once
