@@ -21,7 +21,7 @@ from pathlib import Path
 from urllib.parse import parse_qs, quote
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Body, Depends, HTTPException, Request
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from jinja2 import Environment, FileSystemLoader, select_autoescape
@@ -806,16 +806,20 @@ def admin_live(db: Session = Depends(get_db), user=Depends(current_user)):
 
 
 @router.post("/admin/fetch")
-async def admin_fetch(request: Request, user=Depends(current_user)):
+def admin_fetch(
+    user=Depends(current_user),
+    # JSON, like every other write in this app. An earlier version read a form
+    # here, which needs python-multipart -- a dependency this project does not
+    # carry and does not need, since nothing else posts forms either.
+    connector: str = Body("GeM", embed=True),
+    pages: int | None = Body(None, embed=True),
+    since_hours: float | None = Body(None, embed=True),
+):
     """Start a connector in THIS process, using THIS machine's connection."""
     _require_admin(user)
-    form = await request.form()
-    name = str(form.get("connector") or "GeM")
-    pages = str(form.get("pages") or "").strip()
-    hours = str(form.get("since_hours") or "").strip()
     ok, message = adminjobs.start(
-        name,
-        max_pages=int(pages) if pages.isdigit() else None,
-        since_hours=float(hours) if hours.replace(".", "", 1).isdigit() else None,
+        connector,
+        max_pages=pages if pages and pages > 0 else None,
+        since_hours=since_hours if since_hours and since_hours > 0 else None,
     )
     return JSONResponse({"ok": ok, "message": message}, status_code=200 if ok else 409)
