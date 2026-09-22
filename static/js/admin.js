@@ -86,8 +86,21 @@ if(form){
     btn.disabled = true;
     out.textContent = 'starting...';
     try{
-      const r = await fetch('/admin/fetch', {method:'POST', body:new FormData(form)});
-      const d = await r.json();
+      const fd = new FormData(form);
+      const body = {connector: fd.get('connector') || 'GeM'};
+      // Blank means "the connector's own default", so send nothing rather than
+      // a zero, which would read as "fetch no pages".
+      if(fd.get('pages')) body.pages = Number(fd.get('pages'));
+      if(fd.get('since_hours')) body.since_hours = Number(fd.get('since_hours'));
+      const r = await fetch('/admin/fetch', {
+        method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body),
+      });
+      // A 500 returns HTML, not JSON, and blindly parsing it hid the real error
+      // behind "Unexpected token 'I'".
+      const text = await r.text();
+      let d;
+      try{ d = JSON.parse(text); }
+      catch(_){ out.textContent = 'server error ' + r.status + ': ' + text.slice(0, 300); btn.disabled = false; return; }
       if(!d.ok){ out.textContent = d.message || 'could not start'; btn.disabled = false; return; }
       follow();
     }catch(err){

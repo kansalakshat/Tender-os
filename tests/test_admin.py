@@ -76,7 +76,7 @@ def test_stats_and_fetch_are_closed_to_everyone_else(client):
     c, ids = client
     _as(c, ids["someone@example.com"])
     assert c.get("/admin/stats").status_code == 404
-    assert c.post("/admin/fetch", data={"connector": "GeM"}).status_code == 404
+    assert c.post("/admin/fetch", json={"connector": "GeM"}).status_code == 404
 
 
 def test_is_admin_is_case_and_space_insensitive(monkeypatch):
@@ -177,3 +177,36 @@ def test_live_counts_are_cached_between_polls(session_factory, monkeypatch):
     clock[0] += admin._CACHE_SECONDS
     assert admin.live_counts(db, now=lambda: clock[0])["total"] == 2
     db.close()
+
+
+def test_fetch_takes_json_not_a_form(client, monkeypatch):
+    """The whole app posts JSON. A form here needs python-multipart, which is
+    not installed -- and the failure was a 500 whose HTML body broke the
+    dashboard's JSON parsing, so the real error never reached the screen."""
+    started = {}
+
+    def fake_start(name, max_pages=None, since_hours=None):
+        started.update(name=name, max_pages=max_pages, since_hours=since_hours)
+        return True, "started"
+
+    monkeypatch.setattr("app.adminjobs.start", fake_start)
+    c, ids = client
+    r = _as(c, ids["boss@example.com"]).post(
+        "/admin/fetch", json={"connector": "GeM", "pages": 25, "since_hours": 6}
+    )
+    assert r.status_code == 200 and r.json()["ok"] is True
+    assert started == {"name": "GeM", "max_pages": 25, "since_hours": 6.0}
+
+
+def test_blank_pages_means_the_connector_default(client, monkeypatch):
+    """An omitted field must not arrive as zero, which would read as
+    "fetch no pages" and quietly do nothing."""
+    started = {}
+    monkeypatch.setattr(
+        "app.adminjobs.start",
+        lambda name, max_pages=None, since_hours=None: (
+            started.update(max_pages=max_pages, since_hours=since_hours), (True, "ok"))[1],
+    )
+    c, ids = client
+    _as(c, ids["boss@example.com"]).post("/admin/fetch", json={"connector": "GeM"})
+    assert started == {"max_pages": None, "since_hours": None}
