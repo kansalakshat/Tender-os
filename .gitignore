@@ -48,3 +48,4 @@ purged/
 .claude/settings.local.json
 ingest.log
 gem_catchup*.log
+gem_enrich*.log

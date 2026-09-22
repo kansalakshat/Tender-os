@@ -37,6 +37,15 @@
  <p><a class="btn primary" href="{{ document.url }}" target=_blank rel="noopener noreferrer"
     download>{{ icon('caret-down') }}Download document (PDF)</a></p>
  <p class=hint>Served by {{ document.source }}, not stored or altered by us.</p>
+{#- The attachments the bid document itself points at -- specification sheets,
+    the general terms, annexures. They are link annotations inside the PDF, so
+    they are invisible to anyone reading its text, and they are the documents a
+    bidder actually has to read before deciding. Same list the rows show. -#}
+{%- set ls = tender_links(t) %}{% if ls %}
+ <h3>Referenced in that document</h3>
+ <ul class=docs>{% for l in ls %}<li><a href="{{ l.url }}" target=_blank rel="noopener noreferrer">{{ l.label }}</a></li>{% endfor %}</ul>
+ <p class=hint>Hosted by the portal. We only read the addresses out of the PDF.</p>
+{% endif %}
 </div>{% endif %}
 {% if cppp_box %}
 {#- CPPP rows with a stored tender link: the CAPTCHA sits right here, so opening
