@@ -311,6 +311,55 @@ so leaving it to a manual run means that share of the data stops being replaced
 while the purge keeps removing it on close. The daily task below is what covers
 the rest.
 
+### Getting GeM off this machine
+
+The scheduled task above works, but it makes one laptop load-bearing for two
+thirds of the corpus. It does not have to be.
+
+**What actually blocks the hosted runner.** `bidplus.gem.gov.in` answers
+`ECONNREFUSED` to GitHub Actions -- refused at the socket, no HTTP, no CAPTCHA.
+It is not a datacenter block and not a geo-block: the same host serves its
+robots.txt and its listing to ordinary cloud addresses and to a home connection
+without complaint. GitHub's published runner ranges are widely blocklisted to
+deter scrapers, and this is that. So the fix is not "use a residential IP", it
+is "use anything that is not a GitHub runner".
+
+`Dockerfile` is that anything. It runs one cycle and exits, which is what a
+scheduled job should do -- the long-lived process is exactly what made the
+laptop unreliable, because it dies with a reboot and says nothing.
+
+Any of these hosts work; they differ in price and setup, not capability:
+
+| host | cost | notes |
+|------|------|-------|
+| Fly.io scheduled Machine | pennies/month for ~30 min a day | simplest; `bom` region is closest |
+| Oracle Cloud Always Free | free | 4 ARM cores forever; the most signup friction |
+| Google Cloud Run Job + Scheduler | free tier covers it | `asia-south1`; most moving parts |
+| Any VPS + cron | $4-6/month | dullest and most predictable |
+
+Fly, as the shortest path:
+
+```bash
+fly launch --no-deploy --name tender-ingest --region bom
+fly secrets set DATABASE_URL='...' CONTACT_EMAIL='...'
+fly deploy
+# Run it daily instead of keeping a machine up:
+fly machine run . --schedule daily --region bom
+```
+
+The image needs only `DATABASE_URL` and `CONTACT_EMAIL`; `RETENTION_DAYS=0` is
+baked in to match production.
+
+Once a hosted run has fetched GeM successfully, `daily-ingest.yml` can drop its
+`SKIP_CONNECTORS`, or this host can take everything and the workflow be deleted.
+Until then keep the Windows task: it is the only thing fetching GeM, and two
+schedules doing it is wasteful, not harmful -- the ingest is idempotent.
+
+**The Playwright pin.** The base image tag and the pinned `playwright` version
+must move together. The image carries one browser revision; a mismatched pip
+install fails with "Executable doesn't exist" at run time, on a host nobody is
+watching.
+
 ### The daily task on this machine
 
 `daily_ingest.cmd` runs `run_prod_worker.py --once`: every connector in the
