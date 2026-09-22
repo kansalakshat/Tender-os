@@ -14,6 +14,7 @@ import yaml
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from ..enrich import DONE_KEY
 from ..compliance import (
     BlockedSourceError,
     RobotsDisallowedError,
@@ -349,6 +350,32 @@ class BaseConnector(ABC):
         if existing is None:
             db.add(Tender(source_id=src.id, external_ref=rec.external_ref, **values))
             return 1
+
+        old_payload = existing.raw_payload if isinstance(existing.raw_payload, dict) else {}
+        # MERGE raw_payload, never replace it. app/enrich.py writes what it reads
+        # out of the bid document into this same column -- emd_amount, links,
+        # bid_type, the enriched-already marker -- and a plain setattr wiped all
+        # of it every time the listing was crawled again. The listing's own keys
+        # still win, because that is the fresher copy of what the listing says.
+        values["raw_payload"] = {**old_payload, **(values.get("raw_payload") or {})}
+
+        # A listing that does not publish a value must not erase one we already
+        # read off the document. Unconditional: "the source stopped saying" is
+        # never a reason to forget, whatever put the number there.
+        if values.get("estimated_value") is None and existing.estimated_value is not None:
+            values.pop("estimated_value", None)
+
+        if old_payload.get(DONE_KEY):
+            # These two come out better from the document than from the card,
+            # which is the entire reason enrichment reads it: the card truncates
+            # the title at ~33 characters and names only the ministry. Re-crawling
+            # must not undo that, and the enriched marker means no second pass
+            # would come along to fix it.
+            if len(values.get("title") or "") < len(existing.title or ""):
+                values.pop("title", None)
+            if existing.organization:
+                values.pop("organization", None)
+
         for key, val in values.items():
             setattr(existing, key, val)
         existing.last_updated_at = utcnow()

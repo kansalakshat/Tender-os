@@ -62,7 +62,15 @@ def needs_enrichment(limit: int = 200, shard: tuple[int, int] | None = None,
         if shard is not None:
             index, count = shard
             query = query.where(Tender.id % count == index)
-        rows = db.execute(query.order_by(Tender.deadline.asc().nulls_last())).all()
+        # Streamed, not .all(): the DONE_KEY test needs raw_payload, and
+        # materialising every candidate's JSON first meant ~21,000 blobs pulled
+        # from a hosted database before the first document was fetched -- per
+        # shard. yield_per gives a server-side cursor, so the loop below stops
+        # as soon as it has `limit` ids and the rest is never transferred.
+        rows = db.execute(
+            query.order_by(Tender.deadline.asc().nulls_last()),
+            execution_options={"yield_per": 200},
+        )
         out = []
         for tid, payload in rows:
             if isinstance(payload, dict) and payload.get(DONE_KEY):
@@ -70,6 +78,9 @@ def needs_enrichment(limit: int = 200, shard: tuple[int, int] | None = None,
             out.append(tid)
             if len(out) >= limit:
                 break
+        # Abandoning a server-side cursor mid-iteration leaves it open until the
+        # session closes; this session is about to be closed, but say so.
+        rows.close()
         return out
     finally:
         db.close()
