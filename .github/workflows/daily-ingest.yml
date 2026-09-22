@@ -1,10 +1,16 @@
-# Daily ingest, including the connectors a serverless function cannot run.
+# Daily ingest of everything that will talk to a hosted runner.
 #
-# Why this exists: GeM is browser-driven, so Vercel's /cron/ingest skips it, and
-# the only other runner was a scheduled task on one laptop -- which fetches
-# nothing on a day the laptop is off. GeM publishes ~3,100 bids a day and they
-# close in ~14, so a missed day is a hole that never fills. A hosted runner has
-# both a browser and an uptime guarantee.
+# NOT GeM. bidplus.gem.gov.in answers "connection refused" at the socket to this
+# runner's address -- not a 403, not a CAPTCHA, no TCP session at all -- so six
+# parallel shards here failed inside a minute without reading a byte. Its bid
+# PDFs are on the same host, so enrichment of GeM rows cannot run here either.
+# GeM reaches a residential connection, and only the scheduled task on the
+# operator's machine (daily_ingest.cmd) fetches it. That task is not a fallback
+# for this workflow; it is the only path to two thirds of the corpus.
+#
+# What this does cover: CPPP and the 20 GePNIC state portals, which answer a
+# datacenter address perfectly well -- better than the laptop, in fact, where
+# several of them had been returning nothing for days.
 name: daily-ingest
 
 on:
@@ -25,10 +31,10 @@ concurrency:
 jobs:
   ingest:
     runs-on: ubuntu-latest
-    # GeM alone is ~25 minutes at its 3s rate limit; the rest and enrichment add
-    # to that. Well under the 6h ceiling, but bounded so a hung browser cannot
-    # burn a whole runner day.
-    timeout-minutes: 120
+    # CPPP is the long leg at ~10 minutes; the 20 state portals are mostly empty
+    # but each pays its 3s rate limit. Bounded so a wedged connector cannot burn
+    # a whole runner day.
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
 
@@ -41,8 +47,6 @@ jobs:
       # install it), but app/scheduler.py imports it even for a one-shot run.
       - run: pip install -r requirements.txt apscheduler
 
-      - run: playwright install --with-deps chromium
-
       - name: Ingest
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
@@ -50,4 +54,10 @@ jobs:
           # Matches production. app/retention.py deletes nothing when unset, so
           # leaving it out would quietly stop the purge this job is meant to run.
           RETENTION_DAYS: "0"
+          # GeM is refused from here and its PDFs with it, so both its crawl and
+          # its share of enrichment are skipped rather than spending the run
+          # timing out against a host that will not answer. The machine that can
+          # reach GeM does that work.
+          SKIP_CONNECTORS: GeM
+          ENRICH_SKIP_SOURCES: GeM
         run: python -u run_prod_worker.py --once
