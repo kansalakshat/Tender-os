@@ -80,6 +80,14 @@ def tender_facts(t: Tender, today: date | None = None) -> list[tuple[str, str, b
          True),
         ("Quantity", f"{int(qty):,}" if qty.isdigit() and int(qty) > 1 else "", True),
         ("Contract period", clean(raw.get("contract_period")), False),
+        # Read off the bid document alongside the EMD. Sampling found the EMD and
+        # the estimated value absent from most GeM documents, so on many tenders
+        # these are the only hard terms published at all.
+        ("Bid type", clean(raw.get("bid_type")), False),
+        ("Offer validity", clean(raw.get("offer_validity")), True),
+        ("Bids opened at", clean(raw.get("bid_opening")), True),
+        ("MSE turnover relaxation", clean(raw.get("mse_relaxation")), False),
+        ("Startup turnover relaxation", clean(raw.get("startup_relaxation")), False),
         ("Buying office", clean(raw.get("office")), False),
         ("Ministry", clean(raw.get("ministry")), False),
         ("Source", source_name(t) or "unknown", False),
@@ -97,7 +105,30 @@ def tender_facts(t: Tender, today: date | None = None) -> list[tuple[str, str, b
 _NOT_IN_PREVIEW = {
     "Tender ID", "Buyer", "Department", "Published", "Status", "Listing position",
     "First collected", "Last updated", "Portal record no.",
+    # On the tender page but not in a list row: a bidder skimming does not need
+    # the opening time or the two relaxation flags, and five more cells per row
+    # buries the ones that decide whether to click.
+    "Bids opened at", "MSE turnover relaxation", "Startup turnover relaxation",
 }
+
+
+def links(t: Tender) -> list[dict]:
+    """The documents this bid points at: [{label, url}].
+
+    Written by app/enrich.py from the PDF's link annotations -- they are not in
+    its text, so nothing here can be recovered by reading the document body.
+    Filtered to http(s) on the way in (bidpdf.extract_links) and again here,
+    because these are rendered as real links on a page.
+    """
+    raw = t.raw_payload if isinstance(t.raw_payload, dict) else {}
+    out = []
+    for item in raw.get("links") or []:
+        if not isinstance(item, dict):
+            continue
+        url = str(item.get("url") or "")
+        if url.startswith(("http://", "https://")):
+            out.append({"label": str(item.get("label") or "Attachment"), "url": url})
+    return out
 
 
 def preview_facts(t: Tender, today: date | None = None) -> list[tuple[str, str]]:
@@ -116,7 +147,11 @@ if __name__ == "__main__":
         organization="Odisha", deadline=date(2026, 9, 20), published_date=date(2026, 9, 5),
         raw_payload={"end": "20-09-2026 3:00 PM", "quantity": "4960",
                      "emd_amount": 37200.0, "contract_period": "3 Months",
-                     "organisation_chain": "A||B",
+                     "organisation_chain": "A||B", "bid_type": "Two Packet Bid",
+                     "mse_relaxation": "Yes",
+                     "links": [{"label": "Technical specification",
+                                "url": "https://mkp.gem.gov.in/spec.pdf"},
+                               {"label": "Bad", "url": "javascript:alert(1)"}],
                      "corrigendum": "--"},
     )
     got = dict(preview_facts(t, date(2026, 9, 16)))
@@ -126,5 +161,12 @@ if __name__ == "__main__":
     assert got["Bidding window"] == "15 days"
     assert got["Organisation chain"] == "A > B"
     assert "Corrigendum" not in got and "Estimated value" not in got and "Buyer" not in got
+    assert got["Bid type"] == "Two Packet Bid"
+    # On the tender page, deliberately not in a row.
+    everything = {label: value for label, value, _ in tender_facts(t, date(2026, 9, 16))}
+    assert everything["MSE turnover relaxation"] == "Yes"
+    assert "MSE turnover relaxation" not in got
+    # javascript: and data: URLs must never reach an href.
+    assert [l["label"] for l in links(t)] == ["Technical specification"]
     assert money(1.5e7) == "Rs 1.50 crore" and money(2e5) == "Rs 2 lakh"
     print("ok")

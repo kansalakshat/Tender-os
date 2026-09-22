@@ -128,17 +128,28 @@ class TenderOut(BaseModel):
     # (label, value) pairs from app/facts.py: EMD, quantity, closing time and the
     # rest, preformatted so the JSON rows show what the server-rendered rows do.
     facts: list[tuple[str, str]] = Field(default_factory=list)
+    # The same one-line synopsis the server-rendered rows print, and the
+    # attachments read off the bid document. Both are built server-side so the
+    # JSON rows and the HTML rows cannot drift apart.
+    summary: str = ""
+    links: list[dict] = Field(default_factory=list)
 
     @model_validator(mode="before")
     @classmethod
     def _with_facts(cls, obj):
-        from .facts import preview_facts  # facts -> matching -> models; keep schemas light
+        from .facts import links, preview_facts  # facts -> matching -> models
         from .models import Tender
 
         if not isinstance(obj, Tender):
             return obj
         data = {name: getattr(obj, name) for name in cls.model_fields if hasattr(obj, name)}
         data["facts"] = preview_facts(obj)
+        data["links"] = links(obj)
+        # Imported here, not at module scope: web imports schemas, so doing this
+        # at the top is a cycle.
+        from .web import summary_for
+
+        data["summary"] = summary_for(obj)
         return data
 
 

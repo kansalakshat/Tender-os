@@ -33,7 +33,7 @@ from .auth import current_user
 from .db import get_db
 from .districts import DISTRICTS
 from .eligibility import REGISTRATIONS, checklist, needs_check
-from .facts import money, preview_facts, tender_facts
+from .facts import links as tender_links, money, preview_facts, tender_facts
 from .matching import (
     SECTOR_LABELS,
     STATES,
@@ -145,12 +145,16 @@ def _summary(t: Tender, sectors: list[str], places: list[str], left: str) -> str
     # than printing "not stated" three times.
     raw = t.raw_payload if isinstance(t.raw_payload, dict) else {}
     extra = ""
-    if t.estimated_value is not None:
-        extra += f" Worth about {money(t.estimated_value)}"
-        emd = raw.get("emd_amount")
-        if isinstance(emd, (int, float)):
-            extra += f", with an EMD of {money(emd)}"
-        extra += "."
+    emd = raw.get("emd_amount")
+    # Read separately, not nested under the value: sampling bid documents found
+    # the EMD printed on bids that carry no estimated value at all, and nesting
+    # it meant those showed neither number.
+    if t.estimated_value is not None and isinstance(emd, (int, float)):
+        extra += f" Worth about {money(t.estimated_value)}, with an EMD of {money(emd)}."
+    elif t.estimated_value is not None:
+        extra += f" Worth about {money(t.estimated_value)}."
+    elif isinstance(emd, (int, float)):
+        extra += f" EMD is {money(emd)}."
     qty = raw.get("quantity")
     if qty and str(qty).strip().isdigit() and int(qty) > 1:
         extra += f" {int(qty):,} units."
@@ -177,6 +181,7 @@ _env = Environment(
 _env.globals.update(
     icon=icon, asset=asset, favicon=FAVICON, days_left=days_left,
     rank_class=rank_class, summary_for=summary_for, preview_facts=preview_facts,
+    tender_links=tender_links,
 )
 _env.filters["num"] = lambda n: f"{n:,}"
 _env.filters["urlquote"] = quote

@@ -25,6 +25,25 @@ function facts(t){
     +esc(f[1])+'</dd></div>').join('')+'</dl>';
 }
 
+// The one-line synopsis. Mirrors the rowsum paragraph in _macros.html; the
+// sentence is built server-side (summary_for in web.py) so both say the same.
+function synopsis(t){
+  return t.summary ? '<p class=rowsum>'+esc(t.summary)+'</p>' : '';
+}
+
+// Documents the bid points at. Mirrors doc_links() in _macros.html.
+// rel=noopener because these open a third-party host in a new tab, and the
+// scheme is re-checked here: esc() makes an href safe to print, not safe to
+// follow, and only app/facts.py filtering stands between a stored value and a
+// javascript: URL.
+function docLinks(t){
+  if(!t.links || !t.links.length) return '';
+  const ok = t.links.filter(l=>/^https?:\/\//i.test(l.url||''));
+  if(!ok.length) return '';
+  return '<ul class=docs>'+ok.map(l=>'<li><a href="'+esc(l.url)+'"'
+    +' target=_blank rel="noopener noreferrer">'+esc(l.label)+'</a></li>').join('')+'</ul>';
+}
+
 function flash(html, kind){
   document.getElementById('flash').innerHTML =
     '<div class="notice '+(kind||'warn')+'">'+html+'</div>';

@@ -102,10 +102,19 @@ def enrich_one(db: Session, tender: Tender, client: httpx.Client) -> bool:
         tender.estimated_value = Decimal(str(value))
         changed = True
 
-    for key in ("emd_amount", "contract_period", "quantity", "office", "ministry"):
-        if key in fields:
-            payload[key] = fields[key]
-            changed = True
+    # None of these has a column, and none needs one -- they are read off the
+    # document and only ever displayed. "links" is the attachments the bid points
+    # at (specification, terms, annexures); see bidpdf.extract_links.
+    for key in ("emd_amount", "contract_period", "quantity", "office", "ministry",
+                "bid_type", "offer_validity", "bid_opening", "mse_relaxation",
+                "startup_relaxation", "links"):
+        value_ = fields.get(key)
+        # An empty link list is not worth storing, and writing a key that is
+        # already identical would mark the row updated for no reason.
+        if value_ in (None, [], "") or payload.get(key) == value_:
+            continue
+        payload[key] = value_
+        changed = True
 
     # raw_payload is scrubbed on the way in everywhere else; do the same here.
     tender.raw_payload = scrub_personal(payload)

@@ -52,7 +52,13 @@ def run_once(since_hours: float) -> None:
             log.exception("%s failed", name)
     # Enrich before dedup: dedup matches on title, and a GeM listing title is a
     # stub until enrichment replaces it. Same order as app/scheduler.py.
-    log.info("enriched %d tender(s)", enrich_pending())
+    #
+    # enrich_pending's own default is 200, which is sized for a six-hourly loop.
+    # Once a day against GeM's ~3,000 new bids that never catches up, and the
+    # backlog only grows -- so the daily pass takes a bigger bite. ~1.5s per
+    # document puts 2,000 at roughly 50 minutes.
+    log.info("enriched %d tender(s)", enrich_pending(
+        limit=int(os.getenv("ENRICH_LIMIT", "2000"))))
     log.info("linked %d duplicate(s)", link_duplicates())
     log.info("purged %d tender(s)", purge_expired())
 
