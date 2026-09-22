@@ -337,18 +337,42 @@ Any of these hosts work; they differ in price and setup, not capability:
 | Google Cloud Run Job + Scheduler | free tier covers it | `asia-south1`; most moving parts |
 | Any VPS + cron | $4-6/month | dullest and most predictable |
 
-Fly, as the shortest path:
-
-```bash
-fly launch --no-deploy --name tender-ingest --region bom
-fly secrets set DATABASE_URL='...' CONTACT_EMAIL='...'
-fly deploy
-# Run it daily instead of keeping a machine up:
-fly machine run . --schedule daily --region bom
-```
-
 The image needs only `DATABASE_URL` and `CONTACT_EMAIL`; `RETENTION_DAYS=0` is
 baked in to match production.
+
+#### Oracle Cloud Always Free, the chosen host
+
+Free permanently, and the Ampere shape is genuinely capable rather than a trial.
+
+1. Create the instance: **VM.Standard.A1.Flex**, **4 OCPU / 24 GB**, image
+   **Ubuntu 24.04 (aarch64)**, region `ap-mumbai-1` or `ap-hyderabad-1`.
+   Not the `E2.1.Micro` AMD shape -- 1 GB is not enough for Chromium, and the
+   way you discover that is the OOM killer on a host nobody is watching.
+   Add your SSH key when prompted; no inbound ports are needed, because this
+   host only makes outbound connections.
+2. `ssh ubuntu@<public-ip>`
+3. ```bash
+   curl -fsSL https://raw.githubusercontent.com/kansalakshat/Tender-os/main/deploy/oracle-setup.sh | bash
+   ```
+   It installs Docker, builds the image, asks once for `DATABASE_URL` and
+   `CONTACT_EMAIL`, writes them to `/etc/tender-ingest.env` (mode 600, never in
+   the image or the repo), and installs a systemd timer for 01:30 UTC.
+4. Prove it before trusting it:
+   ```bash
+   sudo systemctl start tender-ingest.service
+   journalctl -u tender-ingest.service -f     # expect [GeM] ok: fetched=...
+   ```
+
+`arm64` is fine: the Playwright base image is multi-arch, checked against the
+registry manifest rather than assumed.
+
+**If the instance will not create** -- "Out of host capacity" is the usual
+Always-Free ARM experience. Try another availability domain, or the other
+Indian region, or retry later; capacity frees up. It is not a configuration
+mistake on your side.
+
+Once a run there has fetched GeM successfully, the Windows task is redundant:
+`Unregister-ScheduledTask -TaskName TenderDailyIngest -Confirm:$false`.
 
 Once a hosted run has fetched GeM successfully, `daily-ingest.yml` can drop its
 `SKIP_CONNECTORS`, or this host can take everything and the workflow be deleted.
