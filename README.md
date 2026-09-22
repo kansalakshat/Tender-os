@@ -304,6 +304,55 @@ Bounded two ways, because "it should fit" is not a plan:
 
 Same `CRON_SECRET` as the purge.
 
+**Vercel cron does not fetch everything.** It skips any connector with
+`requires_browser` -- GeM drives a real Chromium, which a serverless function
+does not have -- and it does not enrich. GeM is about two thirds of the corpus,
+so leaving it to a manual run means that share of the data stops being replaced
+while the purge keeps removing it on close. The daily task below is what covers
+the rest.
+
+### The daily task on this machine
+
+`daily_ingest.cmd` runs `run_prod_worker.py --once`: every connector in the
+registry (GeM included), then enrich, dedup and purge, against the production
+database -- one pass, then exit. Output appends to `ingest.log`.
+
+`--once` rather than leaving `run_prod_worker.py` running, because a laptop is
+not an always-on host: a long-lived APScheduler dies with the next reboot or
+sleep and nobody notices, while a scheduled task that exits simply runs again
+tomorrow.
+
+GeM's `max_pages` is 500 (~25 minutes at its 3s rate limit), not the 40 it was
+while it was nominally on a 6-hourly schedule that never actually ran. The
+listing is newest-first, so depth is the only knob that matters here, and it is
+sized from measured decay rather than a guess: of the 41,394 bids backfilled on
+16 Sep, 57% had closed within six days, implying GeM publishes ~3,100 new bids a
+day. 40 pages is 400 a day. Even 300 sits exactly on the inflow, where one slow
+day leaves a hole that never fills; 500 leaves headroom.
+
+Registered on Windows as **TenderDailyIngest**, 13:00 daily:
+
+```powershell
+$a = New-ScheduledTaskAction -Execute "<repo>\daily_ingest.cmd" -WorkingDirectory "<repo>"
+$t = New-ScheduledTaskTrigger -Daily -At 1pm
+$s = New-ScheduledTaskSettingsSet -StartWhenAvailable -AllowStartIfOnBatteries `
+       -DontStopIfGoingOnBatteries -ExecutionTimeLimit (New-TimeSpan -Hours 2) `
+       -MultipleInstances IgnoreNew
+Register-ScheduledTask -TaskName "TenderDailyIngest" -Action $a -Trigger $t -Settings $s -Force
+```
+
+`-StartWhenAvailable` is the part that matters: the machine is often off at the
+trigger time, and without it a missed day is simply skipped. On a host that is
+genuinely always on, drop the task and run `python run_prod_worker.py` instead.
+
+Check it:
+
+```powershell
+Get-ScheduledTaskInfo -TaskName TenderDailyIngest   # LastRunTime, LastTaskResult (0 = ok)
+Start-ScheduledTask   -TaskName TenderDailyIngest   # run it now
+Unregister-ScheduledTask -TaskName TenderDailyIngest -Confirm:$false
+```
+
 `GET /cron/purge` is the same job behind an authenticated URL, because
 serverless has no always-on process to hold a timer in. It requires
 `Authorization: Bearer $CRON_SECRET`, which Vercel Cron sends automatically once

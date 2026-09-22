@@ -132,9 +132,23 @@ class GeMConnector(BaseConnector):
     paths = (LISTING_PATH, DOCUMENT_PATH)
     rate_limit_seconds = 3.0
     requires_browser = True
-    # ~4,372 pages of 10. One run does not try to walk them all -- the 6-hourly
-    # schedule and run()'s own time budget do the rest, and new bids land on page 1.
-    max_pages = 40
+    # ~4,372 pages of 10. One run does not try to walk them all -- new bids land
+    # on page 1, so a run only has to be deep enough to cover what was published
+    # since the last one.
+    #
+    # Was 40 (400 records), sized for a 6-hourly schedule that in practice never
+    # ran: GeM is browser-driven, so Vercel's /cron/ingest skips it, and the only
+    # thing that fetches it is the daily task, so 400 a day was a fifth of the
+    # inflow and the corpus drained instead of holding.
+    #
+    # 500 is sized from the measured decay of the 16 Sep backfill, not a guess.
+    # Of 41,394 bids fetched that day, 57% had closed within six days and the
+    # median remaining life was ~5 days; ~7 days average remaining life against
+    # ~43,700 listed bids implies ~14 days average total life, so GeM publishes
+    # on the order of 3,100 new bids a day. 300 pages (3,000) sat exactly on that
+    # line, where one slow day is a hole that never fills. 500 is ~25 minutes at
+    # the 3s rate limit -- still well inside the daily task's 2h ceiling.
+    max_pages = 500
     # Where to begin. Only a bulk backfill sets this: because _open can jump to any
     # page with loadBids(), several processes can each take a slice of the listing
     # and run at the same time. The scheduled run always starts at 1.
