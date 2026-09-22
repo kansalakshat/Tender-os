@@ -49,3 +49,5 @@ purged/
 ingest.log
 gem_catchup*.log
 gem_enrich*.log
+gem_catchup*.log.out
+gem_catchup*.log.err
