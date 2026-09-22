@@ -22,7 +22,7 @@ from sqlalchemy.orm import Session
 from .bidpdf import parse_bid_pdf
 from .compliance import assert_not_blocked, scrub_personal, user_agent
 from .db import SessionLocal
-from .models import Tender, utcnow
+from .models import Source, Tender, utcnow
 
 log = logging.getLogger(__name__)
 
@@ -32,13 +32,19 @@ log = logging.getLogger(__name__)
 DONE_KEY = "_enriched"
 
 
-def needs_enrichment(limit: int = 200, shard: tuple[int, int] | None = None) -> list[int]:
+def needs_enrichment(limit: int = 200, shard: tuple[int, int] | None = None,
+                     skip_sources: set[str] | None = None) -> list[int]:
     """Ids of tenders with a document we have not read yet, soonest-closing first.
 
     `shard` is (index, count): take only ids where id % count == index. A bulk
     pass over tens of thousands of documents is one ~150 KB download each, so it
     is run as several processes at once; sharding on id keeps their work disjoint
     without any coordination between them.
+
+    `skip_sources` drops rows by source name. It exists because where this runs
+    decides what it can read: GeM's documents are on bidplus.gem.gov.in, which
+    refuses connections from datacenter addresses, so a hosted runner would spend
+    the whole pass failing on rows a laptop reads without trouble.
     """
     db = SessionLocal()
     try:
@@ -47,6 +53,12 @@ def needs_enrichment(limit: int = 200, shard: tuple[int, int] | None = None) -> 
             .where(Tender.document_url.is_not(None))
             .where(Tender.duplicate_of.is_(None))
         )
+        if skip_sources:
+            query = query.where(
+                Tender.source_id.not_in(
+                    select(Source.id).where(Source.name.in_(skip_sources))
+                )
+            )
         if shard is not None:
             index, count = shard
             query = query.where(Tender.id % count == index)
@@ -124,9 +136,10 @@ def enrich_one(db: Session, tender: Tender, client: httpx.Client) -> bool:
 
 
 def enrich_pending(limit: int = 200, session_factory=SessionLocal,
-                   shard: tuple[int, int] | None = None) -> int:
+                   shard: tuple[int, int] | None = None,
+                   skip_sources: set[str] | None = None) -> int:
     """Enrich up to `limit` tenders. Returns how many changed."""
-    ids = needs_enrichment(limit, shard)
+    ids = needs_enrichment(limit, shard, skip_sources)
     if not ids:
         return 0
     changed = 0

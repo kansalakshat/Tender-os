@@ -44,8 +44,20 @@ def run_once(since_hours: float) -> None:
     from app.scheduler import run_connector
 
     log = logging.getLogger("prod-worker")
+    # Where this runs decides what it can reach: GeM refuses datacenter
+    # addresses outright, so a hosted runner names it here instead of spending
+    # the run timing out against a host that will not answer.
+    skip = {n.strip() for n in os.getenv("SKIP_CONNECTORS", "").split(",") if n.strip()}
+    unknown = skip - set(REGISTRY)
+    if unknown:
+        # Loud, because a typo here silently fetches a source you meant to skip.
+        log.warning("SKIP_CONNECTORS names unknown connectors: %s", ", ".join(sorted(unknown)))
+
     since = utcnow() - timedelta(hours=since_hours)
     for name in REGISTRY:
+        if name in skip:
+            log.info("%s: skipped (SKIP_CONNECTORS)", name)
+            continue
         try:
             run_connector(name, since=since)
         except Exception:                     # one source must not sink the run
@@ -57,8 +69,11 @@ def run_once(since_hours: float) -> None:
     # Once a day against GeM's ~3,000 new bids that never catches up, and the
     # backlog only grows -- so the daily pass takes a bigger bite. ~1.5s per
     # document puts 2,000 at roughly 50 minutes.
+    # Same reasoning as SKIP_CONNECTORS: GeM's bid PDFs sit on the host that
+    # refuses this runner, so there is nothing to gain by trying them.
+    no_docs = {n.strip() for n in os.getenv("ENRICH_SKIP_SOURCES", "").split(",") if n.strip()}
     log.info("enriched %d tender(s)", enrich_pending(
-        limit=int(os.getenv("ENRICH_LIMIT", "2000"))))
+        limit=int(os.getenv("ENRICH_LIMIT", "2000")), skip_sources=no_docs or None))
     log.info("linked %d duplicate(s)", link_duplicates())
     log.info("purged %d tender(s)", purge_expired())
 
