@@ -1,0 +1,13 @@
+.venv/
+.git/
+.github/
+tests/
+migrations/
+static/
+templates/
+*.log
+*.err
+*.sql
+.env*
+dev.db
+__pycache__/
