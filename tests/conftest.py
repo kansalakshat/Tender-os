@@ -9,6 +9,14 @@ os.environ.setdefault("DATABASE_URL", "sqlite://")
 # mail to addresses like ops@acme.invalid on every run. load_dotenv() does not
 # override a key already present in os.environ, so setting it here wins.
 os.environ["SMTP_HOST"] = ""
+# Force-set for the same reason as SMTP_HOST. app/security.py derives
+# https_only() from this, and https_only() decides whether the session cookie is
+# issued `secure`. Once a real deployment URL is set in .env -- correct in
+# production -- every signed-in test fails, because TestClient speaks plain http
+# and a secure cookie is never sent back. Twenty-eight tests broke the moment
+# PUBLIC_BASE_URL was pointed at the live site, none for a reason in the code.
+os.environ["PUBLIC_BASE_URL"] = "http://testserver"
+
 # Same reasoning: a configured OAuth client would make the "button is hidden when
 # unconfigured" test fail depending on whose .env it ran against.
 os.environ.pop("GOOGLE_CLIENT_ID", None)
