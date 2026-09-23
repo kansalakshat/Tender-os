@@ -46,6 +46,8 @@ from .matching import (
     hydrate,
     match_digest,
     sector_terms,
+    strict_set,
+    STRICT_LABELS,
 )
 from .models import Company, ConnectorRun, Source, Tender, User
 
@@ -187,6 +189,8 @@ _env.globals.update(
     tender_links=tender_links,
 )
 _env.filters["num"] = lambda n: f"{n:,}"
+# For rendering a list of strict field keys as the words a bidder used.
+_env.filters["extract"] = lambda key, mapping: mapping.get(key, key)
 _env.filters["urlquote"] = quote
 
 
@@ -468,6 +472,10 @@ def results(
     user: User | None = Depends(current_user),
     sort: str = "score",
     order: str = "",
+    # "" means no opinion: use whatever the profile saved. "off" relaxes every
+    # boundary for this view without touching the saved answers, which is the
+    # escape hatch when strict answers leave too little to look at.
+    filters: str = "",
 ) -> str:
     company = db.get(Company, company_id)
     if company is None:
@@ -478,8 +486,19 @@ def results(
         raise HTTPException(status_code=404, detail="company not found")
     sort = sort if sort in MATCH_SORTS else "score"
     order = order if order in ("asc", "desc") else MATCH_SORTS[sort][1]
-    d = match_digest(db, company)
+    saved_strict = strict_set(company)
+    relaxed = filters == "off"
+    override = set() if relaxed else None
+    d = match_digest(db, company, strict=override)
     scored = sort_matches(db, company, d.scored, sort, order)[:50]
+    # Only worth offering the toggle when there is something to relax. Counting
+    # the other mode costs a second scoring pass, so it is done once here rather
+    # than on every row, and only when a boundary actually exists.
+    other_total = None
+    if saved_strict:
+        other_total = match_digest(
+            db, company, strict=None if relaxed else set()
+        ).total
     rows_by_id = hydrate(db, [tid for _s, _r, tid in scored])
     shown = [
         (rows_by_id[tid], score, list(reasons), needs_check(rows_by_id[tid], company))
@@ -489,7 +508,9 @@ def results(
     return render("matches.html", title="Matches", company=company, total=d.total,
                   shown=shown, top=max((sc for sc, _r, _t in scored), default=0),
                   sorts=[(k, v[0]) for k, v in MATCH_SORTS.items()],
-                  sort=sort, order=order)
+                  sort=sort, order=order,
+                  saved_strict=sorted(saved_strict), relaxed=relaxed,
+                  strict_labels=STRICT_LABELS, other_total=other_total)
 
 
 # ---- one tender --------------------------------------------------------

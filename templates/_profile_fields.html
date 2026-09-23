@@ -19,6 +19,9 @@
  <div class=fhead><span class=flabel>Sectors you work in <span class=req>Required</span></span>
   <button type=button class=clearbtn data-action=clear data-clear=sectors>Clear</button></div>
  <div class=checks>{% for key, label in sectors %}<label><input type=checkbox name=sectors value="{{ key }}"><span>{{ label }}</span></label>{% endfor %}</div>
+ <label class=strict title="Hide tenders that do not match this, instead of just ranking them lower"><input type=checkbox name=strict value="sectors"><span>Only show these</span></label>
+ <p class=fhint>Left off, a sector is a preference: a tender in another sector
+ still appears, ranked lower.</p>
 </div>
 
 <div class=f>
@@ -26,6 +29,7 @@
   <button type=button class=clearbtn data-action=clear data-clear=keywords>Clear</button></div>
  <input id=f_keywords name=keywords autocomplete=off spellcheck=false
     placeholder="e.g. transformer, cable&hellip;">
+ <label class=strict title="Hide tenders that do not match this, instead of just ranking them lower"><input type=checkbox name=strict value="keywords"><span>Only show these</span></label>
  <p class=fhint>A keyword must appear in the tender title as a whole word.</p>
 </div>
 </fieldset>
@@ -40,7 +44,9 @@
      aria-label="Filter states" placeholder="Filter states&hellip;">
   <div class=multilist>{% for st in states %}<label><input type=checkbox name=states value="{{ st }}"><span>{{ st }}</span></label>{% endfor %}</div>
  </div>
- <p class=fhint>Click as many as you like. No need to hold Ctrl.</p>
+ <label class=strict title="Hide tenders outside these places, instead of just ranking them lower"><input type=checkbox name=strict value="location"><span>Only show these places</span></label>
+ <p class=fhint>Click as many as you like. No need to hold Ctrl. Covers the
+ districts below too; either one matching is enough.</p>
 </div>
 
 <div class=f id=districtField hidden>
@@ -67,6 +73,7 @@
      aria-label="Filter buyers" placeholder="Filter buyers&hellip;">
   <div class=multilist>{% for name, n in top_buyers %}<label><input type=checkbox name=buyers value="{{ name }}"><span>{{ name }}</span><b>{{ n|num }}</b></label>{% endfor %}</div>
  </div>
+ <label class=strict title="Hide tenders that do not match this, instead of just ranking them lower"><input type=checkbox name=strict value="buyers"><span>Only show these</span></label>
 </div>
 
 <div class=f>
