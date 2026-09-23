@@ -706,3 +706,18 @@ main h2{display:flex;align-items:center}
 @media (max-width:40rem){
   .vendordocs{font-size:.94rem}
 }
+
+/* Saving a tender. The heart is the control; the label carries the meaning,
+   because a heart alone means "like" to some people and "save" to others. */
+.saverow{display:flex;flex-wrap:wrap;align-items:center;gap:.8rem 1rem;margin:1.4rem 0 0}
+.heart{display:inline-flex;align-items:center;gap:.5rem;padding:.5rem .9rem;
+  border:var(--b) solid var(--rule);border-radius:999px;background:var(--bg);
+  color:var(--fg);font:inherit;font-weight:700;cursor:pointer}
+.heart:hover,.heart:focus-visible{border-color:#c0392b}
+.heart .hearticon{font-size:1.15rem;line-height:1;color:var(--rule)}
+.heart:hover .hearticon{color:#c0392b}
+/* Filled only when saved, so the state is legible without reading the label. */
+.heart.on{border-color:#c0392b}
+.heart.on .hearticon{color:#c0392b}
+.heart[disabled]{opacity:.6;cursor:default}
+.savelink{font-size:.9rem}

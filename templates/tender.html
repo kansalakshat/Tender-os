@@ -47,6 +47,20 @@
  <p class=hint>Hosted by the portal. We only read the addresses out of the PDF.</p>
 {% endif %}
 </div>{% endif %}
+{#- Saving. Rendered signed out too, saying what it needs rather than hiding:
+    a feature that only appears once you already have an account is one nobody
+    finds. The state lives on the button so script has one place to read it. -#}
+<p class=saverow>
+ <button id=savebtn class="heart{{ ' on' if saved else '' }}" type=button
+   data-tender="{{ t.id }}" data-saved="{{ 'true' if saved else 'false' }}"
+   data-signed-in="{{ 'true' if signed_in else 'false' }}"
+   aria-pressed="{{ 'true' if saved else 'false' }}">
+  <span class=hearticon aria-hidden=true>&#9829;</span>
+  <span class=hearttext>{{ 'Saved' if saved else 'Save this tender' }}</span>
+ </button>
+ <a class=savelink href="/wishlist">See saved tenders</a>
+</p>
+
 {% from "_macros.html" import vendor_docs %}{{ vendor_docs() }}
 {% if cppp_box %}
 {#- CPPP rows with a stored tender link: the CAPTCHA sits right here, so opening
@@ -92,4 +106,5 @@
   {{ skeleton_row() }}
   {{ skeleton_row() }}
  </ol></section></div>
-<script src="{{ asset('js/tender.js') }}"></script>{% endblock %}
+<script src="{{ asset('js/tender.js') }}"></script><script src="{{ asset('js/wishlist.js') }}"></script>
+{% endblock %}
