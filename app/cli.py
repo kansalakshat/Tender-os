@@ -33,24 +33,71 @@ def cmd_run(args) -> int:
             value = getattr(args, attr)
             if value is not None and hasattr(connector, attr):
                 setattr(connector, attr, value)
+        reader = _document_reader(connector) if args.enrich else None
         try:
             summary = connector.run(since=since)
         finally:
             connector.close()
+            if reader is not None:
+                reader()          # drain what is left, then stop
         print(summary)
         failed |= summary.status != "ok"
-
-        # Read the documents behind the rows this run just created, here, now.
-        # A listing row on its own has no EMD, no value and no links, and the
-        # general queue is ordered by soonest deadline -- so a bid fetched today
-        # and closing in a fortnight would not be read for hours.
-        if args.enrich and connector.created_ids:
-            from .enrich import enrich_pending
-
-            read = enrich_pending(limit=len(connector.created_ids),
-                                  only=connector.created_ids)
-            print(f"read {read} of {len(connector.created_ids)} new bid document(s)")
     return 1 if failed else 0
+
+
+def _document_reader(connector):
+    """Read each new row's document while the crawl is still running.
+
+    Alongside, not afterwards. A shard walks 800 pages over hours, so reading at
+    the end means a tender collected in the first minute waits all of them --
+    and a listing row without its document has no EMD, no value and no links.
+
+    Doing it inline in the crawl loop is the other wrong answer: a page of ten
+    rows takes 3 seconds to fetch and its ten documents about twenty to read, so
+    the crawl would move at the speed of the slowest PDF. A thread keeps the two
+    at their own pace, and the ids it has already handled are tracked here so a
+    document is never read twice.
+
+    Returns a callable that stops the thread and drains the remainder.
+    """
+    import threading
+
+    from .enrich import enrich_pending
+
+    done: set[int] = set()
+    stop = threading.Event()
+
+    def drain() -> int:
+        fresh = [i for i in list(connector.created_ids) if i not in done]
+        if not fresh:
+            return 0
+        done.update(fresh)
+        return enrich_pending(limit=len(fresh), only=fresh)
+
+    def loop():
+        while not stop.is_set():
+            try:
+                n = drain()
+                if n:
+                    print(f"read {n} new bid document(s)", flush=True)
+            except Exception as exc:      # reading must never sink the crawl
+                print(f"document reader: {type(exc).__name__}: {exc}", flush=True)
+            stop.wait(20)
+
+    thread = threading.Thread(target=loop, name="document-reader", daemon=True)
+    thread.start()
+
+    def finish() -> None:
+        stop.set()
+        thread.join(timeout=10)
+        try:
+            left = drain()
+            if left:
+                print(f"read {left} new bid document(s)", flush=True)
+        except Exception as exc:
+            print(f"document reader: {type(exc).__name__}: {exc}", flush=True)
+
+    return finish
 
 
 def cmd_check_robots(args) -> int:

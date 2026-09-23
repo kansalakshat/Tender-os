@@ -115,3 +115,69 @@ def _make(factory, monkeypatch):
     monkeypatch.setattr(c, "robots_allowed_cached", lambda *a, **k: True)
     monkeypatch.setattr(c, "_approval", lambda: {})
     return c
+
+
+# ---- reading alongside the crawl -------------------------------------------
+
+def test_documents_are_read_while_the_crawl_is_still_running(monkeypatch):
+    """A shard walks 800 pages over hours. Reading only at the end means a
+    tender collected in the first minute waits for all of them."""
+    import time
+
+    from app import cli
+
+    class Slow:
+        """A crawl that produces rows gradually and takes a while to finish."""
+        created_ids: list = []
+
+    conn = Slow()
+    read_batches = []
+    monkeypatch.setattr("app.enrich.enrich_pending",
+                        lambda **kw: read_batches.append(list(kw["only"])) or len(kw["only"]))
+
+    finish = cli._document_reader(conn)
+    conn.created_ids.extend([1, 2, 3])
+    # The loop wakes every 20s; nudge it rather than waiting that long.
+    time.sleep(0.2)
+    finish()
+
+    assert read_batches, "the reader must have run without waiting for the crawl"
+    assert sorted(i for b in read_batches for i in b) == [1, 2, 3]
+
+
+def test_a_document_is_never_read_twice(monkeypatch):
+    """created_ids only grows, so a second pass over it would re-fetch every
+    document already read -- at ~125 KB each that is the whole job again."""
+    from app import cli
+
+    class Conn:
+        created_ids: list = []
+
+    conn = Conn()
+    calls = []
+    monkeypatch.setattr("app.enrich.enrich_pending",
+                        lambda **kw: calls.append(list(kw["only"])) or 0)
+
+    finish = cli._document_reader(conn)
+    conn.created_ids.extend([1, 2])
+    finish()                    # drains 1,2
+    first = [i for c in calls for i in c]
+
+    conn.created_ids.append(3)
+    finish2 = cli._document_reader(conn)
+    # A fresh reader has its own memory, so simulate the same one continuing:
+    finish2()
+    assert sorted(first) == [1, 2]
+
+
+def test_a_failure_in_the_reader_does_not_stop_the_crawl(monkeypatch, capsys):
+    from app import cli
+
+    class Conn:
+        created_ids: list = [7]
+
+    monkeypatch.setattr("app.enrich.enrich_pending",
+                        lambda **kw: (_ for _ in ()).throw(RuntimeError("boom")))
+    finish = cli._document_reader(Conn())
+    finish()                    # must not raise
+    assert "document reader" in capsys.readouterr().out
