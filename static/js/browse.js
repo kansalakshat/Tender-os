@@ -51,7 +51,7 @@ function go(e,off){
         + '<p class=m>'+esc(t.organization||'unnamed buyer')+' &middot; closes '
         + '<time datetime="'+esc(t.deadline||'')+'">'
         + esc(t.deadline||'not stated')+'</time>'
-        + '</p>'+synopsis(t)+extra(t)+facts(t)+docLinks(t)+VENDOR_DOCS+'</div></li>';
+        + '</p>'+synopsis(t)+extra(t)+VENDOR_DOCS+facts(t)+docLinks(t)+'</div></li>';
     }).join('')
       || '<li class=empty><p>Nothing matched that search. Try a shorter word, or '
          + 'clear the source filter.</p></li>';

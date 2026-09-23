@@ -38,11 +38,12 @@ def test_it_is_shown_outright_not_behind_a_control():
     assert "Bidder shall submit the following documents" in html
 
 
-def test_it_sits_after_the_tender_facts():
-    """Same text on every row, so it must not come between a reader and the
-    facts that differ from one tender to the next."""
+def test_it_sits_above_the_fact_strip():
+    """Ordering is deliberate, and the kind of thing a later edit reshuffles
+    without noticing: after the row's own meta lines, before the facts."""
     html = _row_html()
-    assert html.index("vendordocs") > html.index("class=m")
+    assert html.index("vendordocs") > html.index("class='m x'"), "after the meta lines"
+    assert html.index("vendordocs") < html.index("class=pf"), "before the fact strip"
 
 
 def test_the_javascript_rows_say_exactly_the_same_thing():
