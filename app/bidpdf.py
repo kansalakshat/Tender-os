@@ -136,20 +136,16 @@ def _label_for(url: str) -> str:
     return host or "Attachment"
 
 
-def extract_links(data: bytes) -> list[dict]:
+def links_from_reader(reader) -> list[dict]:
     """[{label, url}] for the documents this bid points at, in page order.
+
+    Takes an open reader, not bytes: parsing is the expensive part of reading a
+    PDF, and this used to build a second PdfReader over the same document, so
+    every tender was parsed twice on every pass.
 
     Deduplicated on the URL: a multi-page document repeats the same terms link
     on every page, and twelve identical rows is not information.
     """
-    try:
-        from pypdf import PdfReader
-
-        reader = PdfReader(io.BytesIO(data))
-    except Exception as exc:
-        log.warning("bid pdf unreadable for links: %s", exc)
-        return []
-
     out: list[dict] = []
     seen: set[str] = set()
     for page in reader.pages:
@@ -174,6 +170,17 @@ def extract_links(data: bytes) -> list[dict]:
     return out
 
 
+def extract_links(data: bytes) -> list[dict]:
+    """Links from raw bytes, for a caller with no reader of its own."""
+    try:
+        from pypdf import PdfReader
+
+        return links_from_reader(PdfReader(io.BytesIO(data)))
+    except Exception as exc:
+        log.warning("bid pdf unreadable for links: %s", exc)
+        return []
+
+
 def parse_bid_pdf(data: bytes) -> dict:
     """Bid-document bytes -> the fields worth keeping. Missing keys are absent.
 
@@ -185,6 +192,9 @@ def parse_bid_pdf(data: bytes) -> dict:
 
         reader = PdfReader(io.BytesIO(data))
         raw = "\n".join(page.extract_text() or "" for page in reader.pages)
+        # Same reader, same pass. Building a second one below meant every
+        # document was parsed twice, which is most of the cost of reading one.
+        found_links = links_from_reader(reader)
     except Exception as exc:
         log.warning("bid pdf unreadable: %s", exc)
         return {}
@@ -246,5 +256,5 @@ def parse_bid_pdf(data: bytes) -> dict:
         if val:
             out[key] = val
 
-    out["links"] = extract_links(data)
+    out["links"] = found_links
     return out
