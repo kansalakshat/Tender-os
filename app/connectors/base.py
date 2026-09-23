@@ -314,6 +314,13 @@ class BaseConnector(ABC):
                 # couple of hours; holding that in one transaction means a failure
                 # on the last page throws away every row before it.
                 if summary.fetched % COMMIT_EVERY == 0:
+                    # Record the portal's own total as soon as it is known, not
+                    # at the end: a shard walking 1,600 pages runs for hours, and
+                    # "how much is left" is a question worth answering while it
+                    # is still running rather than once it no longer matters.
+                    if self.listing_total is not None and src.listing_total != self.listing_total:
+                        src.listing_total = self.listing_total
+                        src.listing_total_at = utcnow()
                     db.commit()
                     log.info("%s: committed %d records so far", self.source_name,
                              summary.fetched)
