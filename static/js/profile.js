@@ -41,7 +41,7 @@ function renderPreview(matches){
       + esc(m.tender.title) + '</a>'
       + '<p class=m>' + esc(m.tender.organization || 'unnamed buyer')
       + ' &middot; closes <time datetime="' + esc(m.tender.deadline) + '">'
-      + esc(m.tender.deadline) + '</time></p>' + synopsis(m.tender) + extra(m.tender) + VENDOR_DOCS + facts(m.tender) + docLinks(m.tender)
+      + esc(m.tender.deadline) + '</time></p>' + synopsis(m.tender) + extra(m.tender) + facts(m.tender) + docLinks(m.tender)
       + tags(m.reasons) + '</div></li>').join('')
     + '</ol><p class=hint>Nothing here was saved. '
     + '<a href="/signup">Create an account</a> to keep these answers.</p>';
