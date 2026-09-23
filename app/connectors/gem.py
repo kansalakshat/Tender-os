@@ -276,6 +276,18 @@ class GeMConnector(BaseConnector):
         el = page.query_selector(_SHOWN_SELECTOR)
         return (el.inner_text().strip() if el else "")
 
+    def record_listing_total(self, shown: str) -> int | None:
+        """Pull the portal's own total out of "Showing A - B records of T".
+
+        Stored on the source row so the dashboard can say what is left to
+        collect. Reading it costs nothing -- the pager line is already fetched
+        on every page turn to tell whether the page changed.
+        """
+        m = _SHOWN_RANGE.search(shown or "")
+        if not m:
+            return None
+        return int(m.group(3).replace(",", ""))
+
     def _next_page(self, page, current: int) -> bool:
         """Advance to page `current + 1`. False when there is no next page.
 
@@ -287,6 +299,9 @@ class GeMConnector(BaseConnector):
         """
         self._throttle_pause(page)
         before = self._shown(page)
+        total = self.record_listing_total(before)
+        if total is not None:
+            self.listing_total = total
         if _at_last_page(before):
             log.info("%s: page %d is the last, stopping", self.source_name, current)
             return False

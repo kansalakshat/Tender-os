@@ -17,7 +17,7 @@ import httpx
 from selectolax.parser import HTMLParser
 
 from app.connectors.gepnic import LISTING_PATH, GePNICConnector
-
+from app.connectors.captcha_solver import solve_image_captcha
 # CAPTCHA markers -- if the listing itself is gated we do not touch it (rule #3).
 CAPTCHA_MARKERS = ("captcha", "enter the characters", "provide captcha")
 

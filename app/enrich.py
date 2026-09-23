@@ -16,7 +16,7 @@ import logging
 from decimal import Decimal
 
 import httpx
-from sqlalchemy import select
+from sqlalchemy import Text, func, or_, select
 from sqlalchemy.orm import Session
 
 from .bidpdf import parse_bid_pdf
@@ -48,10 +48,24 @@ def needs_enrichment(limit: int = 200, shard: tuple[int, int] | None = None,
     """
     db = SessionLocal()
     try:
+        # Ids only, and the already-read test done in SQL. Selecting
+        # raw_payload to check one key meant ~30,000 JSON blobs crossing the
+        # network before the first PDF was fetched -- per shard -- and the pass
+        # looked wedged because nothing happened for minutes.
+        #
+        # Matched as text rather than with a JSON operator so the same query
+        # runs on Postgres and on SQLite under test. The marker is a fixed key
+        # this code writes; scraped content cannot collide with it.
         query = (
-            select(Tender.id, Tender.raw_payload)
+            select(Tender.id)
             .where(Tender.document_url.is_not(None))
             .where(Tender.duplicate_of.is_(None))
+            .where(
+                or_(
+                    Tender.raw_payload.is_(None),
+                    func.cast(Tender.raw_payload, Text).notlike(f'%"{DONE_KEY}"%'),
+                )
+            )
         )
         if skip_sources:
             query = query.where(
@@ -62,26 +76,9 @@ def needs_enrichment(limit: int = 200, shard: tuple[int, int] | None = None,
         if shard is not None:
             index, count = shard
             query = query.where(Tender.id % count == index)
-        # Streamed, not .all(): the DONE_KEY test needs raw_payload, and
-        # materialising every candidate's JSON first meant ~21,000 blobs pulled
-        # from a hosted database before the first document was fetched -- per
-        # shard. yield_per gives a server-side cursor, so the loop below stops
-        # as soon as it has `limit` ids and the rest is never transferred.
-        rows = db.execute(
-            query.order_by(Tender.deadline.asc().nulls_last()),
-            execution_options={"yield_per": 200},
-        )
-        out = []
-        for tid, payload in rows:
-            if isinstance(payload, dict) and payload.get(DONE_KEY):
-                continue
-            out.append(tid)
-            if len(out) >= limit:
-                break
-        # Abandoning a server-side cursor mid-iteration leaves it open until the
-        # session closes; this session is about to be closed, but say so.
-        rows.close()
-        return out
+        return list(db.execute(
+            query.order_by(Tender.deadline.asc().nulls_last()).limit(limit)
+        ).scalars())
     finally:
         db.close()
 

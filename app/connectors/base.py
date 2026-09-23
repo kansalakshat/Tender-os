@@ -66,6 +66,10 @@ class BaseConnector(ABC):
     # ImportError every night. It still runs from app/scheduler.py on a host that
     # has a browser.
     requires_browser: bool = False
+    # Set by a connector that can see the portal's own count of what it
+    # publishes; persisted to the source row at the end of a run. None where the
+    # portal publishes no such number.
+    listing_total: int | None = None
 
     def __init_subclass__(cls, **kw):
         """Rule #1 at class-definition time: a GeM connector cannot even be declared."""
@@ -253,6 +257,15 @@ class BaseConnector(ABC):
         try:
             self._approval()
             src = self.ensure_source_row(db)
+            # One guard, here, because every caller routes through run(): the
+            # scheduler, the CLI, /cron/ingest and the dashboard button. Checked
+            # before robots, since asking a portal we have switched off whether
+            # we may read it is a request that should not happen at all.
+            if not src.enabled:
+                summary.status = "disabled"
+                summary.message = "switched off by an operator; nothing was fetched"
+                db.commit()
+                return summary
             if not self.robots_allowed_cached(db, src):
                 src.active = False
                 summary.status = "refused"
@@ -307,6 +320,12 @@ class BaseConnector(ABC):
             summary.updated = (
                 summary.fetched - summary.new - summary.skipped - summary.errors
             )
+            # What the portal says it publishes, if this connector saw it. Kept
+            # on the source row so the dashboard can report what is left to
+            # collect rather than only what we already hold.
+            if self.listing_total is not None:
+                src.listing_total = self.listing_total
+                src.listing_total_at = utcnow()
             db.commit()
         except (BlockedSourceError, RobotsDisallowedError) as exc:
             db.rollback()

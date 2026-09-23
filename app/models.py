@@ -32,7 +32,17 @@ class Source(Base):
     robots_txt_checked_at: Mapped[datetime | None] = mapped_column(DateTime)
     robots_txt_allowed: Mapped[bool | None] = mapped_column(Boolean)
     rate_limit_seconds: Mapped[Decimal] = mapped_column(Numeric, default=2)
+    # Health, written by the connector on every run: False when robots refuses.
     active: Mapped[bool] = mapped_column(Boolean, default=True)
+    # Intent, written only by an operator. Separate from `active` precisely
+    # because a run overwrites that one, so a source turned off would turn
+    # itself back on at the next attempt.
+    enabled: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
+    # The portal's own count of what it publishes, and when we last read it.
+    # Lets the dashboard say what is left to collect rather than only what we
+    # hold. Null where a portal publishes no total, or none has been seen yet.
+    listing_total: Mapped[int | None] = mapped_column()
+    listing_total_at: Mapped[datetime | None] = mapped_column(DateTime)
 
 
 class Tender(Base):
