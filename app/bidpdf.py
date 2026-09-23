@@ -60,8 +60,22 @@ _TRAILING_NOISE = re.compile(r"(?:\s+(?:[^A-Za-z0-9\s]{1,3}|(\d{1,2})\s+\1(?!\S)
 _DOUBLED_LETTER = re.compile(r"(?:\s+([A-Za-z])\s+\1\b)+\s*$")
 
 
+_HINDI_GAP = re.compile(
+    r"([ऀ-ॿ][^\s/]*)\s+[^\sA-Za-z/]{1,3}(?=\s+[^\s/]*[ऀ-ॿ])"
+)
+
+
 def _clean(text: str) -> str:
     """ASCII residue, with the marks the Devanagari leaves behind removed."""
+    # A Devanagari word goes whole, with anything glued to it: the fonts map
+    # some glyphs to ASCII ("मूQयांकन", "'पSीकरण"), and dropping only the
+    # non-ASCII characters left those letters behind as fake words. Stops at
+    # "/", which is what joins a Hindi label to its English half ("है/MSE").
+    # A short number or mark between two Hindi words is part of the Hindi
+    # ("टनओ% वर (3 वष2 का)" is "turnover (3 years)"), so it goes with them.
+    text = _HINDI_GAP.sub(r"\1", text)
+    text = _HINDI_GAP.sub(r"\1", text)      # twice: matches cannot overlap
+    text = re.sub(r"[^\s/]*[ऀ-ॿ][^\s/]*", " ", text)
     ascii_only = re.sub(r"[^\x00-\x7F]+", " ", text)
     # Leftovers look like: "& &", "' '", "W W [ [", "( (". Drop the punctuation
     # runs and the control characters the extractor emits between glyph runs.
@@ -188,13 +202,23 @@ def parse_bid_pdf(data: bytes) -> dict:
     it just means this tender keeps the listing's thinner data.
     """
     try:
+        import pypdfium2 as pdfium
         from pypdf import PdfReader
 
-        reader = PdfReader(io.BytesIO(data))
-        raw = "\n".join(page.extract_text() or "" for page in reader.pages)
-        # Same reader, same pass. Building a second one below meant every
-        # document was parsed twice, which is most of the cost of reading one.
-        found_links = links_from_reader(reader)
+        # Text from pdfium (C), not pypdf: pypdf's extract_text is pure Python
+        # and cost seconds of CPU per bid, which capped a backlog pass at a
+        # couple of hundred documents a minute across every core. pdfium is
+        # ~20x faster on the same documents.
+        doc = pdfium.PdfDocument(data)
+        try:
+            raw = "\n".join(
+                doc[i].get_textpage().get_text_range() for i in range(len(doc))
+            )
+        finally:
+            doc.close()
+        # Links stay on pypdf: reading annotations parses no content stream,
+        # so it is cheap.
+        found_links = links_from_reader(PdfReader(io.BytesIO(data)))
     except Exception as exc:
         log.warning("bid pdf unreadable: %s", exc)
         return {}

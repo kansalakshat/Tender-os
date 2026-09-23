@@ -1,4 +1,4 @@
-# Runtime dependencies for the web app only (Vercel installs from this file).
+﻿# Runtime dependencies for the web app only (Vercel installs from this file).
 # apscheduler and alembic are deliberately absent: the scheduler cannot run on
 # serverless, and migrations are applied from a machine with a real shell.
 fastapi>=0.115
@@ -15,6 +15,8 @@ jinja2>=3.1
 # Reading bid documents (app/bidpdf.py). Imported lazily, so a deploy without it
 # still serves; only enrichment stops.
 pypdf>=5.0.0
+# Text extraction for the same documents: C, ~20x faster than pypdf's.
+pypdfium2>=4.30
 # Browser-driven connectors (app/connectors/gem.py). NOT installed on Vercel --
 # there is no Chromium in a serverless function, which is why /cron/ingest skips
 # connectors that declare requires_browser. Needed on whatever host runs
