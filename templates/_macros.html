@@ -32,6 +32,23 @@
 {%- if ls %}<ul class=docs>{% for l in ls %}<li><a href="{{ l.url }}" target=_blank rel="noopener noreferrer">{{ l.label }}</a></li>{% endfor %}</ul>{% endif -%}
 {%- endmacro %}
 
+{#- The paperwork nearly every Indian public buyer asks for before it can pay a
+    new supplier. Written once here and included by the row, the tender page and
+    the JSON rows' renderer, so the three cannot drift.
+
+    Worded as a standing reminder, not as a quotation: it is not read out of any
+    particular notice, and printing it as though each tender said it would have
+    the site asserting something it has not checked. Collapsed, because it is
+    the same text on every row and an open copy on fifty rows buries the
+    tenders themselves. -#}
+{% macro vendor_docs() -%}
+<details class=vendordocs><summary>Documents to submit for vendor code creation</summary>
+<ol><li>Copy of PAN Card.</li><li>Copy of GSTIN.</li><li>Copy of Cancelled Cheque.</li>
+<li>Copy of EFT Mandate duly certified by Bank.</li></ol>
+<p class=hint>A general requirement for vendor registration, not read from this
+tender. Always check the bid document for what this buyer asks for.</p></details>
+{%- endmacro %}
+
 {#- One list row. The title opens our own page rather than the source portal:
     eprocure.gov.in serves "Invalid Url" for any tendersfullview link that arrives
     without a Referer from its own domain, so linking out directly was a dead end
@@ -44,6 +61,7 @@
 {{- extra_line(t) -}}
 {{- fact_strip(t) -}}
 {{- doc_links(t) -}}
+{{- vendor_docs() -}}
 {%- if tags %}<ul class=tags>{% for tag in tags %}<li class=tag>{{ tag }}</li>{% endfor %}</ul>{% endif -%}
 </div></li>
 {%- endmacro %}

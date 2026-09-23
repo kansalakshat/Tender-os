@@ -47,6 +47,7 @@
  <p class=hint>Hosted by the portal. We only read the addresses out of the PDF.</p>
 {% endif %}
 </div>{% endif %}
+{% from "_macros.html" import vendor_docs %}{{ vendor_docs() }}
 {% if cppp_box %}
 {#- CPPP rows with a stored tender link: the CAPTCHA sits right here, so opening
     the full notice is one click. The image is fetched by script after the page

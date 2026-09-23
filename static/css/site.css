@@ -693,3 +693,13 @@ main h2{display:flex;align-items:center}
 .modebar{display:flex;flex-wrap:wrap;align-items:center;gap:.6rem 1rem;margin:1rem 0 .2rem}
 .toggle{display:inline-flex;gap:.4rem}
 .modenote{font-size:.84rem;color:var(--muted);max-width:52ch}
+
+/* Vendor-code paperwork. The same note on every row, so it stays shut until
+   asked for: fifty open copies would bury the tenders they sit under. */
+.vendordocs{margin:.6rem 0 0;font-size:.84rem}
+.vendordocs summary{cursor:pointer;color:var(--muted);font-weight:700;
+  list-style-position:inside}
+.vendordocs summary:hover,.vendordocs summary:focus-visible{color:var(--fg)}
+.vendordocs ol{margin:.5rem 0 0;padding-left:1.4rem;color:var(--muted)}
+.vendordocs li{margin:.15rem 0}
+.vendordocs .hint{margin:.45rem 0 0}
