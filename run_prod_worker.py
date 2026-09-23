@@ -59,7 +59,8 @@ def run_once(since_hours: float) -> None:
             log.info("%s: skipped (SKIP_CONNECTORS)", name)
             continue
         try:
-            run_connector(name, since=since)
+            summary = run_connector(name, since=since, enrich_new=True)
+            del summary
         except Exception:                     # one source must not sink the run
             log.exception("%s failed", name)
     # Enrich before dedup: dedup matches on title, and a GeM listing title is a

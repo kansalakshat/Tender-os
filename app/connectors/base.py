@@ -84,6 +84,10 @@ class BaseConnector(ABC):
         # Why the last robots check said no. "Unreachable" and "disallowed" are very
         # different operational problems and must not be reported as the same thing.
         self.robots_reason: str | None = None
+        # Ids this run created, for whoever reads their documents next. On the
+        # instance, never the class: a shared list would hand one run's rows to
+        # another.
+        self.created_ids: list[int] = []
         self._client = client or httpx.Client(
             headers={"User-Agent": user_agent()},
             timeout=httpx.Timeout(45.0),
@@ -252,6 +256,7 @@ class BaseConnector(ABC):
         re-reads whatever this one did not reach.
         """
         summary = RunSummary(source=self.source_name)
+        self.created_ids = []           # a second run() must start clean
         db = self.session_factory()
         src = None
         try:
@@ -374,7 +379,15 @@ class BaseConnector(ABC):
         values = rec.model_dump()
         values.pop("external_ref")
         if existing is None:
-            db.add(Tender(source_id=src.id, external_ref=rec.external_ref, **values))
+            row = Tender(source_id=src.id, external_ref=rec.external_ref, **values)
+            db.add(row)
+            # Flushed so the id exists now. Whoever runs next wants to read the
+            # documents behind exactly these rows, and the general queue is
+            # ordered by soonest deadline -- a bid closing in a fortnight sits
+            # behind every one closing tomorrow, so "enrich after crawling"
+            # would not reach today's new bids for hours.
+            db.flush()
+            self.created_ids.append(row.id)
             return 1
 
         old_payload = existing.raw_payload if isinstance(existing.raw_payload, dict) else {}
