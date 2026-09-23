@@ -687,3 +687,9 @@ main h2{display:flex;align-items:center}
 .strict:hover{color:var(--fg);border-color:var(--fg)}
 .strict input{margin:0}
 .strict:has(input:checked){color:var(--fg);border-color:var(--fg)}
+
+/* The strict/preference switch. Sits above the results, not inside the sort
+   bar, because it has to stay reachable when the result set is empty. */
+.modebar{display:flex;flex-wrap:wrap;align-items:center;gap:.6rem 1rem;margin:1rem 0 .2rem}
+.toggle{display:inline-flex;gap:.4rem}
+.modenote{font-size:.84rem;color:var(--muted);max-width:52ch}
