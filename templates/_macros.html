@@ -36,9 +36,10 @@
     new supplier. Written once here and included by the row, the tender page and
     the JSON rows' renderer, so the three cannot drift.
 
-    Shown open on every row, and above the fact strip: it is a requirement a
-    bidder who misses it cannot be paid over, so it is not left to the bottom
-    of a row where the eye stops. -#}
+    On the tender's own page only. It is the same text for every tender, so
+    repeating it down a list of fifty rows crowded out the things that differ
+    between them, which is what a list is for. Someone reading one tender
+    properly sees it there, at the point they would act on it. -#}
 {% macro vendor_docs() -%}
 <div class=vendordocs><p class=vdtitle>Bidder shall submit the following documents along with their bid for Vendor Code Creation:</p>
 <ol><li>Copy of PAN Card.</li><li>Copy of GSTIN.</li><li>Copy of Cancelled Cheque.</li>
@@ -55,7 +56,6 @@
 {%- if summary %}<p class=rowsum>{{ summary_for(t) }}</p>{% endif -%}
 <p class=m>{{ t.organization or 'unnamed buyer' }} &middot; closes <time datetime='{{ t.deadline }}'>{{ t.deadline }}</time></p>
 {{- extra_line(t) -}}
-{{- vendor_docs() -}}
 {{- fact_strip(t) -}}
 {{- doc_links(t) -}}
 {%- if tags %}<ul class=tags>{% for tag in tags %}<li class=tag>{{ tag }}</li>{% endfor %}</ul>{% endif -%}

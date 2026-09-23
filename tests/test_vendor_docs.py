@@ -1,8 +1,9 @@
-"""The vendor-code paperwork note, on every preview.
+"""The vendor-code paperwork note.
 
-The text lives in three renderers -- the row macro, the tender page and the
-JavaScript that draws JSON rows -- so the thing worth testing is that they do
-not drift apart, and that the note never claims to be quoting the tender.
+On a tender's own page, not on list rows. It is identical for every tender, so
+repeating it down a list crowds out the things that differ between them, which
+is the only reason to read a list. Someone opening one tender sees it at the
+point they would act on it.
 """
 from datetime import date, timedelta
 from pathlib import Path
@@ -24,34 +25,32 @@ def _row_html():
     return tpl.render(t=t, today=date.today(), days_left=days_left)
 
 
-def test_every_row_carries_the_note():
+def test_list_rows_do_not_carry_it():
     html = _row_html()
+    for item in ITEMS:
+        assert item not in html, f"{item} should not be on a list row"
+    assert "vendordocs" not in html
+
+
+def test_the_tender_page_macro_still_has_every_line():
+    """Removed from rows, not from the site: the text itself must survive."""
+    tpl = _env.from_string("{% from '_macros.html' import vendor_docs %}{{ vendor_docs() }}")
+    html = tpl.render()
+    assert "Bidder shall submit the following documents" in html
     for item in ITEMS:
         assert item in html, item
 
 
 def test_it_is_shown_outright_not_behind_a_control():
-    """Printed on the page rather than one click away: asked for plainly, and
-    a requirement a bidder must not be able to miss."""
-    html = _row_html()
+    tpl = _env.from_string("{% from '_macros.html' import vendor_docs %}{{ vendor_docs() }}")
+    html = tpl.render()
     assert "<details" not in html and "<summary" not in html
-    assert "Bidder shall submit the following documents" in html
 
 
-def test_it_sits_above_the_fact_strip():
-    """Ordering is deliberate, and the kind of thing a later edit reshuffles
-    without noticing: after the row's own meta lines, before the facts."""
-    html = _row_html()
-    assert html.index("vendordocs") > html.index("class='m x'"), "after the meta lines"
-    assert html.index("vendordocs") < html.index("class=pf"), "before the fact strip"
-
-
-def test_the_javascript_rows_say_exactly_the_same_thing():
-    """/browse draws its rows in script, so a note added only to the template
-    would be missing from the main listing page."""
-    js = (ROOT / "static" / "js" / "site.js").read_text(encoding="utf-8")
-    for item in ITEMS:
-        assert item in js, item
-    for name in ("browse.js", "profile.js"):
-        drawn = (ROOT / "static" / "js" / name).read_text(encoding="utf-8")
-        assert "VENDOR_DOCS" in drawn, name
+def test_the_row_renderers_no_longer_draw_it():
+    """/browse and the match preview draw rows in script; a stale copy there
+    would put the note back on the lists it was taken off."""
+    for name in ("site.js", "browse.js", "profile.js"):
+        js = (ROOT / "static" / "js" / name).read_text(encoding="utf-8")
+        assert "VENDOR_DOCS" not in js, name
+        assert "Copy of PAN Card" not in js, name

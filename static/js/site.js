@@ -44,15 +44,6 @@ function docLinks(t){
     +' target=_blank rel="noopener noreferrer">'+esc(l.label)+'</a></li>').join('')+'</ul>';
 }
 
-// Mirrors vendor_docs() in _macros.html. Static text, so it is built here
-// rather than sent with every row of every page of JSON.
-const VENDOR_DOCS =
-  '<div class=vendordocs><p class=vdtitle>Bidder shall submit the following '
-  + 'documents along with their bid for Vendor Code Creation:</p>'
-  + '<ol><li>Copy of PAN Card.</li><li>Copy of GSTIN.</li>'
-  + '<li>Copy of Cancelled Cheque.</li>'
-  + '<li>Copy of EFT Mandate duly certified by Bank.</li></ol></div>';
-
 function flash(html, kind){
   document.getElementById('flash').innerHTML =
     '<div class="notice '+(kind||'warn')+'">'+html+'</div>';
