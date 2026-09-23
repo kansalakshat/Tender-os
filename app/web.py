@@ -868,7 +868,17 @@ def admin_home(request: Request, db: Session = Depends(get_db), user=Depends(cur
         disabled=admin_data.disabled_sources(db),
         enrichment=admin_data.enrichment_progress(db),
         runs=admin_data.recent_runs(db),
-        connectors=list(REGISTRY),
+        # A host with no browser can still read bid documents and crawl the
+        # HTTP-only portals; only the browser-driven ones are impossible there.
+        # Hiding the whole form made the deployed dashboard useless for jobs it
+        # can actually run.
+        connectors=[adminjobs.ENRICH_JOB, *(
+            n for n, cls in REGISTRY.items()
+            if adminjobs.can_run_browser_jobs()
+            or not getattr(cls, "requires_browser", False)
+        )],
+        enrich_job=adminjobs.ENRICH_JOB,
+        max_workers=adminjobs.MAX_WORKERS,
         job=job.as_dict() if job else None,
         # The panel says which machine would do the fetching, because that is
         # the whole question with GeM: it answers a home connection and refuses
@@ -916,6 +926,11 @@ def admin_fetch(
     connector: str = Body("GeM", embed=True),
     pages: int | None = Body(None, embed=True),
     since_hours: float | None = Body(None, embed=True),
+    # How many bid documents to read in the same job once the listing is in.
+    # A listing row without its document has no EMD, no value and no links, so
+    # fetching without this leaves half a tender behind for a later pass.
+    enrich: int | None = Body(None, embed=True),
+    workers: int | None = Body(None, embed=True),
 ):
     """Start a connector in THIS process, using THIS machine's connection."""
     _require_admin(user)
@@ -923,5 +938,7 @@ def admin_fetch(
         connector,
         max_pages=pages if pages and pages > 0 else None,
         since_hours=since_hours if since_hours and since_hours > 0 else None,
+        then_enrich=enrich if enrich and enrich > 0 else 0,
+        workers=workers if workers and workers > 0 else 4,
     )
     return JSONResponse({"ok": ok, "message": message}, status_code=200 if ok else 409)
