@@ -4,7 +4,6 @@ The text lives in three renderers -- the row macro, the tender page and the
 JavaScript that draws JSON rows -- so the thing worth testing is that they do
 not drift apart, and that the note never claims to be quoting the tender.
 """
-import re
 from datetime import date, timedelta
 from pathlib import Path
 
@@ -31,18 +30,19 @@ def test_every_row_carries_the_note():
         assert item in html, item
 
 
-def test_the_note_does_not_claim_to_come_from_the_tender():
-    """It is a standing requirement, not text read out of this notice. Saying
-    otherwise would have the site asserting something it never checked."""
+def test_it_is_shown_outright_not_behind_a_control():
+    """Printed on the page rather than one click away: asked for plainly, and
+    a requirement a bidder must not be able to miss."""
     html = _row_html()
-    assert "not read from this" in html
+    assert "<details" not in html and "<summary" not in html
+    assert "Bidder shall submit the following documents" in html
 
 
-def test_it_is_collapsed_by_default():
-    """The same four lines on fifty rows would bury the tenders themselves."""
+def test_it_sits_after_the_tender_facts():
+    """Same text on every row, so it must not come between a reader and the
+    facts that differ from one tender to the next."""
     html = _row_html()
-    assert "<details" in html
-    assert not re.search(r"<details[^>]*\bopen\b", html)
+    assert html.index("vendordocs") > html.index("class=m")
 
 
 def test_the_javascript_rows_say_exactly_the_same_thing():
