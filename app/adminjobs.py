@@ -26,10 +26,11 @@ from .models import utcnow
 
 # The name that means "read bid documents" rather than "fetch a listing".
 ENRICH_JOB = "Bid documents"
-# Workers are threads waiting on downloads, so more helps until the portal is
-# the limit rather than us. Measured: 8 reads ~200 documents a minute; the cap
-# is politeness to a government host, not a technical ceiling.
-MAX_WORKERS = 8
+# Workers are threads; the PDF parse runs in app/enrich.py's process pool, so
+# a worker spends its time waiting on the download, the database or a free
+# core. 16 keeps every core fed while each thread waits on I/O; the cap is
+# politeness to a government host, not a technical ceiling.
+MAX_WORKERS = 16
 
 # Bounded: a full GeM walk emits thousands of lines and this is a status panel,
 # not an archive. The interesting end is the recent one.

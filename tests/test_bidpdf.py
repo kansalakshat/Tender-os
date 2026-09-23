@@ -72,3 +72,15 @@ def test_unreadable_pdf_returns_empty_rather_than_raising():
     """A bad document must not kill an enrichment run."""
     assert parse_bid_pdf(b"not a pdf at all") == {}
     assert parse_bid_pdf(b"") == {}
+
+
+def test_clean_drops_hindi_words_with_leaked_ascii():
+    # pdfium prints each Hindi word once, with some glyphs mapped to ASCII; the
+    # letters and short numbers inside that Hindi must not survive as values.
+    raw = ("Type of Bid Two Packet Bid\r\nतकनीक\x10 मूUयांकन के दौरान 'पWीकरण हेतु\r\n"
+           "अनुमत समय /Time allowed\nContract Period 1 Year(s)\r\n"
+           "टनओ% वर (3 वष2 का)\r\n/Minimum Average Annual Turnover")
+    flat = _clean(raw)
+    assert _field(flat, "Type of Bid") == "Two Packet Bid"
+    assert _field(flat, "Contract Period") == "1 Year s"
+    assert "Time allowed" in flat and "/Minimum Average" in flat

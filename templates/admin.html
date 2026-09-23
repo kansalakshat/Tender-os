@@ -43,7 +43,7 @@ here runs in this process, so it uses this machine's connection.</p>
   {#- Reading the documents in the same job is the default, not an extra step:
       a listing row without its document has no EMD, no value and no links. -#}
   <label>Documents to read <input name=enrich type=number min=0 max=50000 value=2000></label>
-  <label>Workers <input name=workers type=number min=1 max="{{ max_workers }}" value=8></label>
+  <label>Workers <input name=workers type=number min=1 max="{{ max_workers }}" value=16></label>
   <button class="btn primary" type=submit>Run</button>
  </form>
  {%- endif %}

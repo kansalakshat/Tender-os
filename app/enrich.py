@@ -13,6 +13,10 @@ document, and a failed download would cost the listing row too.
 from __future__ import annotations
 
 import logging
+import os
+import threading
+from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures.process import BrokenProcessPool
 from decimal import Decimal
 
 import httpx
@@ -31,6 +35,31 @@ log = logging.getLogger(__name__)
 # it. A tender whose PDF yielded nothing is still marked: re-downloading 150 KB
 # every six hours to re-learn that it is unparseable helps nobody.
 DONE_KEY = "_enriched"
+
+# Parsing, not downloading, is the cost of a document: pypdf's text extraction
+# is pure Python, ~2s of CPU for a 10-page bid against ~0.5s to fetch it. The
+# workers are threads, so under the GIL they all queued for one core however
+# many were started. Handing the parse to a process pool puts every core on it;
+# the threads just wait on the result with the GIL released.
+_pool: ProcessPoolExecutor | None = None
+_pool_lock = threading.Lock()
+
+
+def _parse(data: bytes) -> dict:
+    global _pool
+    with _pool_lock:
+        if _pool is None:
+            _pool = ProcessPoolExecutor(max(1, (os.cpu_count() or 2) - 1))
+        pool = _pool
+    try:
+        return pool.submit(parse_bid_pdf, data).result()
+    except BrokenProcessPool:
+        # A child was killed (memory, task manager). Drop the pool so the next
+        # call builds a fresh one, and parse this document here.
+        with _pool_lock:
+            if _pool is pool:
+                _pool = None
+        return parse_bid_pdf(data)
 
 
 def needs_enrichment(limit: int = 200, shard: tuple[int, int] | None = None,
@@ -103,7 +132,7 @@ def enrich_one(db: Session, tender: Tender, client: httpx.Client) -> bool:
         log.warning("enrich %s: %s", tender.external_ref, exc)
         return False
 
-    fields = parse_bid_pdf(resp.content)
+    fields = _parse(resp.content)
     payload = dict(tender.raw_payload) if isinstance(tender.raw_payload, dict) else {}
     # Mark even an empty result, so an unparseable document is not retried forever.
     payload[DONE_KEY] = True
