@@ -169,10 +169,22 @@ def start(name: str, max_pages: int | None = None,
     return True, "started"
 
 
-def can_run_browser_jobs() -> bool:
-    """False where a browser-driven connector cannot work at all.
+def can_run_jobs() -> bool:
+    """False where a job started here would not finish.
 
-    Serverless has no Chromium, and saying so in the panel is kinder than a
-    button that always fails. VERCEL is set by Vercel's own runtime.
+    Not about the browser. A job is a background thread, and a serverless
+    instance is frozen or destroyed once its response is sent, so the thread
+    stops partway through with nobody watching. The job's log lives in this
+    process's memory too, so the next poll can reach a different instance and
+    find no job at all -- the panel would say "started" and then go quiet.
+
+    Both are true whatever the connector, so the whole control is withheld
+    rather than a filtered list of jobs that also would not run. VERCEL is set
+    by Vercel's own runtime.
     """
     return not os.getenv("VERCEL")
+
+
+# Kept as the older name so nothing that imported it breaks; the distinction it
+# once drew (browser vs not) turned out not to be the one that matters.
+can_run_browser_jobs = can_run_jobs
