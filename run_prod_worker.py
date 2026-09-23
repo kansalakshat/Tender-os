@@ -72,8 +72,24 @@ def run_once(since_hours: float) -> None:
     # Same reasoning as SKIP_CONNECTORS: GeM's bid PDFs sit on the host that
     # refuses this runner, so there is nothing to gain by trying them.
     no_docs = {n.strip() for n in os.getenv("ENRICH_SKIP_SOURCES", "").split(",") if n.strip()}
-    log.info("enriched %d tender(s)", enrich_pending(
-        limit=int(os.getenv("ENRICH_LIMIT", "2000")), skip_sources=no_docs or None))
+
+    # Read with several workers, the same way the dashboard does. They wait on
+    # downloads rather than compute, so threads are the right shape and a single
+    # worker leaves the run bounded by one ~150 KB fetch at a time: measured at
+    # ~25 documents a minute against ~145 with eight. At one worker a daily
+    # cycle could not keep up with a day's new bids, which is how the backlog
+    # reached 28,000 in the first place.
+    workers = max(1, int(os.getenv("ENRICH_WORKERS", "6")))
+    limit = int(os.getenv("ENRICH_LIMIT", "4000"))
+    from concurrent.futures import ThreadPoolExecutor
+
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        counts = list(pool.map(
+            lambda i: enrich_pending(limit=max(1, limit // workers),
+                                     shard=(i, workers), skip_sources=no_docs or None),
+            range(workers),
+        ))
+    log.info("enriched %d tender(s) with %d worker(s)", sum(counts), workers)
     log.info("linked %d duplicate(s)", link_duplicates())
     log.info("purged %d tender(s)", purge_expired())
 

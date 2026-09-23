@@ -26,19 +26,27 @@ here runs in this process, so it uses this machine's connection.</p>
  <p class=hint>GeM needs a real browser and answers a home connection. It refuses
  datacenter addresses, which is why this button exists rather than a cron job
  somewhere else.</p>
+ {%- else %}
+ <p class=hint>This host has no browser, so the browser-driven portals are not
+ listed. Reading bid documents and the HTTP-only portals still work here; GeM
+ has to run from a machine with a browser and a home connection.</p>
+ {%- endif %}
  <form id=fetchform class=adminform>
-  <label>Portal
-   <select name=connector>
+  <label>Job
+   <select name=connector id=jobkind>
     {%- for c in connectors %}<option value="{{ c }}"{% if c == 'GeM' %} selected{% endif %}>{{ c }}</option>{% endfor %}
    </select></label>
-  <label>Pages <input name=pages type=number min=1 max=5000 placeholder="connector default"></label>
-  <label>Since hours <input name=since_hours type=number min=1 placeholder="full walk"></label>
-  <button class="btn primary" type=submit>Fetch</button>
+  <label class=forfetch>Pages <input name=pages type=number min=1 max=5000 placeholder="connector default"></label>
+  <label class=forfetch>Since hours <input name=since_hours type=number min=1 placeholder="full walk"></label>
+  {#- Reading the documents in the same job is the default, not an extra step:
+      a listing row without its document has no EMD, no value and no links. -#}
+  <label>Documents to read <input name=enrich type=number min=0 max=50000 value=2000></label>
+  <label>Workers <input name=workers type=number min=1 max="{{ max_workers }}" value=8></label>
+  <button class="btn primary" type=submit>Run</button>
  </form>
- {%- else %}
- <p class=hint>This host has no browser, so browser-driven portals cannot run
- here. Open this dashboard from a machine that has one.</p>
- {%- endif %}
+ <p class=hint>Picking <b>{{ enrich_job }}</b> reads bid documents only. Picking a
+ portal fetches its listing and then reads that many documents in the same job,
+ so a tender never sits half-collected waiting for a second pass.</p>
  <pre id=joblog class=joblog>{% if job %}{{ job.lines | join('\n') }}{% else %}No run started yet.{% endif %}</pre>
 </div>
 

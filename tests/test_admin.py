@@ -185,7 +185,7 @@ def test_fetch_takes_json_not_a_form(client, monkeypatch):
     dashboard's JSON parsing, so the real error never reached the screen."""
     started = {}
 
-    def fake_start(name, max_pages=None, since_hours=None):
+    def fake_start(name, max_pages=None, since_hours=None, **kw):
         started.update(name=name, max_pages=max_pages, since_hours=since_hours)
         return True, "started"
 
@@ -204,9 +204,78 @@ def test_blank_pages_means_the_connector_default(client, monkeypatch):
     started = {}
     monkeypatch.setattr(
         "app.adminjobs.start",
-        lambda name, max_pages=None, since_hours=None: (
+        lambda name, max_pages=None, since_hours=None, **kw: (
             started.update(max_pages=max_pages, since_hours=since_hours), (True, "ok"))[1],
     )
     c, ids = client
     _as(c, ids["boss@example.com"]).post("/admin/fetch", json={"connector": "GeM"})
     assert started == {"max_pages": None, "since_hours": None}
+
+
+# ---- jobs started from the dashboard ---------------------------------------
+
+def test_a_fetch_reads_the_documents_in_the_same_job(client, monkeypatch):
+    """One job, not two. A listing row without its document has no EMD, no
+    value and no links, so fetching without reading leaves half a tender."""
+    got = {}
+
+    def fake_start(name, max_pages=None, since_hours=None, then_enrich=0, workers=4):
+        got.update(name=name, then_enrich=then_enrich, workers=workers)
+        return True, "started"
+
+    monkeypatch.setattr("app.adminjobs.start", fake_start)
+    c, ids = client
+    r = _as(c, ids["boss@example.com"]).post(
+        "/admin/fetch", json={"connector": "GeM", "enrich": 500, "workers": 6})
+    assert r.status_code == 200
+    assert got == {"name": "GeM", "then_enrich": 500, "workers": 6}
+
+
+def test_documents_only_is_a_job_of_its_own(client, monkeypatch):
+    got = {}
+    monkeypatch.setattr(
+        "app.adminjobs.start",
+        lambda name, **kw: (got.update(name=name, **kw), (True, "ok"))[1])
+    c, ids = client
+    from app.adminjobs import ENRICH_JOB
+
+    _as(c, ids["boss@example.com"]).post(
+        "/admin/fetch", json={"connector": ENRICH_JOB, "enrich": 100})
+    assert got["name"] == ENRICH_JOB and got["then_enrich"] == 100
+
+
+def test_workers_are_capped(monkeypatch):
+    """The cap is politeness to a government host, not a technical ceiling, so
+    it must not be settable from a form field."""
+    from app import adminjobs
+
+    seen = {}
+    monkeypatch.setattr(adminjobs.threading, "Thread",
+                        lambda target, args, name, daemon: type(
+                            "T", (), {"start": lambda self: seen.update(workers=args[5])})())
+    adminjobs._current = None
+    ok, _ = adminjobs.start(adminjobs.ENRICH_JOB, then_enrich=10, workers=9999)
+    assert ok and seen["workers"] == adminjobs.MAX_WORKERS
+    adminjobs._current = None
+
+
+def test_a_browserless_host_still_offers_the_jobs_it_can_run(client, monkeypatch):
+    """Vercel has no Chromium, but reading bid documents is plain HTTP and the
+    HTTP-only portals crawl fine. Hiding the whole form there made the deployed
+    dashboard useless for work it is perfectly able to do."""
+    monkeypatch.setenv("VERCEL", "1")
+    c, ids = client
+    body = _as(c, ids["boss@example.com"]).get("/admin").text
+    assert "id=fetchform" in body, "the form must still be there"
+    assert "Bid documents" in body
+    # The dropdown specifically: GeM still appears in the portal tables, which
+    # report what is held, not what can be run.
+    assert '<option value="GeM"' not in body, "a browser-driven portal cannot run here"
+    assert "has to run from a machine with a browser" in body
+
+
+def test_a_host_with_a_browser_offers_everything(client, monkeypatch):
+    monkeypatch.delenv("VERCEL", raising=False)
+    c, ids = client
+    body = _as(c, ids["boss@example.com"]).get("/admin").text
+    assert '<option value="GeM"' in body and "Bid documents" in body

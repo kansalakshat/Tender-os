@@ -92,6 +92,8 @@ if(form){
       // a zero, which would read as "fetch no pages".
       if(fd.get('pages')) body.pages = Number(fd.get('pages'));
       if(fd.get('since_hours')) body.since_hours = Number(fd.get('since_hours'));
+      if(fd.get('enrich')) body.enrich = Number(fd.get('enrich'));
+      if(fd.get('workers')) body.workers = Number(fd.get('workers'));
       const r = await fetch('/admin/fetch', {
         method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body),
       });
@@ -112,3 +114,13 @@ if(form){
 
 // A run started before this page loaded is still worth following.
 if(out && out.textContent.indexOf('No run started yet.') === -1){ follow(); }
+
+
+// Page and since-hours mean nothing for a documents-only job; hiding them stops
+// the form asking for answers it will ignore.
+const kind = document.getElementById('jobkind');
+function syncKind(){
+  const docsOnly = kind.value === 'Bid documents';
+  for(const el of document.querySelectorAll('.forfetch')) el.hidden = docsOnly;
+}
+if(kind){ kind.addEventListener('change', syncKind); syncKind(); }

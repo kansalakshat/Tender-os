@@ -24,6 +24,13 @@ from datetime import datetime
 
 from .models import utcnow
 
+# The name that means "read bid documents" rather than "fetch a listing".
+ENRICH_JOB = "Bid documents"
+# Workers are threads waiting on downloads, so more helps until the portal is
+# the limit rather than us. Measured: 8 reads ~200 documents a minute; the cap
+# is politeness to a government host, not a technical ceiling.
+MAX_WORKERS = 8
+
 # Bounded: a full GeM walk emits thousands of lines and this is a status panel,
 # not an archive. The interesting end is the recent one.
 _MAX_LINES = 300
@@ -60,13 +67,51 @@ def current() -> Job | None:
     return _current
 
 
-def _run(job: Job, name: str, max_pages: int | None, since_hours: float | None) -> None:
+def _enrich(job: Job, workers: int, limit: int) -> int:
+    """Read bid documents with several workers in this process.
+
+    Threads, not processes: every worker spends its time waiting on a ~150 KB
+    download, so the GIL is free almost all of the time and there is nothing to
+    gain from separate interpreters. Sharded on id, which needs_enrichment
+    supports, so the workers never hand each other the same tender.
+    """
+    from .enrich import enrich_pending
+
+    done = [0] * workers
+    threads = []
+
+    def work(index: int) -> None:
+        try:
+            done[index] = enrich_pending(
+                limit=max(1, limit // workers), shard=(index, workers)
+            )
+        except Exception as exc:                # one worker must not sink the job
+            job.log(f"enrich worker {index}: {type(exc).__name__}: {exc}")
+
+    for i in range(workers):
+        t = threading.Thread(target=work, args=(i,), name=f"enrich-{i}", daemon=True)
+        t.start()
+        threads.append(t)
+    for t in threads:
+        t.join()
+    return sum(done)
+
+
+def _run(job: Job, name: str, max_pages: int | None, since_hours: float | None,
+         then_enrich: int = 0, workers: int = 4) -> None:
     global _current
     from datetime import timedelta
 
     from .connectors import REGISTRY
 
     try:
+        if name == ENRICH_JOB:
+            job.log(f"reading bid documents, {workers} workers, up to {then_enrich}")
+            changed = _enrich(job, workers, then_enrich)
+            job.summary = f"read {changed} bid document(s)"
+            job.status = "ok"
+            job.log(job.summary)
+            return
         connector = REGISTRY[name]()
         if max_pages is not None and hasattr(connector, "max_pages"):
             connector.max_pages = max_pages
@@ -81,6 +126,15 @@ def _run(job: Job, name: str, max_pages: int | None, since_hours: float | None) 
         job.summary = str(summary)
         job.status = "ok" if summary.status == "ok" else summary.status
         job.log(job.summary)
+
+        # The same job reads the documents behind what it just fetched, rather
+        # than leaving a second pass to catch up later. A listing row without
+        # its document has no EMD, no value and no links -- half a tender.
+        if then_enrich:
+            job.log(f"reading bid documents, {workers} workers, up to {then_enrich}")
+            changed = _enrich(job, workers, then_enrich)
+            job.summary += f" | read {changed} bid document(s)"
+            job.log(f"read {changed} bid document(s)")
     except Exception as exc:                    # the panel must show the failure
         job.status = "error"
         job.summary = f"{type(exc).__name__}: {exc}"
@@ -93,13 +147,15 @@ def _run(job: Job, name: str, max_pages: int | None, since_hours: float | None) 
 
 
 def start(name: str, max_pages: int | None = None,
-          since_hours: float | None = None) -> tuple[bool, str]:
+          since_hours: float | None = None, then_enrich: int = 0,
+          workers: int = 4) -> tuple[bool, str]:
     """Begin a run. False when one is already going."""
     global _current
     from .connectors import REGISTRY
 
-    if name not in REGISTRY:
+    if name != ENRICH_JOB and name not in REGISTRY:
         return False, f"unknown connector {name!r}"
+    workers = max(1, min(workers, MAX_WORKERS))
     with _lock:
         if _current is not None and _current.status == "running":
             return False, f"{_current.name} is still running"
@@ -107,7 +163,7 @@ def start(name: str, max_pages: int | None = None,
         _current = job
     # daemon: this must never hold up an interpreter that is trying to exit.
     threading.Thread(
-        target=_run, args=(job, name, max_pages, since_hours),
+        target=_run, args=(job, name, max_pages, since_hours, then_enrich, workers),
         name=f"adminjob-{name}", daemon=True,
     ).start()
     return True, "started"
