@@ -259,23 +259,24 @@ def test_workers_are_capped(monkeypatch):
     adminjobs._current = None
 
 
-def test_a_browserless_host_still_offers_the_jobs_it_can_run(client, monkeypatch):
-    """Vercel has no Chromium, but reading bid documents is plain HTTP and the
-    HTTP-only portals crawl fine. Hiding the whole form there made the deployed
-    dashboard useless for work it is perfectly able to do."""
+def test_a_serverless_host_offers_no_job_controls(client, monkeypatch):
+    """Not about the browser. A job is a background thread and the instance is
+    frozen once it answers, so the work would stop partway through -- and the
+    job log lives in that process's memory, so the next poll can reach a
+    different instance and find nothing. A button that reports "started" and
+    then goes quiet is worse than no button."""
     monkeypatch.setenv("VERCEL", "1")
     c, ids = client
     body = _as(c, ids["boss@example.com"]).get("/admin").text
-    assert "id=fetchform" in body, "the form must still be there"
-    assert "Bid documents" in body
-    # The dropdown specifically: GeM still appears in the portal tables, which
-    # report what is held, not what can be run.
-    assert '<option value="GeM"' not in body, "a browser-driven portal cannot run here"
-    assert "has to run from a machine with a browser" in body
+    assert "id=fetchform" not in body, "no control where the job cannot finish"
+    assert "Jobs cannot run on this host" in body
+    # The numbers are still worth showing; only the controls go.
+    assert "Bid documents read" in body and "Portals" in body
 
 
-def test_a_host_with_a_browser_offers_everything(client, monkeypatch):
+def test_a_host_that_can_finish_a_job_offers_the_controls(client, monkeypatch):
     monkeypatch.delenv("VERCEL", raising=False)
     c, ids = client
     body = _as(c, ids["boss@example.com"]).get("/admin").text
+    assert "id=fetchform" in body
     assert '<option value="GeM"' in body and "Bid documents" in body

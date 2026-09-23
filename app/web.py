@@ -868,15 +868,7 @@ def admin_home(request: Request, db: Session = Depends(get_db), user=Depends(cur
         disabled=admin_data.disabled_sources(db),
         enrichment=admin_data.enrichment_progress(db),
         runs=admin_data.recent_runs(db),
-        # A host with no browser can still read bid documents and crawl the
-        # HTTP-only portals; only the browser-driven ones are impossible there.
-        # Hiding the whole form made the deployed dashboard useless for jobs it
-        # can actually run.
-        connectors=[adminjobs.ENRICH_JOB, *(
-            n for n, cls in REGISTRY.items()
-            if adminjobs.can_run_browser_jobs()
-            or not getattr(cls, "requires_browser", False)
-        )],
+        connectors=[adminjobs.ENRICH_JOB, *REGISTRY],
         enrich_job=adminjobs.ENRICH_JOB,
         max_workers=adminjobs.MAX_WORKERS,
         job=job.as_dict() if job else None,
@@ -884,7 +876,7 @@ def admin_home(request: Request, db: Session = Depends(get_db), user=Depends(cur
         # the whole question with GeM: it answers a home connection and refuses
         # a datacenter one.
         host=platform.node(),
-        can_browser=adminjobs.can_run_browser_jobs(),
+        can_browser=adminjobs.can_run_jobs(),
     )
 
 
