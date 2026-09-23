@@ -16,6 +16,7 @@ import logging
 from decimal import Decimal
 
 import httpx
+from sqlalchemy.exc import OperationalError
 from sqlalchemy import Text, func, or_, select
 from sqlalchemy.orm import Session
 
@@ -159,14 +160,27 @@ def enrich_pending(limit: int = 200, session_factory=SessionLocal,
     )
     try:
         for n, tid in enumerate(ids, 1):
-            tender = db.get(Tender, tid)
-            if tender is None:
-                continue
-            if enrich_one(db, tender, client):
-                changed += 1
-            if n % 25 == 0:
-                db.commit()
-                log.info("enrich: %d/%d processed, %d changed", n, len(ids), changed)
+            try:
+                tender = db.get(Tender, tid)
+                if tender is None:
+                    continue
+                if enrich_one(db, tender, client):
+                    changed += 1
+                if n % 25 == 0:
+                    db.commit()
+                    log.info("enrich: %d/%d processed, %d changed", n, len(ids), changed)
+            except OperationalError as exc:
+                # A deadlock is transient by definition: the loser is told to
+                # retry, not to stop. Two shards died mid-pass this way, minutes
+                # after the nightly purge started deleting expired rows -- a
+                # bulk DELETE against per-row UPDATEs -- and took 20,000
+                # remaining documents with them, silently.
+                #
+                # Roll back and move on rather than retry this one tender: it
+                # stays unmarked, so the next pass picks it up anyway.
+                db.rollback()
+                log.warning("enrich: %s on tender %s, skipping it: %s",
+                            type(exc).__name__, tid, str(exc).splitlines()[0][:120])
         db.commit()
     finally:
         client.close()
