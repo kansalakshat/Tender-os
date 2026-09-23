@@ -694,10 +694,15 @@ main h2{display:flex;align-items:center}
 .toggle{display:inline-flex;gap:.4rem}
 .modenote{font-size:.84rem;color:var(--muted);max-width:52ch}
 
-/* Vendor-code paperwork. Printed in full on every row, so it is set small and
-   low-contrast and placed last: present without competing with the tender. */
-.vendordocs{margin:.6rem 0 0;font-size:.8rem;color:var(--muted);
-  border-left:var(--b) solid var(--rule);padding-left:.7rem}
-.vdtitle{margin:0;font-weight:700}
-.vendordocs ol{margin:.3rem 0 0;padding-left:1.3rem}
-.vendordocs li{margin:.1rem 0}
+/* Vendor-code paperwork. Printed in full on every row, and sized to be read
+   rather than skimmed past: a bidder who misses this cannot be paid. Still
+   last in the row, so it does not come between a reader and the facts that
+   differ from one tender to the next. */
+.vendordocs{margin:.8rem 0 0;font-size:1rem;color:var(--fg);
+  border-left:3px solid var(--rule);padding:.15rem 0 .15rem .9rem}
+.vdtitle{margin:0;font-weight:700;line-height:1.4}
+.vendordocs ol{margin:.4rem 0 0;padding-left:1.5rem}
+.vendordocs li{margin:.2rem 0;line-height:1.5}
+@media (max-width:40rem){
+  .vendordocs{font-size:.94rem}
+}
