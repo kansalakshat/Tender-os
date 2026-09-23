@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% from "_macros.html" import row %}
+{% block content %}<h1>Saved tenders</h1>
+{%- if saved %}
+<p class=lede>{{ saved|length|num }} saved, soonest closing first.</p>
+{#- A saved list is a to-do list, so it is ordered by what needs deciding next
+    rather than by when it was saved. -#}
+<ol class=rows>
+{%- for t in saved %}{% set gutter, rank = days_left(t.deadline, today) %}
+{{ row(gutter, rank, t) }}
+{%- endfor %}
+</ol>
+<p class=hint>A tender leaves this list when it closes. Nothing is kept once
+bidding is over, here or anywhere else on the site.</p>
+{%- else %}
+<div class=empty>
+ <p>Nothing saved yet. Open any tender and press <b>Save this tender</b> to keep
+ it here.</p>
+ <p><a href="/browse">Browse tenders</a></p>
+</div>
+{%- endif %}
+{% endblock %}

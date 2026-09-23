@@ -50,7 +50,7 @@ from .matching import (
     strict_set,
     STRICT_LABELS,
 )
-from .models import Company, ConnectorRun, Source, Tender, User
+from .models import Company, ConnectorRun, Source, Tender, User, WishlistItem
 
 log = logging.getLogger(__name__)
 
@@ -641,6 +641,9 @@ def tender_detail(
     found = _document_for(db, t)
     return render(
         "tender.html", title=t.title[:60], t=t, company=company,
+        # Signed out the heart still draws, and says what it needs: hiding it
+        # would make saving a feature nobody discovers.
+        saved=t.id in saved_ids(db, user), signed_in=user is not None,
         company_answered=company is not None and not (
             company.years_in_business is None and company.annual_turnover is None
             and company.largest_similar_work is None and company.bid_capacity is None
@@ -772,6 +775,71 @@ def browse(db: Session = Depends(get_db)) -> str:
     this page is the form around it, not a second query path."""
     sources = db.execute(select(Source).order_by(Source.name)).scalars().all()
     return render("browse.html", title="Browse tenders", sources=sources)
+
+
+# ---- wishlist --------------------------------------------------------------
+#
+# Saving needs an account: the list belongs to a person, and an anonymous one
+# could not be shown back to them on their next visit.
+
+
+def saved_ids(db: Session, user: User | None) -> set[int]:
+    """Which tenders this user has saved. Empty for a signed-out visitor."""
+    if user is None:
+        return set()
+    return set(db.execute(
+        select(WishlistItem.tender_id).where(WishlistItem.user_id == user.id)
+    ).scalars())
+
+
+@router.get("/wishlist", response_class=HTMLResponse)
+def wishlist(db: Session = Depends(get_db), user: User | None = Depends(current_user)):
+    if user is None:
+        return RedirectResponse("/login?next=/wishlist", status_code=303)
+    rows = db.execute(
+        select(Tender, WishlistItem.created_at)
+        .join(WishlistItem, WishlistItem.tender_id == Tender.id)
+        .where(WishlistItem.user_id == user.id)
+        # Soonest deadline first: a saved list is a to-do list, and the one
+        # closing next is the one that needs deciding.
+        .order_by(Tender.deadline.asc().nulls_last(), WishlistItem.created_at.desc())
+    ).all()
+    return render("wishlist.html", title="Saved tenders",
+                  saved=[t for t, _ in rows], today=date.today())
+
+
+@router.post("/wishlist/{tender_id}")
+def wishlist_add(tender_id: int, db: Session = Depends(get_db),
+                 user: User | None = Depends(current_user)):
+    if user is None:
+        raise HTTPException(status_code=401, detail="sign in to save tenders")
+    if db.get(Tender, tender_id) is None:
+        raise HTTPException(status_code=404, detail="tender not found")
+    existing = db.execute(
+        select(WishlistItem).where(WishlistItem.user_id == user.id,
+                                   WishlistItem.tender_id == tender_id)
+    ).scalar_one_or_none()
+    # Saving something already saved is not an error; it is what a second tab
+    # or an impatient second click looks like.
+    if existing is None:
+        db.add(WishlistItem(user_id=user.id, tender_id=tender_id))
+        db.commit()
+    return JSONResponse({"saved": True})
+
+
+@router.delete("/wishlist/{tender_id}")
+def wishlist_remove(tender_id: int, db: Session = Depends(get_db),
+                    user: User | None = Depends(current_user)):
+    if user is None:
+        raise HTTPException(status_code=401, detail="sign in to save tenders")
+    item = db.execute(
+        select(WishlistItem).where(WishlistItem.user_id == user.id,
+                                   WishlistItem.tender_id == tender_id)
+    ).scalar_one_or_none()
+    if item is not None:
+        db.delete(item)
+        db.commit()
+    return JSONResponse({"saved": False})
 
 
 # ---- operator dashboard -----------------------------------------------------

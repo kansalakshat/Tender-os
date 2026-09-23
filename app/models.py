@@ -160,6 +160,31 @@ class User(Base):
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime)
 
 
+class WishlistItem(Base):
+    """A tender someone saved to come back to.
+
+    Both foreign keys cascade on delete. Expired tenders are purged daily, and
+    a restricting key would have that purge fail the first time a saved tender
+    closed -- the whole ingest breaking nightly over a bookmark. A saved tender
+    that closes leaves the list, which is what a bidder expects anyway.
+    """
+
+    __tablename__ = "wishlist_items"
+    __table_args__ = (
+        # One save per tender per person: a double-click or a second tab would
+        # otherwise store it twice and show it twice.
+        UniqueConstraint("user_id", "tender_id", name="uq_wishlist_user_tender"),
+        Index("ix_wishlist_user", "user_id", "created_at"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    tender_id: Mapped[int] = mapped_column(
+        ForeignKey("tenders.id", ondelete="CASCADE"), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+
+
 class ConnectorRun(Base):
     __tablename__ = "connector_runs"
 
