@@ -36,17 +36,13 @@
     new supplier. Written once here and included by the row, the tender page and
     the JSON rows' renderer, so the three cannot drift.
 
-    Worded as a standing reminder, not as a quotation: it is not read out of any
-    particular notice, and printing it as though each tender said it would have
-    the site asserting something it has not checked. Collapsed, because it is
-    the same text on every row and an open copy on fifty rows buries the
-    tenders themselves. -#}
+    Shown open on every row by choice: it is the same text everywhere, so it is
+    set small and quiet rather than hidden, and it sits last so it never comes
+    between a reader and the tender's own facts. -#}
 {% macro vendor_docs() -%}
-<details class=vendordocs><summary>Documents to submit for vendor code creation</summary>
+<div class=vendordocs><p class=vdtitle>Bidder shall submit the following documents along with their bid for Vendor Code Creation:</p>
 <ol><li>Copy of PAN Card.</li><li>Copy of GSTIN.</li><li>Copy of Cancelled Cheque.</li>
-<li>Copy of EFT Mandate duly certified by Bank.</li></ol>
-<p class=hint>A general requirement for vendor registration, not read from this
-tender. Always check the bid document for what this buyer asks for.</p></details>
+<li>Copy of EFT Mandate duly certified by Bank.</li></ol></div>
 {%- endmacro %}
 
 {#- One list row. The title opens our own page rather than the source portal:
