@@ -384,6 +384,32 @@ must move together. The image carries one browser revision; a mismatched pip
 install fails with "Executable doesn't exist" at run time, on a host nobody is
 watching.
 
+### Having the dashboard simply be there
+
+Starting a server by hand before every use is a step nobody keeps doing, and
+the dashboard is where the jobs are started from. `serve.cmd` runs it, and a
+one-line `.vbs` in the Startup folder runs that hidden at logon:
+
+```
+%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\TenderServe.vbs
+```
+
+`.vbs` rather than a shortcut to the `.cmd`, because cmd flashes a console
+window at every logon and the server logs to files anyway. Delete that file to
+stop it starting. A Task Scheduler at-logon trigger would be tidier but needs
+an elevated shell to register; the Startup folder needs nothing.
+
+Bound to `127.0.0.1` on purpose: the dashboard can start crawls and read the
+whole corpus, so it has no business listening on the network.
+
+**Why jobs cannot move to the deployed site.** A job is a background thread,
+and a serverless instance is frozen or destroyed the moment it answers a
+request, so the thread stops partway through with nothing to show. The job log
+lives in that process's memory too, so the next poll can reach a different
+instance and find no job at all. The deployed dashboard therefore shows every
+number and no controls. Moving jobs off this machine means a host with a real
+process -- see the container above -- not a different serverless setting.
+
 ### The daily task on this machine
 
 `daily_ingest.cmd` runs `run_prod_worker.py --once`: every connector in the
