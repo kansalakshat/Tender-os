@@ -207,10 +207,11 @@ def test_the_toggle_keeps_the_chosen_sort(matches_page):
     assert 'value="deadline" selected' in body or "value=\"deadline\" selected" in body
 
 
-def test_no_toggle_when_nothing_is_strict(own_db):
-    """A profile with no boundaries has nothing to relax, so the control would
-    be a switch that does nothing."""
-
+def test_the_toggle_is_offered_even_when_nothing_was_ticked(own_db):
+    """A profile that ticked no boundary still gets the switch. Strict then
+    means "every answer I did give", so the control is useful rather than a
+    switch that does nothing -- and a reader who cannot see the choice cannot
+    know it exists."""
     session_factory = own_db
     db = session_factory()
     user = User(email="b@example.com", email_verified=True)
@@ -219,8 +220,12 @@ def test_no_toggle_when_nothing_is_strict(own_db):
     db.flush()
     db.add(Company(user_id=user.id, name="B", sectors=["electrical_power"],
                    states=["Madhya Pradesh"], strict=[], min_lead_days=0))
-    db.add(Tender(source_id=src.id, external_ref="t", source_url="u", deadline=SOON,
-                  status="open", title="Supply of switchgear and cable, Madhya Pradesh"))
+    db.add_all([
+        Tender(source_id=src.id, external_ref="in", source_url="u", deadline=SOON,
+               status="open", title="Supply of switchgear and cable, Madhya Pradesh"),
+        Tender(source_id=src.id, external_ref="out", source_url="u", deadline=SOON,
+               status="open", title="Supply of switchgear and cable, Tamil Nadu"),
+    ])
     db.commit()
     cid, uid = db.query(Company).one().id, user.id
     db.close()
@@ -228,5 +233,61 @@ def test_no_toggle_when_nothing_is_strict(own_db):
     app.dependency_overrides[get_db] = lambda: session_factory()
     c = TestClient(app)
     c.cookies.set(SESSION_COOKIE, make_session(uid))
-    assert "Everything, ranked" not in c.get(f"/c/{cid}").text
+
+    # Default: nothing was ticked, so nothing is hidden...
+    body = c.get(f"/c/{cid}").text
+    assert "Everything, ranked" in body, "the switch must be visible by default"
+    assert "Madhya Pradesh" in body and "Tamil Nadu" in body
+
+    # ...but asking for strict narrows to the answers that were given.
+    tightened = c.get(f"/c/{cid}?filters=on").text
+    assert "Madhya Pradesh" in tightened
+    assert "Tamil Nadu" not in tightened
+    app.dependency_overrides.clear()
+
+
+def test_a_blank_answer_never_becomes_a_boundary(own_db):
+    """Strict must only bind the answers that were filled in. A profile with no
+    place named must not be narrowed to nowhere."""
+    from app.matching import answered_fields
+
+    class P:
+        sectors = ["electrical_power"]
+        keywords = []
+        districts = []
+        states = []
+        buyers = []
+
+    assert answered_fields(P()) == {"sectors"}
+
+
+def test_the_way_back_survives_zero_matches(own_db):
+    """Strict can narrow a profile to nothing. That is exactly when the reader
+    needs the switch, so it must not live inside the "if there are rows" block."""
+    session_factory = own_db
+    db = session_factory()
+    user = User(email="z@example.com", email_verified=True)
+    src = Source(name="CPPP", base_url="https://eprocure.gov.in")
+    db.add_all([user, src])
+    db.flush()
+    # Answers that no tender here can satisfy together.
+    db.add(Company(user_id=user.id, name="Z", sectors=["electrical_power"],
+                   buyers=["Nobody In Particular"], strict=["buyers"], min_lead_days=0))
+    db.add(Tender(source_id=src.id, external_ref="t", source_url="u", deadline=SOON,
+                  status="open", title="Supply of switchgear and cable",
+                  organization="Someone Else"))
+    db.commit()
+    cid, uid = db.query(Company).one().id, user.id
+    db.close()
+
+    app.dependency_overrides[get_db] = lambda: session_factory()
+    c = TestClient(app)
+    c.cookies.set(SESSION_COOKIE, make_session(uid))
+
+    body = c.get(f"/c/{cid}").text
+    assert "0 open tenders" in body, "the strict answer should hide the one tender"
+    assert "Everything, ranked" in body, "the switch must still be on the page"
+
+    # And it works from there.
+    assert "Supply of switchgear" in c.get(f"/c/{cid}?filters=off").text
     app.dependency_overrides.clear()

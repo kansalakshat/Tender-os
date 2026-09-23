@@ -270,6 +270,25 @@ STRICT_LABELS = {
 }
 
 
+def answered_fields(profile) -> set[str]:
+    """The boundary-capable answers this profile actually filled in.
+
+    What "strict" means for someone who never ticked a box in the questionnaire:
+    treat every answer they did give as a boundary. Fields left blank stay out,
+    because a boundary with nothing behind it would hide the whole corpus.
+    """
+    got = set()
+    if getattr(profile, "sectors", None):
+        got.add("sectors")
+    if getattr(profile, "keywords", None):
+        got.add("keywords")
+    if getattr(profile, "districts", None) or getattr(profile, "states", None):
+        got.add("location")
+    if getattr(profile, "buyers", None):
+        got.add("buyers")
+    return got
+
+
 def strict_set(profile, override=None) -> set[str]:
     """Which answers to treat as filters for this search.
 

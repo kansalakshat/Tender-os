@@ -45,6 +45,7 @@ from .matching import (
     derive_states,
     hydrate,
     match_digest,
+    answered_fields,
     sector_terms,
     strict_set,
     STRICT_LABELS,
@@ -487,18 +488,25 @@ def results(
     sort = sort if sort in MATCH_SORTS else "score"
     order = order if order in ("asc", "desc") else MATCH_SORTS[sort][1]
     saved_strict = strict_set(company)
-    relaxed = filters == "off"
-    override = set() if relaxed else None
-    d = match_digest(db, company, strict=override)
+    # What "strict" means here. A profile that ticked boundaries in the
+    # questionnaire gets those; one that ticked none still gets a usable switch,
+    # by treating every answer it did give as a boundary. Blank answers are left
+    # out either way -- a boundary with nothing behind it hides the whole corpus.
+    tight = saved_strict or answered_fields(company)
+    # "" is the profile's own setting, which is strict only if it asked to be.
+    if filters == "off":
+        chosen = set()
+    elif filters == "on":
+        chosen = tight
+    else:
+        chosen = saved_strict
+    relaxed = not chosen
+    d = match_digest(db, company, strict=chosen)
     scored = sort_matches(db, company, d.scored, sort, order)[:50]
-    # Only worth offering the toggle when there is something to relax. Counting
-    # the other mode costs a second scoring pass, so it is done once here rather
-    # than on every row, and only when a boundary actually exists.
-    other_total = None
-    if saved_strict:
-        other_total = match_digest(
-            db, company, strict=None if relaxed else set()
-        ).total
+    # What the other mode would show, so the page can say what is being hidden
+    # rather than leaving the reader to click and find out. One extra scoring
+    # pass, cached on the same digest key as everything else.
+    other_total = match_digest(db, company, strict=set() if chosen else tight).total
     rows_by_id = hydrate(db, [tid for _s, _r, tid in scored])
     shown = [
         (rows_by_id[tid], score, list(reasons), needs_check(rows_by_id[tid], company))
@@ -510,6 +518,7 @@ def results(
                   sorts=[(k, v[0]) for k, v in MATCH_SORTS.items()],
                   sort=sort, order=order,
                   saved_strict=sorted(saved_strict), relaxed=relaxed,
+                  tight=sorted(tight),
                   strict_labels=STRICT_LABELS, other_total=other_total)
 
 
