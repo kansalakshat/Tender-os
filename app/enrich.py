@@ -34,7 +34,8 @@ DONE_KEY = "_enriched"
 
 
 def needs_enrichment(limit: int = 200, shard: tuple[int, int] | None = None,
-                     skip_sources: set[str] | None = None) -> list[int]:
+                     skip_sources: set[str] | None = None,
+                     only: list[int] | None = None) -> list[int]:
     """Ids of tenders with a document we have not read yet, soonest-closing first.
 
     `shard` is (index, count): take only ids where id % count == index. A bulk
@@ -74,6 +75,14 @@ def needs_enrichment(limit: int = 200, shard: tuple[int, int] | None = None,
                     select(Source.id).where(Source.name.in_(skip_sources))
                 )
             )
+        if only is not None:
+            # A crawl handing over the rows it just created. Without this they
+            # join the back of a queue ordered by soonest deadline -- a bid
+            # closing in a fortnight sits behind every one closing tomorrow, so
+            # today's new bids would wait hours to be read.
+            if not only:
+                return []
+            query = query.where(Tender.id.in_(only))
         if shard is not None:
             index, count = shard
             query = query.where(Tender.id % count == index)
@@ -146,9 +155,10 @@ def enrich_one(db: Session, tender: Tender, client: httpx.Client) -> bool:
 
 def enrich_pending(limit: int = 200, session_factory=SessionLocal,
                    shard: tuple[int, int] | None = None,
-                   skip_sources: set[str] | None = None) -> int:
+                   skip_sources: set[str] | None = None,
+                   only: list[int] | None = None) -> int:
     """Enrich up to `limit` tenders. Returns how many changed."""
-    ids = needs_enrichment(limit, shard, skip_sources)
+    ids = needs_enrichment(limit, shard, skip_sources, only)
     if not ids:
         return 0
     changed = 0

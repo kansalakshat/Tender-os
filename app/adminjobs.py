@@ -131,7 +131,16 @@ def _run(job: Job, name: str, max_pages: int | None, since_hours: float | None,
         # than leaving a second pass to catch up later. A listing row without
         # its document has no EMD, no value and no links -- half a tender.
         if then_enrich:
-            job.log(f"reading bid documents, {workers} workers, up to {then_enrich}")
+            # This run's own rows first. The general queue is ordered by soonest
+            # deadline, so a bid fetched now and closing in a fortnight would sit
+            # behind every one closing tomorrow and not be read for hours.
+            fresh = list(connector.created_ids)
+            if fresh:
+                from .enrich import enrich_pending
+
+                job.log(f"reading {len(fresh)} document(s) for the rows just fetched")
+                job.log(f"read {enrich_pending(limit=len(fresh), only=fresh)} of them")
+            job.log(f"reading the backlog, {workers} workers, up to {then_enrich}")
             changed = _enrich(job, workers, then_enrich)
             job.summary += f" | read {changed} bid document(s)"
             job.log(f"read {changed} bid document(s)")

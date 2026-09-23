@@ -39,6 +39,17 @@ def cmd_run(args) -> int:
             connector.close()
         print(summary)
         failed |= summary.status != "ok"
+
+        # Read the documents behind the rows this run just created, here, now.
+        # A listing row on its own has no EMD, no value and no links, and the
+        # general queue is ordered by soonest deadline -- so a bid fetched today
+        # and closing in a fortnight would not be read for hours.
+        if args.enrich and connector.created_ids:
+            from .enrich import enrich_pending
+
+            read = enrich_pending(limit=len(connector.created_ids),
+                                  only=connector.created_ids)
+            print(f"read {read} of {len(connector.created_ids)} new bid document(s)")
     return 1 if failed else 0
 
 
@@ -196,6 +207,9 @@ def main(argv=None) -> int:
                        help="page-based connectors: how many listing pages to read")
     p_run.add_argument("--start-page", type=int, default=None,
                        help="page-based connectors: resume a backfill from this page")
+    p_run.add_argument("--enrich", action="store_true",
+                       help="read the bid document of every row this run creates, "
+                            "in the same pass, so a new tender is never half-collected")
     p_run.add_argument("--rate-limit", type=float, default=None,
                        help="seconds between requests for this run only "
                             "(default: the connector's own, 3s for CPPP/GePNIC)")

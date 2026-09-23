@@ -20,18 +20,37 @@ INTERVAL_HOURS = float(os.getenv("SCHEDULE_INTERVAL_HOURS", "6"))
 OVERLAP = timedelta(hours=2)
 
 
-def run_connector(name: str, since: datetime | None = None):
+def run_connector(name: str, since: datetime | None = None, enrich_new: bool = False):
+    """Run one connector, optionally reading the documents it just collected.
+
+    `enrich_new` covers this run's own rows only. The general enrichment queue
+    is ordered by soonest deadline, so a bid fetched today and closing in a
+    fortnight sits behind every one closing tomorrow -- without this it would
+    not be read for hours, and a listing row with no document has no EMD, no
+    value and no links.
+    """
     connector = REGISTRY[name]()
     try:
         summary = connector.run(since=since)
         log.info("%s", summary)
+        if enrich_new and connector.created_ids:
+            from .enrich import enrich_pending
+
+            fresh = list(connector.created_ids)
+            log.info("%s: read %d of %d new bid document(s)", name,
+                     enrich_pending(limit=len(fresh), only=fresh), len(fresh))
         return summary
     finally:
         connector.close()
 
 
 def run_incremental(name: str):
-    return run_connector(name, since=utcnow() - timedelta(hours=INTERVAL_HOURS) - OVERLAP)
+    return run_connector(
+        name, since=utcnow() - timedelta(hours=INTERVAL_HOURS) - OVERLAP,
+        # Same rule as every other caller: a tender is never left half-collected
+        # for a later pass to find.
+        enrich_new=True,
+    )
 
 
 def build_scheduler() -> BlockingScheduler:
