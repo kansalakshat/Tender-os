@@ -18,6 +18,7 @@ from sqlalchemy import Text, case, func, select
 from sqlalchemy.orm import Session
 
 from .models import Company, ConnectorRun, Source, Tender, User, utcnow
+from .enrich import DONE_KEY
 
 # The owner's address is the default so a fresh deployment is not locked out of
 # its own dashboard. Override with a comma-separated ADMIN_EMAILS.
@@ -78,6 +79,7 @@ def by_source(db: Session) -> list[dict]:
             func.max(Tender.first_seen_at),
         )
         .join(Tender, Tender.source_id == Source.id, isouter=True)
+        .where(Source.enabled.is_(True))
         .group_by(Source.id, Source.name)
         .order_by(func.count(Tender.id).desc())
     ).all()
@@ -85,6 +87,14 @@ def by_source(db: Session) -> list[dict]:
         {"id": sid, "name": name, "total": total, "open": int(open_), "last_seen": last}
         for sid, name, total, open_, last in rows
     ]
+
+
+def disabled_sources(db: Session) -> list[str]:
+    """Switched off by an operator. Listed, not hidden: a portal nobody can see
+    is switched off is a portal nobody remembers to switch back on."""
+    return list(db.execute(
+        select(Source.name).where(Source.enabled.is_(False)).order_by(Source.name)
+    ).scalars())
 
 
 def recent_runs(db: Session, limit: int = 12) -> list[ConnectorRun]:
@@ -195,3 +205,92 @@ def live_counts(db: Session, now=None) -> dict:
     }
     _cache = (clock(), result)
     return result
+
+
+def _rate_per_min(db: Session, column, minutes: int = 15) -> float:
+    """Rows touched in the recent past, per minute.
+
+    Measured over a window rather than since a job began: a backfill that ran
+    hard for an hour and then stalled would otherwise keep reporting the average
+    that made it look healthy.
+    """
+    since = utcnow() - timedelta(minutes=minutes)
+    n = db.execute(
+        select(func.count()).select_from(Tender).where(column >= since)
+    ).scalar_one()
+    return n / minutes
+
+
+def _eta(remaining: int, per_min: float) -> str:
+    """Plain words. "3.4h" is a number; "about 3 hours" is an answer."""
+    if remaining <= 0:
+        return "done"
+    if per_min <= 0:
+        return "stalled"
+    mins = remaining / per_min
+    if mins < 90:
+        return f"about {max(1, round(mins))} min"
+    hours = mins / 60
+    if hours < 36:
+        return f"about {hours:.1f} hours"
+    return f"about {hours / 24:.1f} days"
+
+
+def collection_progress(db: Session) -> dict:
+    """What is left to collect, and how long at the rate of the last quarter hour.
+
+    Only portals that publish their own total can report a remainder; the rest
+    have no denominator, and inventing one would be worse than saying so.
+    """
+    rows = db.execute(
+        select(Source.name, Source.listing_total, Source.listing_total_at,
+               func.count(Tender.id))
+        .join(Tender, Tender.source_id == Source.id, isouter=True)
+        .where(Source.enabled.is_(True))
+        .group_by(Source.id, Source.name, Source.listing_total, Source.listing_total_at)
+        .having(Source.listing_total.is_not(None))
+        .order_by(Source.listing_total.desc())
+    ).all()
+    per_min = _rate_per_min(db, Tender.first_seen_at)
+    out = []
+    for name, total, at, held in rows:
+        remaining = max(0, (total or 0) - held)
+        out.append({
+            "name": name, "held": held, "listing_total": total,
+            "remaining": remaining, "seen_at": at,
+            "percent": round(100 * held / total) if total else 0,
+        })
+    biggest = max((o["remaining"] for o in out), default=0)
+    return {
+        "sources": out,
+        "per_min": round(per_min, 1),
+        "eta": _eta(biggest, per_min),
+    }
+
+
+def enrichment_progress(db: Session) -> dict:
+    """How far the bid-document pass has got.
+
+    Worth its own panel: every EMD, estimated value and document link on the
+    site comes from it, so "the site looks thin" and "this number is low" are
+    the same fact, and an operator should be able to see that at a glance.
+    """
+    with_docs = db.execute(
+        select(func.count()).select_from(Tender).where(Tender.document_url.is_not(None))
+    ).scalar_one()
+    done = db.execute(
+        select(func.count()).select_from(Tender).where(
+            Tender.raw_payload.is_not(None),
+            func.cast(Tender.raw_payload, Text).like(f'%"{DONE_KEY}"%'),
+        )
+    ).scalar_one()
+    per_min = _rate_per_min(db, Tender.last_updated_at)
+    remaining = max(0, with_docs - done)
+    return {
+        "with_documents": with_docs,
+        "read": done,
+        "remaining": remaining,
+        "percent": round(100 * done / with_docs) if with_docs else 0,
+        "per_min": round(per_min, 1),
+        "eta": _eta(remaining, per_min),
+    }

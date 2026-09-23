@@ -42,6 +42,35 @@ here runs in this process, so it uses this machine's connection.</p>
  <pre id=joblog class=joblog>{% if job %}{{ job.lines | join('\n') }}{% else %}No run started yet.{% endif %}</pre>
 </div>
 
+<h2>Still to collect</h2>
+{%- if collection.sources %}
+<table class=admintable>
+ <thead><tr><th>Portal</th><th>Held</th><th>Portal says</th><th>Remaining</th><th>Done</th></tr></thead>
+ <tbody>
+ {%- for c in collection.sources %}
+ <tr><td>{{ c.name }}</td><td class=mono>{{ c.held | num }}</td>
+  <td class=mono>{{ c.listing_total | num }}</td>
+  <td class=mono>{{ c.remaining | num }}</td>
+  <td class=mono>{{ c.percent }}%</td></tr>
+ {%- endfor %}
+ </tbody>
+</table>
+<p class=hint>{{ collection.per_min }} new rows/min over the last 15 minutes &mdash;
+ {{ collection.eta }} at that pace. Only portals that publish their own total can
+ report a remainder; the rest have no denominator to count against.</p>
+{%- else %}
+<p class=hint>No portal has reported its own total yet. GeM records one while it
+crawls, so this fills in after the next GeM run.</p>
+{%- endif %}
+
+<h2>Bid documents read</h2>
+<div class=progress><span style="width: {{ enrichment.percent }}%"></span></div>
+<p class=hint><b>{{ enrichment.read | num }}</b> of {{ enrichment.with_documents | num }}
+ read ({{ enrichment.percent }}%) &mdash; <b>{{ enrichment.remaining | num }}</b> left,
+ {{ enrichment.eta }} at {{ enrichment.per_min }} rows/min.
+ Every EMD, estimated value and document link comes from this pass, so a low
+ number here is why tenders look bare.</p>
+
 <h2>Last 7 days</h2>
 <ul class=bars>
  {#- Square-root scale, not linear. A one-off backfill of 20,957 against
@@ -68,6 +97,12 @@ here runs in this process, so it uses this machine's connection.</p>
  {%- endfor %}
  </tbody>
 </table>
+
+{%- if disabled %}
+<p class=hint><b>Switched off ({{ disabled | length }}):</b> {{ disabled | join(', ') }}.
+ They are skipped before robots.txt is even checked. Re-enable with
+ <span class=mono>tenders sources enable "&lt;name&gt;"</span>.</p>
+{%- endif %}
 
 <h2>Portals failing</h2>
 {%- if failing %}

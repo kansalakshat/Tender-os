@@ -6,8 +6,10 @@ import logging
 import sys
 from datetime import datetime, timedelta
 
+from sqlalchemy import func
+
 from .connectors import REGISTRY
-from .models import utcnow
+from .models import ConnectorRun, utcnow
 from .dedup import link_duplicates
 from .retention import DEFAULT_RETENTION_DAYS, cutoff_date, purge_expired
 
@@ -81,6 +83,73 @@ def cmd_discover(args) -> int:
     return 0
 
 
+def cmd_sources(args) -> int:
+    """List, enable or disable sources.
+
+    Disabling writes `enabled`, not `active`: the connector rewrites `active` on
+    every run to record whether robots let it in, so a source switched off
+    through that column would switch itself back on at the next attempt.
+    """
+    from sqlalchemy import select
+
+    from .db import SessionLocal
+    from .models import Source, Tender
+
+    db = SessionLocal()
+    try:
+        if args.action == "list":
+            rows = db.execute(
+                select(Source.name, Source.enabled, func.count(Tender.id))
+                .join(Tender, Tender.source_id == Source.id, isouter=True)
+                .group_by(Source.id, Source.name, Source.enabled)
+                .order_by(func.count(Tender.id).desc())
+            ).all()
+            for name, enabled, rows_held in rows:
+                print(f"{'on ' if enabled else 'OFF'}  {rows_held:>7}  {name}")
+            return 0
+
+        if args.action == "prune-empty":
+            # Only sources that have actually been tried. One that has never run
+            # has produced nothing for the same reason an unopened letter has no
+            # reply, and switching it off would make that permanent.
+            tried = select(ConnectorRun.source_name).distinct()
+            targets = db.execute(
+                select(Source)
+                .where(Source.enabled.is_(True), Source.name.in_(tried))
+                .where(~Source.id.in_(select(Tender.source_id).where(
+                    Tender.source_id.is_not(None)).distinct()))
+                .order_by(Source.name)
+            ).scalars().all()
+            if not targets:
+                print("nothing to prune: every source that has run holds at least one row")
+                return 0
+            for src in targets:
+                print(("would disable " if args.dry_run else "disabled ") + src.name)
+                if not args.dry_run:
+                    src.enabled = False
+            if not args.dry_run:
+                db.commit()
+            print(f"{len(targets)} source(s)")
+            return 0
+
+        names = args.names
+        if not names:
+            print("name at least one source", file=sys.stderr)
+            return 2
+        wanted = args.action == "enable"
+        found = db.execute(select(Source).where(Source.name.in_(names))).scalars().all()
+        missing = set(names) - {s.name for s in found}
+        for name in sorted(missing):
+            print(f"unknown source {name!r}", file=sys.stderr)
+        for src in found:
+            src.enabled = wanted
+            print(f"{'enabled' if wanted else 'disabled'} {src.name}")
+        db.commit()
+        return 1 if missing else 0
+    finally:
+        db.close()
+
+
 def cmd_dedup(args) -> int:
     print(f"linked {link_duplicates(window_days=args.window_days)} duplicates")
     return 0
@@ -140,6 +209,13 @@ def main(argv=None) -> int:
                             help="list candidate data.gov.in datasets to pin")
     p_disc.add_argument("--show-fields", action="store_true")
     p_disc.set_defaults(func=cmd_discover)
+
+    p_src = sub.add_parser("sources", help="list, enable or disable sources")
+    p_src.add_argument("action", choices=["list", "enable", "disable", "prune-empty"])
+    p_src.add_argument("names", nargs="*", help="source names, for enable/disable")
+    p_src.add_argument("--dry-run", action="store_true",
+                       help="prune-empty: show what would be switched off")
+    p_src.set_defaults(func=cmd_sources)
 
     p_dedup = sub.add_parser("dedup", help="link cross-source duplicates")
     p_dedup.add_argument("--window-days", type=int, default=120)

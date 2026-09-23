@@ -673,3 +673,8 @@ main h2{display:flex;align-items:center}
 .livesources{list-style:none;display:flex;flex-wrap:wrap;gap:.4rem .9rem;padding:0;
   margin:0 0 .4rem;font:.8rem/1.5 var(--mono);color:var(--muted)}
 .livesources b{color:var(--fg);font-weight:700}
+
+.progress{height:.8rem;border-radius:999px;background:rgba(127,127,127,.18);overflow:hidden;
+  margin:.7rem 0 .4rem}
+.progress>span{display:block;height:100%;background:var(--accent,currentColor);
+  border-radius:999px;transition:width .4s ease}

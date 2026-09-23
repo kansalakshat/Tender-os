@@ -766,6 +766,9 @@ def admin_home(request: Request, db: Session = Depends(get_db), user=Depends(cur
         daily=admin_data.daily_intake(db, days=7),
         sources=admin_data.by_source(db),
         failing=admin_data.failing_sources(db),
+        collection=admin_data.collection_progress(db),
+        disabled=admin_data.disabled_sources(db),
+        enrichment=admin_data.enrichment_progress(db),
         runs=admin_data.recent_runs(db),
         connectors=list(REGISTRY),
         job=job.as_dict() if job else None,
@@ -790,6 +793,7 @@ def admin_stats(db: Session = Depends(get_db), user=Depends(current_user)):
             for s in admin_data.by_source(db)
         ],
         "failing": [{**f, "at": f["at"].isoformat()} for f in admin_data.failing_sources(db)],
+        "enrichment": admin_data.enrichment_progress(db),
         "job": job.as_dict() if job else None,
     })
 
