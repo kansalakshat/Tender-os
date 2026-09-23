@@ -8,6 +8,11 @@
 # Safe to run repeatedly, and safe to run on a timer: a shard already running is
 # left alone, and re-crawling a range only produces updates, never duplicates.
 #
+# --enrich: each shard reads the documents of the rows it creates, in the same
+# pass. Without it the rows land with no EMD, no value and no links and wait on
+# a separate pass that is ordered by soonest deadline -- so a bid closing in a
+# fortnight would sit behind every one closing tomorrow.
+#
 #   powershell -ExecutionPolicy Bypass -File gem_supervise.ps1
 param(
   [int]$Shards = 8,
@@ -34,7 +39,7 @@ for ($i = 0; $i -lt $Shards; $i++) {
   $log = Join-Path $root "gem_catchup.$i.log"
   Add-Content $log "---- $(Get-Date -Format s) supervisor starting shard $i at page $start"
   Start-Process -FilePath "$root\.venv\Scripts\python.exe" `
-    -ArgumentList "-u","-m","app.cli","run","GeM","--start-page",$start,"--max-pages",$Pages `
+    -ArgumentList "-u","-m","app.cli","run","GeM","--start-page",$start,"--max-pages",$Pages,"--enrich" `
     -WorkingDirectory $root -WindowStyle Hidden `
     -RedirectStandardOutput "$log.out" -RedirectStandardError "$log.err"
   Write-Output "started shard $i (page $start)"
