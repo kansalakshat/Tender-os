@@ -181,6 +181,10 @@ class CompanyIn(BaseModel):
     buyers: list[str] = Field(default_factory=list)
     exclude_keywords: list[str] = Field(default_factory=list)
     exclude_buyers: list[str] = Field(default_factory=list)
+    # Which of the answers above are boundaries rather than leanings. Validated
+    # against the known names, because it arrives from a form and an unknown
+    # value stored here would quietly do nothing for good.
+    strict: list[str] = Field(default_factory=list)
     min_lead_days: int = Field(7, ge=0, le=365)
     # Kept, but inert today: estimated_value is null on 100% of live rows because
     # neither portal publishes it on a listing page. It starts working the moment
@@ -193,6 +197,21 @@ class CompanyIn(BaseModel):
     bid_capacity: Decimal | None = Field(None, ge=0)
     emd_budget: Decimal | None = Field(None, ge=0)
     registrations: list[str] = Field(default_factory=list)
+
+    @field_validator("strict")
+    @classmethod
+    def _known_strict_fields(cls, value):
+        from .matching import STRICT_FIELDS
+
+        unknown = sorted(set(value) - set(STRICT_FIELDS))
+        if unknown:
+            raise ValueError(
+                "cannot be made strict: " + ", ".join(unknown)
+                + f" (choose from {', '.join(STRICT_FIELDS)})"
+            )
+        # De-duplicated and ordered, so two equivalent profiles produce the same
+        # digest cache key rather than two.
+        return sorted(set(value))
 
     @field_validator("registrations")
     @classmethod

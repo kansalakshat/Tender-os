@@ -258,8 +258,34 @@ def _keyword_hits(keywords, title: str) -> list[str]:
     return hits
 
 
+# The answers that can be a boundary instead of a leaning. Not every answer can:
+# min_lead_days and max_project_value already disqualify, and the exclusions
+# always did. These four are the ones that currently only deduct.
+STRICT_FIELDS = ("sectors", "keywords", "location", "buyers")
+STRICT_LABELS = {
+    "sectors": "sector",
+    "keywords": "keywords",
+    "location": "location",
+    "buyers": "buyer",
+}
+
+
+def strict_set(profile, override=None) -> set[str]:
+    """Which answers to treat as filters for this search.
+
+    `override` is the page's toggle and wins over the saved answer, including
+    when it is an empty set -- that is how "show me everything as a preference"
+    is said. None means "no opinion, use what the profile stored".
+    """
+    if override is not None:
+        return {f for f in override if f in STRICT_FIELDS}
+    saved = getattr(profile, "strict", None) or []
+    return {f for f in saved if f in STRICT_FIELDS}
+
+
 def match_score(
-    profile, tender, today: date | None = None, idf: dict[str, float] | None = None
+    profile, tender, today: date | None = None, idf: dict[str, float] | None = None,
+    strict: set[str] | None = None,
 ) -> tuple[int, list[str]] | None:
     """Score one tender against one company profile.
 
@@ -269,6 +295,7 @@ def match_score(
     Company ORM row and the CompanyIn pydantic model can be passed directly.
     """
     today = today or date.today()
+    strict = strict_set(profile, strict)
     lead = profile.min_lead_days
     if lead is None:
         lead = DEFAULT_MIN_LEAD_DAYS
@@ -343,6 +370,13 @@ def match_score(
     if not overlap and not hits:
         return None
 
+    # A boundary only binds when there is an answer to bind to: marking sectors
+    # strict and then naming none must not hide the entire corpus.
+    if "sectors" in strict and profile.sectors and not overlap:
+        return None
+    if "keywords" in strict and getattr(profile, "keywords", None) and not hits:
+        return None
+
     # Geography is one signal, awarded once: a district hit and its state hit are
     # the same fact stated twice, and paying for both double-counts it.
     places = []
@@ -354,6 +388,11 @@ def match_score(
     if places:
         score += GEO_WEIGHT
         reasons.append("location: " + ", ".join(places))
+    elif "location" in strict and (profile.districts or getattr(profile, "states", None)):
+        # Districts and states are one answer to a bidder ("where we work"), so
+        # one boundary covers both: naming a district and a state means either
+        # will do, not that both must match.
+        return None
 
     buyers = _buyer_hits(
         getattr(profile, "buyers", None), tender.organization, tender.department
@@ -361,6 +400,8 @@ def match_score(
     if buyers:
         score += BUYER_WEIGHT
         reasons.append("buyer: " + ", ".join(buyers))
+    elif "buyers" in strict and getattr(profile, "buyers", None):
+        return None
 
     # Reported, never scored -- see the note by the weights.
     reasons.append(f"closes in {days_left} day{'s' if days_left != 1 else ''}")
@@ -409,6 +450,10 @@ def _profile_stamp(profile) -> tuple:
         get("sectors"), get("keywords"), get("states"), get("districts"),
         get("buyers"), get("exclude_keywords"), get("exclude_buyers"),
         get("min_lead_days"), get("max_project_value"),
+        # Which answers bind as filters changes the result set, not just the
+        # order, so it has to be part of the key. Without it the page toggle
+        # would hand back the previous mode's cached list.
+        get("strict"),
     )
 
 
@@ -421,15 +466,19 @@ def _corpus_stamp(db: Session) -> tuple:
     )
 
 
-def match_digest(db: Session, profile, today: date | None = None) -> MatchDigest:
+def match_digest(db: Session, profile, today: date | None = None,
+                 strict: set[str] | None = None) -> MatchDigest:
     """The digest for one profile, computed at most once per corpus change."""
     today = today or date.today()
-    key = (_profile_stamp(profile), _corpus_stamp(db), today)
+    # The override belongs in the key too: the same profile viewed strictly and
+    # loosely is two different result sets.
+    key = (_profile_stamp(profile), _corpus_stamp(db), today,
+           tuple(sorted(strict)) if strict is not None else None)
     hit = _DIGESTS.get(key)
     if hit is not None:
         return hit
 
-    scored = find_matches(db, profile, limit=None, today=today)
+    scored = find_matches(db, profile, limit=None, today=today, strict=strict)
     horizon = today + timedelta(days=7)
     tally: dict[str, int] = {}
     soon = 0
@@ -470,6 +519,7 @@ def find_matches(
     profile,
     limit: int | None = 50,
     today: date | None = None,
+    strict: set[str] | None = None,
 ) -> list[tuple[int, list[str], Tender]]:
     """Rank open tenders for one profile, best first.
 
@@ -507,7 +557,7 @@ def find_matches(
 
     scored = []
     for row in rows:
-        result = match_score(profile, row, today=today, idf=idf)
+        result = match_score(profile, row, today=today, idf=idf, strict=strict)
         if result is not None:
             scored.append((result[0], result[1], row))
 

@@ -10,7 +10,27 @@
   <select name=sort>{% for key, label in sorts %}<option value="{{ key }}"{% if key == sort %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
  <button name=order value=asc class="{{ '' if order == 'asc' else 'ghost' }}" aria-pressed="{{ 'true' if order == 'asc' else 'false' }}">Ascending &uarr;</button>
  <button name=order value=desc class="{{ '' if order == 'desc' else 'ghost' }}" aria-pressed="{{ 'true' if order == 'desc' else 'false' }}">Descending &darr;</button>
+{%- if saved_strict %}
+ {#- The escape hatch. Answers marked "only show these" hide everything else,
+     which is right until it leaves too little to look at -- so the same answers
+     can be read as preferences for one view, without editing them. Carries the
+     current sort so switching mode does not silently reorder the page. -#}
+ <input type=hidden name=sort value="{{ sort }}">
+ <input type=hidden name=order value="{{ order }}">
+ <span class=toggle>
+  <button name=filters value="" class="{{ '' if not relaxed else 'ghost' }}" aria-pressed="{{ 'false' if relaxed else 'true' }}">Only my {{ saved_strict | map('extract', strict_labels) | join(', ') }}</button>
+  <button name=filters value=off class="{{ '' if relaxed else 'ghost' }}" aria-pressed="{{ 'true' if relaxed else 'false' }}">Everything, ranked</button>
+ </span>
+{%- endif %}
 </form>
+{%- if saved_strict %}
+<p class=hint>
+ {%- if relaxed %}Showing everything, with your {{ saved_strict | map('extract', strict_labels) | join(' and ') }} answers only raising the score.
+ {{ other_total|num }} tenders match them exactly.
+ {%- else %}Hiding tenders outside your {{ saved_strict | map('extract', strict_labels) | join(' and ') }}.
+ {{ other_total|num }} more would show if these counted as preferences.{% endif -%}
+</p>
+{%- endif %}
 <p class=hint>Tenders missing the value you sort by go to the end.{% if sort == 'distance' %} Distance: your districts first, then your states, then tenders that name neither.{% endif %}</p>
 {%- endif %}
 {%- if shown %}<ol class=rows>
@@ -18,4 +38,12 @@
 {{ row(score|string, rank_class(score, top), t, reasons + (["check eligibility"] if check else []), summary=true) }}
 {%- endfor -%}
 </ol>
-{%- else %}<div class=empty><p>No open tenders match this profile yet. Broaden the sectors, drop a state, or lower the preparation days on your <a href="/profile">answers</a>.</p></div>{% endif %}{% endblock %}
+{%- else %}<div class=empty>
+{%- if saved_strict and not relaxed %}
+ <p>Nothing matches your {{ saved_strict | map('extract', strict_labels) | join(' and ') }} exactly.
+ <a href="?filters=off&amp;sort={{ sort }}&amp;order={{ order }}">Show everything, ranked</a>
+. Your answers still decide the order.</p>
+{%- else %}
+ <p>No open tenders match this profile yet. Broaden the sectors, drop a state, or lower the preparation days on your <a href="/profile">answers</a>.</p>
+{%- endif %}
+</div>{% endif %}{% endblock %}

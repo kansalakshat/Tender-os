@@ -108,6 +108,12 @@ class Company(Base):
     districts: Mapped[list] = mapped_column(JSONType, default=list)
     states: Mapped[list] = mapped_column(JSONType, default=list)
     buyers: Mapped[list] = mapped_column(JSONType, default=list)
+    # Which of the answers above are boundaries rather than leanings. A name in
+    # here ("location", "buyers", "sectors", "keywords") turns that answer into
+    # a filter: a tender that does not match is not shown at all, instead of
+    # being shown with a lower score. Empty for every profile that predates the
+    # question, which is the right default -- it is what they were told.
+    strict: Mapped[list] = mapped_column(JSONType, default=list, server_default="[]")
     # Exclusions, not preferences: these disqualify rather than deduct.
     exclude_keywords: Mapped[list] = mapped_column(JSONType, default=list)
     exclude_buyers: Mapped[list] = mapped_column(JSONType, default=list)
