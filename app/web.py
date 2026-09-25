@@ -233,7 +233,9 @@ def home(request: Request, db: Session = Depends(get_db),
     """
     profile = _profile_of(db, user)
     if user is not None and profile is None:
-        return RedirectResponse("/profile", status_code=303)
+        # An operator has no company to profile; their home is the dashboard.
+        target = "/admin" if admin_data.is_admin(user) else "/profile"
+        return RedirectResponse(target, status_code=303)
     if profile is not None:
         return _welcome_signed_in(db, profile)
     return _welcome(db)
@@ -592,6 +594,10 @@ def _related(db: Session, t: Tender, today: date) -> str:
     return render("_related.html", sections=sections, today=today)
 
 
+def _web_link(url: str | None) -> bool:
+    return bool(url) and url.lower().startswith(("https://", "http://"))
+
+
 def _document_for(db: Session, t: Tender) -> tuple[str, str] | None:
     """(url, source_name) for a downloadable document, or None.
 
@@ -601,7 +607,9 @@ def _document_for(db: Session, t: Tender) -> tuple[str, str] | None:
     notice republished on GeM has a PDF that answers an ordinary GET. Showing
     that twin's document is what lets a CPPP tender skip the copy-the-ID dance.
     """
-    if t.document_url:
+    # The URL is scraped, so it is untrusted: a javascript: or data: href would
+    # run on our origin when clicked. Only web links are ever printed.
+    if _web_link(t.document_url):
         src = db.get(Source, t.source_id) if t.source_id else None
         return t.document_url, (src.name if src else "the source portal")
 
@@ -613,7 +621,7 @@ def _document_for(db: Session, t: Tender) -> tuple[str, str] | None:
             Tender.document_url.is_not(None),
         ).limit(1)
     ).scalars().first()
-    if twins is None:
+    if twins is None or not _web_link(twins.document_url):
         return None
     src = db.get(Source, twins.source_id) if twins.source_id else None
     return twins.document_url, (src.name if src else "another portal")

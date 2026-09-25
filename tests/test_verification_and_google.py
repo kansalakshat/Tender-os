@@ -14,8 +14,8 @@ from app.api import app
 from app.auth import (
     make_session,
     make_verification_token,
-    read_verification_token,
     unsign,
+    user_from_verification_token,
 )
 from app.db import get_db
 from app.models import Source, Tender, User
@@ -53,15 +53,17 @@ def _user(session_factory, email=CREDS["email"]):
 
 # ---- token separation ----
 
-def test_a_session_cookie_is_not_a_verification_token():
+ONE = User(id=1, email="one@acme.invalid")
+
+
+def test_a_session_cookie_is_not_a_verification_token(db):
     """Without a purpose in the signed payload, being logged in for 30 days would
     also be a standing licence to mark yourself verified."""
-    assert read_verification_token(make_session(1)) is None
-    assert unsign("oauth", make_verification_token(1)) is None
-
-
-def test_verification_token_round_trips():
-    assert read_verification_token(make_verification_token(42)) == 42
+    db.add(User(email=ONE.email))
+    db.commit()
+    assert user_from_verification_token(db, make_session(ONE)) is None
+    assert user_from_verification_token(db, make_verification_token(ONE)).id == 1
+    assert unsign("oauth", make_verification_token(ONE)) is None
 
 
 # ---- verification flow ----
@@ -76,7 +78,7 @@ def test_signup_is_unverified_and_writes_a_link_to_the_outbox(client, session_fa
 
 def test_clicking_the_link_verifies_and_signs_in(client, session_factory):
     client.post("/auth/signup", json=CREDS)
-    token = make_verification_token(_user(session_factory).id)
+    token = make_verification_token(_user(session_factory))
     client.post("/auth/logout")
 
     r = client.get(f"/auth/verify?token={token}", follow_redirects=False)
@@ -86,10 +88,18 @@ def test_clicking_the_link_verifies_and_signs_in(client, session_factory):
     me = client.get("/me").json()
     assert me["user"]["email_verified"] is True
 
+    # Once only: a second click is not a standing 24-hour login.
+    client.post("/auth/logout")
+    client.get(f"/auth/verify?token={token}", follow_redirects=False)
+    assert client.get("/me").json()["user"] is None
 
-def test_forged_or_expired_link_is_refused(client):
+
+def test_forged_or_expired_link_is_refused(client, session_factory):
     client.post("/auth/signup", json=CREDS)
-    for bad in ("nonsense", make_session(1), make_verification_token(1)[:-3] + "aaa"):
+    me = _user(session_factory)
+    stranger = User(id=me.id, email="stranger@x.invalid")    # same id, other account
+    for bad in ("nonsense", make_session(me), make_verification_token(me)[:-3] + "aaa",
+                make_verification_token(stranger)):
         r = client.get(f"/auth/verify?token={bad}", follow_redirects=False)
         assert r.headers["location"] == "/?verify=invalid"
     assert client.get("/me").json()["user"]["email_verified"] is False
@@ -170,7 +180,7 @@ def _complete_google(client, monkeypatch, sub, email, verified=True):
     state = start.cookies["oauth_state"]
     monkeypatch.setattr(
         oauth, "exchange_code",
-        lambda code: {"sub": sub, "email": email, "email_verified": verified},
+        lambda code, origin=None: {"sub": sub, "email": email, "email_verified": verified},
     )
     return client.get(
         f"/auth/google/callback?code=abc&state={state}", follow_redirects=False
@@ -195,7 +205,32 @@ def test_google_links_to_an_existing_password_account(client, google, session_fa
     me = client.get("/me").json()["user"]
     assert me["id"] == existing_id       # linked, not a duplicate account
     assert me["email_verified"] is True
-    # And the password still works afterwards.
+    # The address was never confirmed, so that password may be a squatter's.
+    # Google proved ownership; the unproven password is gone.
+    client.post("/auth/logout")
+    assert client.post("/auth/login", json=CREDS).status_code == 401
+
+
+def test_a_squatter_is_locked_out_when_the_owner_uses_google(client, google):
+    """Pre-registration takeover: sign up with someone's address, keep the
+    session, wait for them to arrive through Google."""
+    squatter = TestClient(app)
+    squatter.post("/auth/signup", json=CREDS)
+    assert squatter.get("/me").json()["user"] is not None
+
+    _complete_google(client, google, "sub-owner", CREDS["email"])
+    assert client.get("/me").json()["user"]["email"] == CREDS["email"]
+    assert squatter.get("/me").json()["user"] is None       # old session dead
+    assert squatter.post("/auth/login", json=CREDS).status_code == 401
+
+
+def test_a_verified_password_survives_linking_google(client, google, session_factory):
+    client.post("/auth/signup", json=CREDS)
+    with session_factory() as db:
+        db.query(User).one().email_verified = True
+        db.commit()
+    client.post("/auth/logout")
+    _complete_google(client, google, "sub-2b", CREDS["email"])
     client.post("/auth/logout")
     assert client.post("/auth/login", json=CREDS).status_code == 200
 
@@ -223,3 +258,17 @@ def test_google_only_account_cannot_be_password_guessed(client, google):
     r = client.post("/auth/login", json={"email": "nopw@gmail.com", "password": "anything at all"})
     assert r.status_code == 401
     assert "Google" in r.json()["detail"]
+
+
+def test_google_returns_you_to_the_origin_you_started_on(monkeypatch):
+    """Started on the local dashboard, PUBLIC_BASE_URL on Vercel: Google sent
+    the visitor to Vercel, where the state cookie does not exist."""
+    monkeypatch.setenv("PUBLIC_BASE_URL", "https://tender-0s.vercel.app")
+    cb = "/auth/google/callback"
+    assert oauth.redirect_uri("http://127.0.0.1:8000") == "http://127.0.0.1:8000" + cb
+    assert oauth.redirect_uri("http://localhost:8000") == "http://localhost:8000" + cb
+    assert oauth.redirect_uri("https://tender-0s.vercel.app") == "https://tender-0s.vercel.app" + cb
+    # A spoofed Host header cannot pick where Google sends the code.
+    for evil in ("https://evil.example", "http://127.0.0.1.evil.example",
+                 "https://127.0.0.1:8000", None):
+        assert oauth.redirect_uri(evil) == "https://tender-0s.vercel.app" + cb

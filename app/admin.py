@@ -31,7 +31,13 @@ def admin_emails() -> set[str]:
 
 
 def is_admin(user: User | None) -> bool:
-    return bool(user and (user.email or "").strip().lower() in admin_emails())
+    """Verified only. Signup does not prove you own the address you typed, so
+    without this anyone could register the owner's email on a database where it
+    is not taken yet (a fresh deploy, a restored backup) and walk into /admin."""
+    return bool(
+        user and user.email_verified
+        and (user.email or "").strip().lower() in admin_emails()
+    )
 
 
 def daily_intake(db: Session, days: int = 7) -> list[dict]:

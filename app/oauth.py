@@ -44,9 +44,27 @@ def configured() -> bool:
     return bool(_env("GOOGLE_CLIENT_ID") and _env("GOOGLE_CLIENT_SECRET"))
 
 
-def redirect_uri() -> str:
-    """Must match a URI registered on the Google OAuth client, exactly."""
-    return f"{public_base_url()}/auth/google/callback"
+_LOOPBACK_HOSTS = {"127.0.0.1", "localhost"}
+
+
+def redirect_uri(origin: str | None = None) -> str:
+    """Must match a URI registered on the Google OAuth client, exactly.
+
+    Google has to send the visitor back to the origin they started on: the
+    oauth_state cookie lives there, and landing anywhere else fails the state
+    check. With PUBLIC_BASE_URL on Vercel, a sign-in begun on the local
+    dashboard (http://127.0.0.1:8000) was being returned to Vercel and refused.
+
+    The request's origin is used only when it is the public one or loopback
+    over http. Anything else -- a spoofed Host header -- gets the public URL.
+    """
+    base = public_base_url()
+    if origin:
+        scheme, _, hostport = origin.partition("://")
+        host = hostport.rsplit(":", 1)[0] if hostport.count(":") == 1 else hostport
+        if origin == base or (scheme == "http" and host in _LOOPBACK_HOSTS):
+            base = origin
+    return f"{base}/auth/google/callback"
 
 
 def make_state() -> str:
@@ -58,11 +76,11 @@ def check_state(state: str | None) -> bool:
     return unsign("oauth", state) is not None
 
 
-def authorize_url(state: str) -> str:
+def authorize_url(state: str, origin: str | None = None) -> str:
     return AUTH_ENDPOINT + "?" + urlencode(
         {
             "client_id": _env("GOOGLE_CLIENT_ID"),
-            "redirect_uri": redirect_uri(),
+            "redirect_uri": redirect_uri(origin),
             "response_type": "code",
             "scope": "openid email profile",
             "state": state,
@@ -74,7 +92,7 @@ def authorize_url(state: str) -> str:
     )
 
 
-def exchange_code(code: str) -> dict:
+def exchange_code(code: str, origin: str | None = None) -> dict:
     """Swap the one-time code for an access token, then read the profile.
 
     Returns the userinfo claims: `sub`, `email`, `email_verified`, `name`.
@@ -89,7 +107,7 @@ def exchange_code(code: str) -> dict:
                     "code": code,
                     "client_id": _env("GOOGLE_CLIENT_ID"),
                     "client_secret": _env("GOOGLE_CLIENT_SECRET"),
-                    "redirect_uri": redirect_uri(),
+                    "redirect_uri": redirect_uri(origin),
                     "grant_type": "authorization_code",
                 },
             )

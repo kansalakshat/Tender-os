@@ -59,15 +59,15 @@ def client(own_db):
                title="Cable laying work", deadline=GONE, status="open"),
     ])
     db.commit()
-    ids = {u.email: u.id for u in db.query(User).all()}
+    ids = {u.email: u for u in db.query(User).all()}
     db.close()
     app.dependency_overrides[get_db] = lambda: own_db()
     yield TestClient(app), ids, own_db
     app.dependency_overrides.clear()
 
 
-def _as(c, uid):
-    c.cookies.set(SESSION_COOKIE, make_session(uid))
+def _as(c, user):
+    c.cookies.set(SESSION_COOKIE, make_session(user))
     return c
 
 

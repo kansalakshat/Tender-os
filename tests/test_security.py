@@ -355,3 +355,46 @@ def test_pages_are_not_cached_but_static_assets_still_are(client):
     css = client.get("/static/docs.css")
     if css.status_code == 200:
         assert "no-store" not in css.headers.get("Cache-Control", "")
+
+
+# ---- 26 Sep 2026: every visitor shared one rate-limit bucket via the tunnel ----
+
+def test_tunnel_visitors_get_their_own_bucket():
+    """cloudflared connects from loopback, so without CF-Connecting-IP the whole
+    internet was one address: five signups an hour, total."""
+    from starlette.requests import Request
+
+    def req(peer, **headers):
+        return Request({"type": "http", "client": (peer, 1), "headers": [
+            (k.replace("_", "-").encode(), v.encode()) for k, v in headers.items()]})
+
+    assert security.client_ip(req("127.0.0.1", cf_connecting_ip="203.0.113.9")) == "203.0.113.9"
+    assert security.client_ip(req("127.0.0.1")) == "127.0.0.1"
+    # From anywhere but loopback the header is attacker-controlled and ignored.
+    assert security.client_ip(req("198.51.100.4", cf_connecting_ip="1.2.3.4")) == "198.51.100.4"
+
+
+def test_who_am_i_is_never_cached(client):
+    """/me names the signed-in account; a shared cache must never keep it."""
+    client.post("/auth/signup", json=CREDS)
+    assert "no-store" in client.get("/me").headers["cache-control"]
+
+
+def test_session_cookie_is_secure_except_on_local_http(monkeypatch):
+    """PUBLIC_BASE_URL is https in production, but the operator also signs in
+    on http://127.0.0.1:8000, where a Secure cookie can be silently dropped."""
+    from starlette.requests import Request
+
+    def req(url):
+        scheme, rest = url.split("://")
+        host = rest.split("/")[0]
+        return Request({"type": "http", "scheme": scheme, "path": "/", "query_string": b"",
+                        "server": (host.split(":")[0], 80), "headers": [(b"host", host.encode())]})
+
+    monkeypatch.setenv("PUBLIC_BASE_URL", "https://tender-0s.vercel.app")
+    assert security.cookie_secure(req("https://tender-0s.vercel.app/"))
+    assert security.cookie_secure(req("http://tunnel.example/"))   # TLS ends upstream
+    assert not security.cookie_secure(req("http://127.0.0.1:8000/"))
+    assert not security.cookie_secure(req("http://localhost:8000/"))
+    monkeypatch.setenv("PUBLIC_BASE_URL", "http://127.0.0.1:8000")
+    assert not security.cookie_secure(req("http://tunnel.example/"))
