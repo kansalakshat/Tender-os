@@ -33,10 +33,10 @@ from .connectors import REGISTRY
 from . import admin as admin_data
 from . import adminjobs, cppp_relay, oauth, security
 from .auth import current_user
-from .db import get_db
+from .db import get_db, shared
 from .districts import DISTRICTS
 from .eligibility import REGISTRATIONS, checklist, needs_check
-from .facts import links as tender_links, money, preview_facts, tender_facts
+from .facts import links as tender_links, money, preview_facts, sources, tender_facts
 from .matching import (
     SECTOR_LABELS,
     STATES,
@@ -241,12 +241,28 @@ def home(request: Request, db: Session = Depends(get_db),
     return _welcome(db)
 
 
-def _last_collected(db: Session):
-    # "Updated daily" would be a claim; the last successful run is a fact, and it
-    # is the one that goes stale visibly if the scheduler process is not running.
-    return db.scalar(
-        select(func.max(ConnectorRun.finished_at)).where(ConnectorRun.status == "ok")
-    )
+def _figures(db: Session, today: date) -> dict:
+    """The corpus counts both home pages print, in one round trip, shared by
+    every visitor for a minute."""
+    def compute(db):
+        is_open = or_(Tender.deadline.is_(None), Tender.deadline >= today)
+        live = Tender.duplicate_of.is_(None)
+        row = db.execute(select(
+            select(func.count()).where(live, is_open).scalar_subquery(),
+            select(func.count()).where(
+                live, Tender.deadline.between(today, today + timedelta(7))
+            ).scalar_subquery(),
+            select(func.count(distinct(Tender.organization))).where(
+                Tender.organization.is_not(None), live, is_open
+            ).scalar_subquery(),
+            select(func.count()).select_from(Source).scalar_subquery(),
+            # "Updated daily" would be a claim; the last successful run is a fact,
+            # and it goes stale visibly if the scheduler process is not running.
+            select(func.max(ConnectorRun.finished_at))
+            .where(ConnectorRun.status == "ok").scalar_subquery(),
+        )).one()
+        return dict(zip(("n_open", "n_soon", "n_buyers", "n_sources", "last"), row))
+    return shared(db, ("figures", today), 60, compute)
 
 
 def _welcome_signed_in(db: Session, company: Company) -> str:
@@ -255,18 +271,7 @@ def _welcome_signed_in(db: Session, company: Company) -> str:
     # Everything below comes from one cached digest, so a page load does not
     # re-score the corpus. Only the six rows actually printed are fetched.
     d = match_digest(db, company, today)
-    n_open = db.scalar(
-        select(func.count()).select_from(Tender).where(
-            Tender.duplicate_of.is_(None),
-            or_(Tender.deadline.is_(None), Tender.deadline >= today),
-        )
-    )
-    c_soon = db.scalar(
-        select(func.count()).select_from(Tender).where(
-            Tender.duplicate_of.is_(None),
-            Tender.deadline.between(today, today + timedelta(7)),
-        )
-    )
+    f = _figures(db, today)
     score_of = {tid: sc for sc, _r, tid in d.scored}
     soon_ids = list(d.by_deadline[:6])
     rows_by_id = hydrate(db, soon_ids)
@@ -275,9 +280,9 @@ def _welcome_signed_in(db: Session, company: Company) -> str:
     short = company.name if len(company.name) <= 22 else company.name[:21] + "…"
     return render(
         "home_signed_in.html", title=f"Home | {company.name}", company=company,
-        short=short, d=d, n_open=n_open, n_soon=d.closing_within_7, c_soon=c_soon,
-        n_sources=db.scalar(select(func.count()).select_from(Source)),
-        last=_last_collected(db), soon=soon, buyers=d.buyers[:8], today=today,
+        short=short, d=d, n_open=f["n_open"], n_soon=d.closing_within_7,
+        c_soon=f["n_soon"], n_sources=f["n_sources"], last=f["last"], soon=soon,
+        buyers=d.buyers[:8], today=today,
     )
 
 
@@ -305,18 +310,12 @@ def _welcome(db: Session) -> str:
     closes. A hard-coded "8,000+" was wrong within weeks; this cannot be.
     """
     today = date.today()
+    return shared(db, ("welcome", today), 60, lambda db: _render_welcome(db, today))
+
+
+def _render_welcome(db: Session, today: date) -> str:
     is_open = or_(Tender.deadline.is_(None), Tender.deadline >= today)
-    n_open, n_soon = db.execute(
-        select(
-            func.count().filter(is_open),
-            func.count().filter(Tender.deadline.between(today, today + timedelta(7))),
-        ).select_from(Tender).where(Tender.duplicate_of.is_(None))
-    ).one()
-    n_buyers = db.scalar(
-        select(func.count(distinct(Tender.organization)))
-        .where(Tender.organization.is_not(None), Tender.duplicate_of.is_(None),
-               is_open)
-    )
+    f = _figures(db, today)
     # Real notices beat any amount of describing them, and they are the same rows
     # /browse would show at the top of its default sort.
     soonest = db.execute(
@@ -334,9 +333,9 @@ def _welcome(db: Session) -> str:
         .limit(8)
     ).all()
     return render(
-        "home.html", title="Find tenders", n_open=n_open, n_soon=n_soon,
-        n_sources=db.scalar(select(func.count()).select_from(Source)),
-        n_buyers=n_buyers, last=_last_collected(db), soonest=soonest,
+        "home.html", title="Find tenders", n_open=f["n_open"], n_soon=f["n_soon"],
+        n_sources=f["n_sources"], n_buyers=f["n_buyers"], last=f["last"],
+        soonest=soonest,
         buyers=buyers, today=today,
     )
 
@@ -347,13 +346,13 @@ def _questionnaire(db: Session) -> dict:
     """Option lists for templates/_profile_fields.html."""
     # Offered from the corpus, not a hard-coded list: the option text is exactly the
     # string stored in tenders.organization, so anything offered here can match.
-    top = db.execute(
+    top = shared(db, ("top_buyers",), 600, lambda db: [tuple(r) for r in db.execute(
         select(Tender.organization, func.count())
         .where(Tender.organization.is_not(None))
         .group_by(Tender.organization)
         .order_by(func.count().desc())
         .limit(40)
-    ).all()
+    )])
     return {
         "sectors": sorted(SECTOR_LABELS.items(), key=lambda kv: kv[1]),
         "states": STATES,
@@ -430,9 +429,12 @@ def sort_matches(db: Session, company: Company, scored, key: str, order: str):
     ids = [tid for _s, _r, tid in scored]
     cols = {}
     if key != "distance" and ids:
+        # raw_payload is most of a row's bytes; only the EMD and quantity sorts
+        # read it, and every column crosses the ocean for every match.
+        extra = [Tender.raw_payload] if key in ("emd", "quantity") else []
         cols = {r.id: r for r in db.execute(
             select(Tender.id, Tender.deadline, Tender.published_date, Tender.title,
-                   Tender.estimated_value, Tender.organization, Tender.raw_payload)
+                   Tender.estimated_value, Tender.organization, *extra)
             .where(Tender.id.in_(ids))
         )}
     mine = set(company.districts or [])
@@ -445,7 +447,8 @@ def sort_matches(db: Session, company: Company, scored, key: str, order: str):
         r = cols.get(tid)
         if r is None:
             return None
-        raw = r.raw_payload if isinstance(r.raw_payload, dict) else {}
+        raw = getattr(r, "raw_payload", None)
+        raw = raw if isinstance(raw, dict) else {}
         if key == "deadline":
             return r.deadline
         if key == "published":
@@ -610,7 +613,7 @@ def _document_for(db: Session, t: Tender) -> tuple[str, str] | None:
     # The URL is scraped, so it is untrusted: a javascript: or data: href would
     # run on our origin when clicked. Only web links are ever printed.
     if _web_link(t.document_url):
-        src = db.get(Source, t.source_id) if t.source_id else None
+        src = sources(db).get(t.source_id)
         return t.document_url, (src.name if src else "the source portal")
 
     twins = db.execute(
@@ -623,7 +626,7 @@ def _document_for(db: Session, t: Tender) -> tuple[str, str] | None:
     ).scalars().first()
     if twins is None or not _web_link(twins.document_url):
         return None
-    src = db.get(Source, twins.source_id) if twins.source_id else None
+    src = sources(db).get(twins.source_id)
     return twins.document_url, (src.name if src else "another portal")
 
 
@@ -636,7 +639,7 @@ def tender_detail(
     t = db.get(Tender, tender_id)
     if t is None:
         raise HTTPException(status_code=404, detail="tender not found")
-    src = db.get(Source, t.source_id) if t.source_id else None
+    src = sources(db).get(t.source_id)
 
     raw = t.raw_payload if isinstance(t.raw_payload, dict) else {}
     sectors = sorted(SECTOR_LABELS[k] for k in derive_sectors(t.title))
@@ -781,8 +784,9 @@ async def cppp_open(request: Request, tender_id: int, db: Session = Depends(get_
 def browse(db: Session = Depends(get_db)) -> str:
     """Read-only view of the whole corpus. Filtering happens in GET /tenders --
     this page is the form around it, not a second query path."""
-    sources = db.execute(select(Source).order_by(Source.name)).scalars().all()
-    return render("browse.html", title="Browse tenders", sources=sources)
+    return shared(db, ("browse",), 300, lambda db: render(
+        "browse.html", title="Browse tenders",
+        sources=db.execute(select(Source).order_by(Source.name)).scalars().all()))
 
 
 # ---- wishlist --------------------------------------------------------------

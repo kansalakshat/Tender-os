@@ -59,9 +59,14 @@ def never_send_real_email(monkeypatch, tmp_path):
     # Rate-limit buckets are module-level and would otherwise carry across tests:
     # the sixth signup in the whole session would 429 regardless of which test
     # made it. Each test starts with a clean budget.
-    from app import security
+    from app import db, matching, security
 
     security.reset()
+    # Same for the read caches: each test builds its own corpus, and a stamp or
+    # a cached page from the previous one must not answer for it.
+    matching._DIGESTS.clear()
+    matching._CANDIDATES.clear()
+    db._SHARED.clear()
 
 
 STATIC = Path(__file__).resolve().parent.parent / "static"

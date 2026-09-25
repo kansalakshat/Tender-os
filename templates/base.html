@@ -9,6 +9,9 @@
 {#- Styles and scripts are files under /static, not inline blocks: script-src and
     style-src 'self' already allow them, so the strict CSP needs no nonce here. #}
 <link rel=stylesheet href="{{ asset('css/site.css') }}">
+{#- Body and heading faces, fetched alongside the stylesheet instead of after it. #}
+<link rel=preload href="/static/fonts/Nunito.woff2" as=font type=font/woff2 crossorigin>
+<link rel=preload href="/static/fonts/Quicksand.woff2" as=font type=font/woff2 crossorigin>
 <a class=skip href="#main">Skip to content</a>
 <header class=top><div class=wrap>
  <a class=brand href="/">
@@ -33,7 +36,7 @@
 {% block hero %}{% endblock %}
 <div class=wrap><div id=flash></div></div>
 <main id=main>
-<script src="{{ asset('js/site.js') }}"></script>
+<script defer src="{{ asset('js/site.js') }}"></script>
 {#- The landing pages bring their own <section> wrappers because their blocks are
     full-bleed and ruled; every other page is one plain column. #}
 {% block body %}<section class=sec><div class="wrap flow">{% block content %}{% endblock %}</div></section>{% endblock %}
@@ -71,6 +74,6 @@
 {#- Motion. Loaded last, after the content, and every animation lives inside a
     gsap.matchMedia() branch that simply does not exist under
     prefers-reduced-motion -- see static/js/motion.js. #}
-<script src="/static/js/gsap.min.js"></script>
-<script src="/static/js/ScrollTrigger.min.js"></script>
-<script src="{{ asset('js/motion.js') }}"></script>
+<script defer src="{{ asset('js/gsap.min.js') }}"></script>
+<script defer src="{{ asset('js/ScrollTrigger.min.js') }}"></script>
+<script defer src="{{ asset('js/motion.js') }}"></script>

@@ -31,7 +31,7 @@ from datetime import date, timedelta
 from sqlalchemy import and_, delete, func, select, update
 
 from .db import SessionLocal
-from .models import Tender
+from .models import Tender, utcnow
 
 log = logging.getLogger(__name__)
 
@@ -81,7 +81,9 @@ def purge_expired(
         db.execute(
             update(Tender)
             .where(Tender.duplicate_of.in_(select(Tender.id).where(condition)))
-            .values(duplicate_of=None)
+            # Bumped so the matcher's delta (matching._candidates) sees the
+            # survivor become visible.
+            .values(duplicate_of=None, last_updated_at=utcnow())
             .execution_options(synchronize_session=False)
         )
         db.execute(delete(Tender).where(condition).execution_options(

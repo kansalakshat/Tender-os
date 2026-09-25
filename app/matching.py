@@ -13,8 +13,11 @@ against the live MP listing; retune them when the corpus grows.
 """
 from __future__ import annotations
 
+import logging
 import math
 import re
+import threading
+import time
 from dataclasses import dataclass
 from functools import lru_cache
 from datetime import date, timedelta
@@ -23,6 +26,7 @@ from decimal import Decimal
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
+from .db import SessionLocal, memo
 from .districts import DISTRICTS
 from .models import Tender
 
@@ -477,12 +481,110 @@ def _profile_stamp(profile) -> tuple:
 
 
 def _corpus_stamp(db: Session) -> tuple:
-    """Cheap and sufficient: ingest bumps last_updated_at, retention drops rows."""
-    return tuple(
+    """Cheap and sufficient: ingest and enrichment bump last_updated_at, retention
+    drops rows. Read once per request: the matches page asks for two digests."""
+    return memo(db, "corpus_stamp", lambda: tuple(
         db.execute(
             select(func.count(), func.max(Tender.last_updated_at)).select_from(Tender)
         ).one()
-    )
+    ))
+
+
+# Only what match_score reads, plus duplicate_of to drop rows that become one.
+# Whole rows dragged raw_payload (~1 KB each) across the ocean for every
+# candidate: 22k rows measured 150 s from here to us-east-1.
+_SCORE_COLUMNS = (Tender.id, Tender.title, Tender.organization, Tender.department,
+                  Tender.estimated_value, Tender.status, Tender.deadline,
+                  Tender.duplicate_of)
+# One copy of every biddable row's scoring columns, shared by every profile:
+# stamp (corpus stamp it reflects), gen (bumped on each full load), rows {id: row},
+# list (rows as a list), full_at (monotonic time of the last full load).
+_CANDIDATES: dict = {}
+_CANDIDATES_LOCK = threading.Lock()
+# How far a delta reaches back past the newest timestamp seen: several workers on
+# different machines write last_updated_at, and their clocks are not in step.
+_CLOCK_SLACK = timedelta(minutes=2)
+# A full reload now and then catches what no timestamp records (dedup linking a
+# row to another does not bump last_updated_at).
+_FULL_EVERY_SECONDS = 6 * 3600
+
+
+def _biddable(row, today: date) -> bool:
+    return (row.duplicate_of is None and row.deadline is not None
+            and row.deadline >= today and row.status in (None, "open"))
+
+
+def _load_all(db: Session, today: date) -> dict:
+    rows = db.execute(select(*_SCORE_COLUMNS).where(
+        Tender.duplicate_of.is_(None), Tender.deadline >= today,
+        or_(Tender.status.is_(None), Tender.status == "open"),
+    )).all()
+    return {r.id: r for r in rows}
+
+
+def _candidates(db: Session, today: date) -> tuple[tuple, list]:
+    """(version, rows): every biddable row's scoring columns.
+
+    Loaded whole once, then kept current by fetching only rows whose
+    last_updated_at moved -- usually a handful, against 35 s for all of them.
+    Rows past their deadline stay in the set; callers filter by date anyway.
+    """
+    stamp = _corpus_stamp(db)
+    with _CANDIDATES_LOCK:
+        c = _CANDIDATES
+        if not c:
+            c.update(stamp=stamp, gen=0, rows=_load_all(db, today), list=None,
+                     full_at=time.monotonic())
+        elif c["stamp"] != stamp:
+            since = c["stamp"][1]
+            fresh = db.execute(select(*_SCORE_COLUMNS).where(
+                Tender.last_updated_at > since - _CLOCK_SLACK)).all() if since else None
+            # A row inserted with an older timestamp than any seen would slip past
+            # the delta; more new rows than the delta returned means exactly that.
+            if fresh is None or stamp[0] - c["stamp"][0] > len(fresh):
+                c.update(rows=_load_all(db, today), gen=c["gen"] + 1,
+                         full_at=time.monotonic())
+            else:
+                for r in fresh:
+                    if _biddable(r, today):
+                        c["rows"][r.id] = r
+                    else:
+                        c["rows"].pop(r.id, None)
+            c.update(stamp=stamp, list=None)
+        if c["list"] is None:
+            c["list"] = list(c["rows"].values())
+        if (time.monotonic() - c["full_at"] > _FULL_EVERY_SECONDS
+                and not c.get("reloading")):
+            c["reloading"] = True
+            threading.Thread(target=_reload_candidates, args=(stamp, today),
+                             daemon=True).start()
+        return (c["stamp"], c["gen"]), c["list"]
+
+
+def warm_candidates() -> None:
+    """Run at server start, in a thread, so the one full load (~35 s from here)
+    is not paid by whoever signs in first."""
+    try:
+        with SessionLocal() as db:
+            _candidates(db, date.today())
+    except Exception:
+        logging.getLogger(__name__).exception("warming match candidates failed")
+
+
+def _reload_candidates(stamp: tuple, today: date) -> None:
+    """The periodic full load, off the request path. Current rows keep being
+    served meanwhile; the stamp taken before the load makes the next delta
+    re-read anything written while it ran."""
+    try:
+        with SessionLocal() as db:
+            rows = _load_all(db, today)
+        with _CANDIDATES_LOCK:
+            _CANDIDATES.update(rows=rows, stamp=stamp, gen=_CANDIDATES["gen"] + 1,
+                               list=None, full_at=time.monotonic())
+    except Exception:
+        logging.getLogger(__name__).exception("reloading match candidates failed")
+    finally:
+        _CANDIDATES["reloading"] = False
 
 
 def match_digest(db: Session, profile, today: date | None = None,
@@ -491,13 +593,14 @@ def match_digest(db: Session, profile, today: date | None = None,
     today = today or date.today()
     # The override belongs in the key too: the same profile viewed strictly and
     # loosely is two different result sets.
-    key = (_profile_stamp(profile), _corpus_stamp(db), today,
+    version, rows = _candidates(db, today)
+    key = (_profile_stamp(profile), version, today,
            tuple(sorted(strict)) if strict is not None else None)
     hit = _DIGESTS.get(key)
     if hit is not None:
         return hit
 
-    scored = find_matches(db, profile, limit=None, today=today, strict=strict)
+    scored = _score_all(rows, profile, today, strict)
     horizon = today + timedelta(days=7)
     tally: dict[str, int] = {}
     soon = 0
@@ -556,19 +659,21 @@ def find_matches(
     table is the upgrade path if the corpus outgrows that.
     """
     today = today or date.today()
+    scored = _score_all(_candidates(db, today)[1], profile, today, strict)
+    if limit is not None:
+        scored = scored[:limit]
+    full = hydrate(db, [row.id for _s, _r, row in scored])
+    return [(sc, reasons, full[row.id]) for sc, reasons, row in scored if row.id in full]
+
+
+def _score_all(candidates, profile, today: date, strict: set[str] | None) -> list:
+    """(score, reasons, row) for every match, best first. Rows carry only
+    _SCORE_COLUMNS; find_matches loads full rows for the slice it returns."""
     lead = profile.min_lead_days
     if lead is None:
         lead = DEFAULT_MIN_LEAD_DAYS
-
-    rows = db.execute(
-        select(Tender)
-        .where(Tender.duplicate_of.is_(None))
-        .where(Tender.deadline.is_not(None))
-        .where(Tender.deadline >= today + timedelta(days=lead))
-        .where(or_(Tender.status.is_(None), Tender.status == "open"))
-    ).scalars()
-
-    rows = list(rows)
+    cutoff = today + timedelta(days=lead)
+    rows = [r for r in candidates if r.deadline >= cutoff]
     # One extra pass over the candidates to learn which terms are common here. It
     # costs the same regexes the scoring pass runs anyway and is what stops a
     # near-universal word like "maintenance" from scoring like a rare one.
@@ -583,4 +688,4 @@ def find_matches(
     # Sort by score, then by soonest deadline: among equally good matches the
     # one closing first is the one you need to act on first.
     scored.sort(key=lambda s: (-s[0], s[2].deadline, s[2].id))
-    return scored if limit is None else scored[:limit]
+    return scored
