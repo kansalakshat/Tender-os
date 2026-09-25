@@ -250,3 +250,23 @@ def test_cron_ingest_never_starts_a_browser_driven_connector(client, monkeypatch
     assert started == [], "the connector was instantiated despite requiring a browser"
     assert body["skipped"] == ["browsery"]
     assert body["ran"] == []
+
+
+def test_listing_costs_two_queries_whatever_the_page_size(client, session_factory):
+    """Every query is a round trip to us-east-1. Naming each row's source used to
+    cost one query per row, 50 per page, 16 seconds in production."""
+    from sqlalchemy import event
+
+    with session_factory() as db:
+        db.add_all([Tender(source_id=1, external_ref=f"n{i}", title=f"Notice {i}",
+                           deadline=LATER, source_url="u") for i in range(30)])
+        db.commit()
+        engine = db.get_bind()
+    seen = []
+    event.listen(engine, "before_cursor_execute", lambda *a: seen.append(1))
+    body = client.get("/tenders", params={"limit": 50}).json()
+    assert body["total"] == 32 and len(body["items"]) == 32
+    assert all(dict(map(tuple, t["facts"])).get("Source") == "CPPP" for t in body["items"])
+    assert len(seen) <= 2, len(seen)          # the page + one lookup of source names
+    # Past the end there is no row to carry the window count; it still answers.
+    assert client.get("/tenders", params={"offset": 500}).json()["total"] == 32

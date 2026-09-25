@@ -301,3 +301,31 @@ def test_cppp_lookup_sends_the_humans_captcha_and_returns_the_tender(
     assert r.status_code == 404 and "no longer opens this tender" in r.text
     r = client.get(f"/t/{tid}/cppp/captcha")
     assert r.status_code == 404 and "no longer opens" in r.json()["error"]
+
+
+def test_shared_serves_stale_while_one_thread_refreshes(monkeypatch):
+    """A visitor after expiry gets the old value at once, never the database wait."""
+    import threading
+    from contextlib import nullcontext
+
+    from app import db as web
+
+    calls, gate = [], threading.Event()
+
+    def compute(db):
+        calls.append(db)
+        if len(calls) > 1:
+            gate.wait(5)
+        return len(calls)
+
+    monkeypatch.setattr(web, "SessionLocal", lambda: nullcontext("fresh"))
+    assert web.shared("req", ("k",), 60, compute) == 1
+    web._SHARED[("k",)] = (0, 1)                     # expire it
+    assert web.shared("req", ("k",), 60, compute) == 1   # stale, not blocked
+    assert web.shared("req", ("k",), 60, compute) == 1   # still one refresh only
+    gate.set()
+    for t in threading.enumerate():
+        if t is not threading.current_thread() and t.daemon:
+            t.join(5)
+    assert calls == ["req", "fresh"]
+    assert web.shared("req", ("k",), 60, compute) == 2

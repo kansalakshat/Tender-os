@@ -3,13 +3,16 @@ from __future__ import annotations
 import hmac
 import logging
 import os
+import threading
 import time
+from contextlib import asynccontextmanager
 from datetime import date, timedelta
 from decimal import Decimal
 from pathlib import Path
 
 from fastapi import Body, Depends, FastAPI, HTTPException, Query, Request, Response
 from fastapi.openapi.docs import get_swagger_ui_html
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -33,7 +36,7 @@ from .auth import (
 from .connectors import REGISTRY
 from .db import SessionLocal, get_db
 from .districts import DISTRICTS
-from .matching import ALL_DISTRICTS, SECTOR_LABELS, STATES, find_matches
+from .matching import ALL_DISTRICTS, SECTOR_LABELS, STATES, find_matches, warm_candidates
 from .models import Company, ConnectorRun, Source, Tender, User
 from .models import utcnow
 from .retention import DEFAULT_RETENTION_DAYS, purge_expired
@@ -55,7 +58,16 @@ log = logging.getLogger(__name__)
 # same helper by hand gets both, without reimplementing anything Swagger does.
 DOCS_PATHS = {"/docs", "/redoc", "/docs/oauth2-redirect"}
 
+@asynccontextmanager
+async def lifespan(_app):
+    # Not on serverless: a frozen instance would never finish the load.
+    if not os.getenv("VERCEL"):
+        threading.Thread(target=warm_candidates, daemon=True).start()
+    yield
+
+
 app = FastAPI(
+    lifespan=lifespan,
     docs_url=None,
     title="Tender OS",
     version="0.1.0",
@@ -67,6 +79,11 @@ app = FastAPI(
         "agreement rather than a scraper."
     ),
 )
+
+
+# The site is served from a home connection through a tunnel, so upload bandwidth
+# is the narrow pipe: text shrinks to about a fifth.
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 
 @app.middleware("http")
@@ -96,6 +113,13 @@ async def harden(request: Request, call_next):
     # nothing may be left for a shared cache to decide on its own.
     if not request.url.path.startswith("/static/"):
         response.headers.setdefault("Cache-Control", "no-store, private")
+    elif "v=" in request.url.query:
+        # asset() stamps the file's mtime into ?v=, so this URL's content never
+        # changes: the browser need not even ask again.
+        response.headers.setdefault("Cache-Control", "public, max-age=31536000, immutable")
+    else:
+        # Fonts and icons, linked without a version. A day, then revalidate.
+        response.headers.setdefault("Cache-Control", "public, max-age=86400")
     if security.https_only():
         response.headers.setdefault(
             "Strict-Transport-Security", "max-age=31536000; includeSubDomains"
@@ -236,22 +260,30 @@ def list_tenders(
             or_(Tender.deadline.is_(None), Tender.deadline >= date.today())
         )
 
-    total = db.execute(
-        select(func.count()).select_from(Tender).where(*filters)
-    ).scalar_one()
     order = {
         "deadline": Tender.deadline.asc(),
         "published_date": Tender.published_date.desc(),
         "first_seen_at": Tender.first_seen_at.desc(),
     }[sort]
+    # The total rides along on every row as a window count: one round trip
+    # instead of two. Only a page past the end has no row to carry it.
     rows = db.execute(
-        select(Tender).where(*filters).order_by(order, Tender.id).limit(limit).offset(offset)
-    ).scalars()
+        select(Tender, func.count().over())
+        .where(*filters).order_by(order, Tender.id).limit(limit).offset(offset)
+    ).all()
+    if rows:
+        total = rows[0][1]
+    elif offset:
+        total = db.execute(
+            select(func.count()).select_from(Tender).where(*filters)
+        ).scalar_one()
+    else:
+        total = 0
     return Page(
         total=total,
         limit=limit,
         offset=offset,
-        items=[TenderOut.model_validate(r) for r in rows],
+        items=[TenderOut.model_validate(r) for r, _n in rows],
     )
 
 

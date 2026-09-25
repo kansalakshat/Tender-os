@@ -8,8 +8,10 @@ from __future__ import annotations
 
 from datetime import date
 
+from sqlalchemy import select
 from sqlalchemy.orm import object_session
 
+from .db import shared
 from .matching import derive_districts, derive_states
 from .models import Source, Tender
 
@@ -33,9 +35,20 @@ def clean(v) -> str:
     return "" if v in {"", "--", "-", "NA", "N/A"} else v
 
 
+def sources(db) -> dict:
+    """{id: (name, license, base_url)} for every source. A handful of rows that
+    nearly every page needs, so they are held for everyone instead of re-read."""
+    return shared(db, ("sources",), 300, lambda db: {
+        r.id: r for r in db.execute(select(Source.id, Source.name, Source.license,
+                                           Source.base_url))})
+
+
 def source_name(t: Tender) -> str:
+    # Not db.get(Source) per row: the identity map holds weak references, so each
+    # Source was dropped once its name was read, and 50 rows meant 50 round trips
+    # (16 s on /tenders in production).
     db = object_session(t)
-    src = db.get(Source, t.source_id) if db is not None and t.source_id else None
+    src = sources(db).get(t.source_id) if db is not None and t.source_id else None
     return src.name if src else ""
 
 

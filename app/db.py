@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+import logging
 import os
+import threading
+import time
 
 from dotenv import load_dotenv
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import create_engine, event
+from sqlalchemy.exc import DisconnectionError
+from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import NullPool
 
 load_dotenv()
@@ -58,7 +62,32 @@ def get_engine():
                 "postgres:// URL is accepted too."
             )
         _engine = create_engine(DATABASE_URL, future=True, **_pool_options())
+        if not isinstance(_engine.pool, NullPool):
+            _ping_when_idle(_engine)
     return _engine
+
+
+# The database is in us-east-1 and the server is not: every round trip is ~270 ms.
+# pool_pre_ping paid one of those on every request just to ask "still there?".
+# A connection that was in use a moment ago is; only one that sat idle long
+# enough for Neon to suspend, or a NAT to forget it, is worth checking.
+IDLE_PING_SECONDS = 60
+
+
+def _ping_when_idle(engine) -> None:
+    @event.listens_for(engine, "checkin")
+    def _checkin(dbapi_conn, record):
+        record.info["idle_since"] = time.monotonic()
+
+    @event.listens_for(engine, "checkout")
+    def _checkout(dbapi_conn, record, proxy):
+        if time.monotonic() - record.info.get("idle_since", 0) < IDLE_PING_SECONDS:
+            return
+        try:
+            engine.dialect.do_ping(dbapi_conn)
+        except Exception as exc:
+            # The pool discards this connection and checks out a fresh one.
+            raise DisconnectionError() from exc
 
 
 def _pool_options() -> dict:
@@ -75,9 +104,8 @@ def _pool_options() -> dict:
     """
     if os.getenv("VERCEL") or os.getenv("AWS_LAMBDA_FUNCTION_NAME"):
         return {"poolclass": NullPool}
-    # pool_pre_ping costs a round trip per checkout; worth it for a process that
-    # can otherwise hand out a connection the database has since dropped.
-    return {"pool_pre_ping": True}
+    # No pool_pre_ping: see _ping_when_idle, which checks only stale connections.
+    return {}
 
 
 def SessionLocal():
@@ -91,6 +119,53 @@ def __getattr__(name):
     if name == "engine":
         return get_engine()
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
+def memo(db: Session, key: str, compute):
+    """compute() once per session, i.e. once per request. Cleared on flush, so a
+    session never reads back a memo from before its own writes."""
+    store = db.info.setdefault("memo", {})
+    if key not in store:
+        store[key] = compute()
+    return store[key]
+
+
+@event.listens_for(Session, "after_flush")
+def _forget_memo(session, _flush_context):
+    session.info.pop("memo", None)
+
+
+# Pages, figures and lookups that are the same for every visitor. The database is
+# an ocean away (~270 ms a query), so the landing page's six counts cost seconds;
+# a minute of staleness on "how many tenders are open" costs nothing.
+#
+# Expired entries are still served while one background thread recomputes them,
+# so only the first visitor after a restart ever waits on the database.
+_SHARED: dict[tuple, tuple[float, object]] = {}
+_REFRESHING: set[tuple] = set()
+
+
+def shared(db: Session, key: tuple, seconds: float, compute):
+    """compute(db) -> value, cached for `seconds`, same for every visitor."""
+    hit = _SHARED.get(key)
+    if hit is None:
+        _SHARED[key] = (time.monotonic() + seconds, compute(db))
+        return _SHARED[key][1]
+    if hit[0] <= time.monotonic() and key not in _REFRESHING:
+        _REFRESHING.add(key)
+        threading.Thread(target=_refresh, args=(key, seconds, compute), daemon=True).start()
+    return hit[1]
+
+
+def _refresh(key: tuple, seconds: float, compute) -> None:
+    try:
+        with SessionLocal() as db:       # the request's session is closed by now
+            _SHARED[key] = (time.monotonic() + seconds, compute(db))
+    except Exception:
+        logging.getLogger(__name__).exception(
+            "refreshing %s failed; still serving the old value", key)
+    finally:
+        _REFRESHING.discard(key)
 
 
 def get_db():

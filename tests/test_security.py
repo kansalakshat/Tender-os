@@ -282,7 +282,32 @@ def test_serverless_does_not_pool_connections(monkeypatch):
     monkeypatch.setenv("VERCEL", "1")
     assert db._pool_options() == {"poolclass": NullPool}
     monkeypatch.delenv("VERCEL")
-    assert db._pool_options() == {"pool_pre_ping": True}
+    assert "poolclass" not in db._pool_options()
+
+
+def test_pool_pings_only_idle_connections(monkeypatch):
+    """A ping is a round trip to us-east-1; a connection used a moment ago skips
+    it, one idle past IDLE_PING_SECONDS gets it, and a failed ping is replaced."""
+    from sqlalchemy import create_engine, text
+
+    import app.db as db
+
+    engine = create_engine("sqlite://")
+    db._ping_when_idle(engine)
+    pings = []
+    monkeypatch.setattr(engine.dialect, "do_ping", lambda conn: pings.append(1))
+
+    with engine.connect() as c:          # first checkout: never used, so pinged
+        c.execute(text("select 1"))
+    with engine.connect() as c:          # back within the window: no ping
+        c.execute(text("select 1"))
+    assert len(pings) == 1
+
+    clock = db.time.monotonic() + db.IDLE_PING_SECONDS + 1
+    monkeypatch.setattr(db.time, "monotonic", lambda: clock)
+    with engine.connect() as c:          # idle past the window: pinged again
+        c.execute(text("select 1"))
+    assert len(pings) == 2
 
 
 def test_no_page_relies_on_inline_event_handlers(client):

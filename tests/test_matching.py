@@ -307,3 +307,40 @@ def test_ubiquitous_keyword_is_worth_less_than_a_rare_one(db):
     _corpus(db, ["11 kv feeder cable at site"] * 20 + ["11 kv feeder chlorpyrifos store"])
     out = find_matches(db, profile(keywords=["cable", "chlorpyrifos"]), today=TODAY)
     assert "chlorpyrifos" in out[0][2].title.lower()
+
+
+def test_candidates_follow_changes_without_reloading_everything(db):
+    """After the first load only rows whose last_updated_at moved are re-read,
+    and the matches still reflect inserts, edits and newly linked duplicates."""
+    from app import matching
+    from app.models import utcnow
+
+    src = Source(name="MP", base_url="https://mptenders.gov.in")
+    db.add(src)
+    db.flush()
+    a = tender(external_ref="A", source_id=src.id)
+    db.add(a)
+    db.commit()
+    ids = lambda: [t.id for _, _, t in find_matches(db, profile(), today=TODAY)]
+    assert ids() == [a.id]
+    full_loads = []
+    real = matching._load_all
+    matching._load_all = lambda *args: full_loads.append(1) or real(*args)
+    try:
+        b = tender(external_ref="B", source_id=src.id)
+        db.add(b)
+        db.commit()
+        assert sorted(ids()) == sorted([a.id, b.id])          # insert seen
+
+        b.duplicate_of = a.id
+        b.last_updated_at = utcnow()
+        db.commit()
+        assert ids() == [a.id]                                 # now a duplicate
+
+        a.title = "Tender for medicine items"
+        a.last_updated_at = utcnow()
+        db.commit()
+        assert ids() == []                                     # edit seen
+        assert full_loads == []
+    finally:
+        matching._load_all = real
