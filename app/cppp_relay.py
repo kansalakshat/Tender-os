@@ -185,6 +185,11 @@ def portal_error(html: str) -> str:
 def submit(state: str, detail_url: str, captcha_text: str) -> TenderPage | Captcha:
     """The tender page, or a fresh CAPTCHA with a message saying what went wrong."""
     data = _unpack(state)
+    # The action came from CPPP's own form. Signed, so a visitor cannot change
+    # it, but a page CPPP serves could still point it anywhere -- and this
+    # server would then POST wherever it said. Only ever to CPPP.
+    if data is not None and not str(data.get("a", "")).startswith(BASE + "/"):
+        raise LinkRejected(f"CPPP form posts off-site: {data.get('a')!r}")
     if data is None:
         captcha = start(detail_url)
         captcha.message = "That CAPTCHA expired. Here is a new one."

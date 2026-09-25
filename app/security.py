@@ -25,6 +25,7 @@ _BUCKETS: dict[str, deque[float]] = defaultdict(deque)
 # Failed sign-ins per (ip, email). Low, because a real person mistyping a
 # password three times is normal and thirty times is not.
 LOGIN_LIMIT, LOGIN_WINDOW = 8, 900          # 8 per 15 minutes
+LOGIN_ACCOUNT_LIMIT = 30                    # per email, from every address
 # Anything that creates an account or sends mail, per ip.
 SIGNUP_LIMIT, SIGNUP_WINDOW = 5, 3600       # 5 per hour
 MAIL_LIMIT, MAIL_WINDOW = 4, 3600           # 4 verification mails per hour
@@ -42,12 +43,25 @@ if os.getenv("VERCEL") or os.getenv("AWS_LAMBDA_FUNCTION_NAME"):
     )
 
 
+_LOOPBACK = {"127.0.0.1", "::1"}
+
+
 def client_ip(request: Request) -> str:
-    """The peer address. X-Forwarded-For is deliberately NOT trusted: nothing
-    here strips it, so an attacker could forge it and get a fresh bucket per
-    request. Behind a real proxy, configure uvicorn --forwarded-allow-ips and
-    read request.client.host, which the proxy then sets."""
-    return request.client.host if request.client else "unknown"
+    """The visitor's address. X-Forwarded-For is deliberately NOT trusted:
+    nothing here strips it, so an attacker could forge it and get a fresh bucket
+    per request.
+
+    The one exception is a loopback peer. The public site reaches this process
+    through cloudflared on the same machine, so every visitor arrived as
+    127.0.0.1 and shared one bucket -- five signups an hour for the whole
+    internet, and one sprayer could lock everybody out. Cloudflare's edge
+    overwrites CF-Connecting-IP with the real client, and nothing but the local
+    machine can open a loopback connection, so on that path it is trustworthy.
+    """
+    peer = request.client.host if request.client else "unknown"
+    if peer in _LOOPBACK:
+        return request.headers.get("cf-connecting-ip", "").strip()[:64] or peer
+    return peer
 
 
 def hit(key: str, limit: int, window: int) -> bool:
@@ -96,6 +110,20 @@ def https_only() -> bool:
     """Cookies get the Secure flag when the site is actually served over TLS.
     Setting it on a plain-http demo would silently break every login."""
     return (os.getenv("PUBLIC_BASE_URL") or "").strip().lower().startswith("https://")
+
+
+def cookie_secure(request: Request) -> bool:
+    """Whether a cookie set on this response gets the Secure flag.
+
+    Decided per request, not from PUBLIC_BASE_URL alone: that names the public
+    site (https), but the operator also signs in on http://127.0.0.1:8000, and
+    a Secure cookie there is dropped by some browsers -- the sign-in "works"
+    and the next page is signed out. Loopback over http never leaves the
+    machine, so it has nothing for the flag to protect.
+    """
+    if request.url.scheme == "https":
+        return True
+    return https_only() and request.url.hostname not in ("127.0.0.1", "localhost", "::1")
 
 
 def make_nonce() -> str:

@@ -25,7 +25,7 @@ from .auth import (
     clear_session_cookie,
     current_user,
     make_verification_token,
-    read_verification_token,
+    user_from_verification_token,
     register,
     set_session_cookie,
     user_from_google,
@@ -91,8 +91,10 @@ async def harden(request: Request, call_next):
     # finish answering. With no Cache-Control at all a browser is free to fall
     # back on heuristic caching and re-show a page from before you signed in,
     # which reads as "it ignored my sign-in". Static assets keep their own
-    # caching; this is only for the rendered pages.
-    if response.headers.get("content-type", "").startswith("text/html"):
+    # caching; everything else is personalised or live. JSON too: /me names the
+    # signed-in account, and the site is served through a Cloudflare tunnel, so
+    # nothing may be left for a shared cache to decide on its own.
+    if not request.url.path.startswith("/static/"):
         response.headers.setdefault("Cache-Control", "no-store, private")
     if security.https_only():
         response.headers.setdefault(
@@ -312,7 +314,7 @@ def _send_verification(user: User) -> bool:
     """Never lets a mail failure break signup: the account exists either way and
     the address can be confirmed later from the banner."""
     try:
-        return mailer.send_verification(user.email, make_verification_token(user.id))
+        return mailer.send_verification(user.email, make_verification_token(user))
     except Exception:
         log.exception("could not send verification mail to %s", user.email)
         return False
@@ -335,7 +337,7 @@ def signup(
         user = register(db, email, password)
     except AuthError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
-    set_session_cookie(response, user.id)
+    set_session_cookie(response, user, request)
     _send_verification(user)
     return {"id": user.id, "email": user.email, "email_verified": user.email_verified}
 
@@ -361,33 +363,45 @@ def resend_verification(request: Request, user: User | None = Depends(current_us
 
 
 @app.get("/auth/verify")
-def verify_email(token: str, db: Session = Depends(get_db)):
+def verify_email(request: Request, token: str, db: Session = Depends(get_db)):
     """Clicked from the email. Confirms the address and signs the person in, so a
-    link opened on a phone does not dead-end on a login form."""
-    user_id = read_verification_token(token)
-    user = db.get(User, user_id) if user_id else None
+    link opened on a phone does not dead-end on a login form.
+
+    Signs in on the first click only. The link sits in a mailbox (or outbox.log)
+    for 24 hours; if every click signed in, anyone who ever saw it -- a forwarded
+    mail, a shared screen -- would hold a day-long login to the account.
+    """
+    user = user_from_verification_token(db, token)
     if user is None:
         return RedirectResponse("/?verify=invalid", status_code=303)
-    user.email_verified = True
-    db.commit()
     response = RedirectResponse("/?verify=ok", status_code=303)
-    set_session_cookie(response, user.id)
+    if not user.email_verified:
+        user.email_verified = True
+        db.commit()
+        set_session_cookie(response, user, request)
     return response
 
 
 # ---- Google sign-in ----
 
+def _origin(request: Request) -> str:
+    return f"{request.url.scheme}://{request.url.netloc}"
+
+
 @app.get("/auth/google")
-def google_start():
+def google_start(request: Request):
     if not oauth.configured():
         raise HTTPException(status_code=404, detail="Google sign-in is not configured")
     state = oauth.make_state()
-    response = RedirectResponse(oauth.authorize_url(state), status_code=303)
+    response = RedirectResponse(
+        oauth.authorize_url(state, _origin(request)), status_code=303
+    )
     # The state is echoed by Google in the URL; keeping a copy in a cookie means a
     # forged callback needs both, which an attacker crafting a link does not have.
     response.set_cookie(
         "oauth_state", state, max_age=oauth.STATE_TTL_SECONDS, httponly=True,
         samesite="lax",
+        secure=security.cookie_secure(request),
     )
     return response
 
@@ -410,7 +424,7 @@ def google_callback(
     ):
         return RedirectResponse("/login?error=state", status_code=303)
     try:
-        claims = oauth.exchange_code(code)
+        claims = oauth.exchange_code(code, _origin(request))
         user = user_from_google(
             db,
             sub=claims["sub"],
@@ -425,7 +439,7 @@ def google_callback(
     response = RedirectResponse(
         "/admin" if is_admin(user) else "/", status_code=303
     )
-    set_session_cookie(response, user.id)
+    set_session_cookie(response, user, request)
     response.delete_cookie("oauth_state")
     return response
 
@@ -441,9 +455,17 @@ def login(
     # Keyed on address AND account: one attacker cannot lock every user out by
     # spraying their emails, and one account cannot be sprayed from one host.
     ip = security.client_ip(request)
-    key = f"login:{ip}:{(email or '').strip().lower()}"
+    address = (email or "").strip().lower()
+    key = f"login:{ip}:{address}"
     security.enforce(
         key, security.LOGIN_LIMIT, security.LOGIN_WINDOW,
+        "too many sign-in attempts; try again in a few minutes",
+    )
+    # And per account from everywhere, or an attacker with many addresses gets
+    # LOGIN_LIMIT guesses per address. Higher, so a victim is not trivially
+    # locked out by someone spraying their email.
+    security.enforce(
+        f"login-any:{address}", security.LOGIN_ACCOUNT_LIMIT, security.LOGIN_WINDOW,
         "too many sign-in attempts; try again in a few minutes",
     )
     try:
@@ -451,13 +473,16 @@ def login(
     except AuthError as exc:
         raise HTTPException(status_code=401, detail=str(exc))
     security.reset_key(key)          # a success clears the failure budget
-    set_session_cookie(response, user.id)
-    return {"id": user.id, "email": user.email}
+    set_session_cookie(response, user, request)
+    # Same landing rule as the Google callback. "/" would bounce an operator
+    # with no company profile to /profile.
+    return {"id": user.id, "email": user.email,
+            "next": "/admin" if is_admin(user) else "/"}
 
 
 @app.post("/auth/logout")
-def logout(response: Response):
-    clear_session_cookie(response)
+def logout(request: Request, response: Response):
+    clear_session_cookie(response, request)
     return {"status": "signed out"}
 
 
@@ -582,9 +607,15 @@ def match_preview(
     ]
 
 
-@app.get("/runs")
-def list_runs(db: Session = Depends(get_db), limit: int = Query(20, ge=1, le=200)):
-    """Recent connector runs -- how you notice a source started refusing us."""
+@app.get("/runs", include_in_schema=False)
+def list_runs(db: Session = Depends(get_db), user: User | None = Depends(current_user),
+              limit: int = Query(20, ge=1, le=200)):
+    """Recent connector runs -- how you notice a source started refusing us.
+
+    Operators only, and 404 like /admin for everyone else: run messages carry
+    raw exception text -- hostnames, portal responses, internal paths."""
+    if not is_admin(user):
+        raise HTTPException(status_code=404, detail="Not found")
     rows = db.execute(
         select(ConnectorRun).order_by(ConnectorRun.started_at.desc()).limit(limit)
     ).scalars()

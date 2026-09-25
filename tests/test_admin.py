@@ -38,7 +38,7 @@ def client(session_factory, monkeypatch):
     db.flush()
     db.add(Tender(source_id=src.id, external_ref="g1", title="a tender", source_url="u"))
     db.commit()
-    ids = {u.email: u.id for u in db.query(User).all()}
+    ids = {u.email: u for u in db.query(User).all()}
     db.close()
 
     app.dependency_overrides[get_db] = lambda: session_factory()
@@ -46,8 +46,8 @@ def client(session_factory, monkeypatch):
     app.dependency_overrides.clear()
 
 
-def _as(c, uid):
-    c.cookies.set(SESSION_COOKIE, make_session(uid))
+def _as(c, user):
+    c.cookies.set(SESSION_COOKIE, make_session(user))
     return c
 
 
@@ -79,12 +79,38 @@ def test_stats_and_fetch_are_closed_to_everyone_else(client):
     assert c.post("/admin/fetch", json={"connector": "GeM"}).status_code == 404
 
 
+def test_password_sign_in_sends_the_operator_to_the_dashboard(client, session_factory):
+    from app.auth import hash_password
+
+    c, _ = client
+    with session_factory() as db:
+        for u in db.query(User).all():
+            u.password_hash = hash_password("correct horse battery")
+        db.commit()
+    boss = c.post("/auth/login", json={"email": "boss@example.com",
+                                       "password": "correct horse battery"})
+    assert boss.json()["next"] == "/admin"
+    other = c.post("/auth/login", json={"email": "someone@example.com",
+                                        "password": "correct horse battery"})
+    assert other.json()["next"] == "/"
+
+
+def test_run_history_is_operator_only(client):
+    """Run messages carry raw exception text from the crawlers."""
+    c, ids = client
+    assert c.get("/runs").status_code == 404
+    assert _as(c, ids["someone@example.com"]).get("/runs").status_code == 404
+    assert _as(c, ids["boss@example.com"]).get("/runs").status_code == 200
+
+
 def test_is_admin_is_case_and_space_insensitive(monkeypatch):
     monkeypatch.setenv("ADMIN_EMAILS", "Boss@Example.com , other@x.io")
-    assert admin.is_admin(User(email="boss@example.com"))
-    assert admin.is_admin(User(email="  OTHER@X.IO  "))
-    assert not admin.is_admin(User(email="nope@example.com"))
+    assert admin.is_admin(User(email="boss@example.com", email_verified=True))
+    assert admin.is_admin(User(email="  OTHER@X.IO  ", email_verified=True))
+    assert not admin.is_admin(User(email="nope@example.com", email_verified=True))
     assert not admin.is_admin(None)
+    # Registering the owner's address proves nothing until it is confirmed.
+    assert not admin.is_admin(User(email="boss@example.com", email_verified=False))
 
 
 def test_daily_intake_reports_empty_days_as_zero(session_factory):
@@ -280,3 +306,11 @@ def test_a_host_that_can_finish_a_job_offers_the_controls(client, monkeypatch):
     body = _as(c, ids["boss@example.com"]).get("/admin").text
     assert "id=fetchform" in body
     assert '<option value="GeM"' in body and "Bid documents" in body
+
+
+def test_home_sends_an_operator_to_the_dashboard_not_the_questionnaire(client):
+    c, ids = client
+    r = _as(c, ids["boss@example.com"]).get("/", follow_redirects=False)
+    assert r.headers["location"] == "/admin"
+    r = _as(c, ids["someone@example.com"]).get("/", follow_redirects=False)
+    assert r.headers["location"] == "/profile"

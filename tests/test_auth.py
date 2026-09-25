@@ -12,7 +12,7 @@ from app.auth import (
     verify_password,
 )
 from app.db import get_db
-from app.models import Source, Tender
+from app.models import Source, Tender, User
 
 SOON = date.today() + timedelta(days=30)
 PROFILE = {
@@ -65,14 +65,17 @@ def test_garbage_hash_is_rejected_not_crashed():
 
 # ---- session cookie ----
 
+SEVEN = User(id=7, email="seven@acme.invalid", password_hash="scrypt$x")
+
+
 def test_session_round_trip():
-    assert read_session(make_session(7)) == 7
+    assert read_session(make_session(SEVEN))[0] == 7
 
 
 def test_tampered_or_missing_session_is_rejected():
-    token = make_session(7)
+    token = make_session(SEVEN)
     assert read_session(token[:-3] + "aaa") is None      # broken signature
-    assert read_session("9." + token.split(".", 1)[1]) is None  # swapped user id
+    assert read_session(token.replace("session.7:", "session.9:")) is None  # swapped id
     assert read_session(None) is None
     assert read_session("nonsense") is None
 
@@ -80,10 +83,40 @@ def test_tampered_or_missing_session_is_rejected():
 def test_expired_session_is_rejected(monkeypatch):
     import app.auth as auth
 
-    token = make_session(7)
+    token = make_session(SEVEN)
     monkeypatch.setattr(auth, "SESSION_DAYS", -1)
-    assert read_session(auth.make_session(7)) is None
-    assert read_session(token) == 7      # the unexpired one still works
+    assert read_session(auth.make_session(SEVEN)) is None
+    assert read_session(token)[0] == 7      # the unexpired one still works
+
+
+def test_a_cookie_does_not_follow_its_id_to_another_account(client, session_factory):
+    """The reported bug: a cookie issued against one database signed a stranger
+    into the other, because both give out id 1 and share SESSION_SECRET. A
+    fresh database here holds a different person at the same id."""
+    client.post("/auth/signup", json=CREDS)
+    cookie = client.cookies[SESSION_COOKIE]
+    with session_factory() as db:
+        me = db.query(User).one()
+        # Same row id, someone else's account -- a reseed, restore, or other DB.
+        me.email, me.password_hash = "stranger@x.invalid", hash_password("their own pw")
+        db.commit()
+    client.cookies.set(SESSION_COOKIE, cookie)
+    assert client.get("/me").json()["user"] is None
+
+
+def test_changing_the_password_ends_old_sessions(client, session_factory):
+    client.post("/auth/signup", json=CREDS)
+    with session_factory() as db:
+        db.query(User).one().password_hash = hash_password("a brand new password")
+        db.commit()
+    assert client.get("/me").json()["user"] is None
+
+
+def test_oversized_password_is_refused_before_hashing(client):
+    r = client.post("/auth/signup", json={**CREDS, "password": "x" * 100_000})
+    assert r.status_code == 400
+    r = client.post("/auth/login", json={**CREDS, "password": "x" * 100_000})
+    assert r.status_code == 401
 
 
 # ---- endpoints ----

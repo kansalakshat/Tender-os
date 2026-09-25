@@ -35,6 +35,9 @@ _N, _R, _P, _DKLEN = 2**14, 8, 1, 32
 _MAXMEM = 64 * 1024 * 1024
 
 MIN_PASSWORD_LEN = 10
+# scrypt reads the whole password, so an unbounded one is a free CPU burner on
+# an unauthenticated endpoint. Far above anything a password manager produces.
+MAX_PASSWORD_LEN = 256
 SESSION_COOKIE = "tender_session"
 SESSION_DAYS = 30
 VERIFICATION_HOURS = 24
@@ -42,6 +45,9 @@ VERIFICATION_HOURS = 24
 _ENV_SECRET = os.getenv("SESSION_SECRET", "").strip()
 if _ENV_SECRET:
     SECRET = _ENV_SECRET.encode()
+    if len(SECRET) < 32:
+        # Anyone who guesses it can mint a session for any account.
+        log.warning("SESSION_SECRET is under 32 characters; generate a longer one.")
 else:
     # Ephemeral: fine for a demo, but every restart invalidates every session.
     # Set SESSION_SECRET in .env before anyone relies on staying logged in.
@@ -93,6 +99,8 @@ def password_problem(password: str) -> str | None:
     """Returns why a password is unacceptable, or None if it is fine."""
     if len(password or "") < MIN_PASSWORD_LEN:
         return f"password must be at least {MIN_PASSWORD_LEN} characters"
+    if len(password) > MAX_PASSWORD_LEN:
+        return f"password must be at most {MAX_PASSWORD_LEN} characters"
     return None
 
 
@@ -135,61 +143,96 @@ def unsign(purpose: str, token: str | None) -> str | None:
         return None
 
 
-def make_session(user_id: int) -> str:
-    return sign("session", user_id, SESSION_DAYS * 86400)
+def account_stamp(user: User) -> str:
+    """Binds a token to one account, not just to a row number.
+
+    A bare user id was the whole session once, and it was a real hole: the same
+    SESSION_SECRET signs cookies for the local database and for Neon, so "user
+    5" signed in one database was "user 5" -- a stranger -- in the other. The
+    same happens after any restore or reseed that hands an id to someone new.
+
+    The stamp covers the email, the password hash and the Google link, so it
+    also revokes every outstanding session when any of those change: a new
+    password, or a Google sign-in that strips a squatter's password (see
+    user_from_google), logs out whoever held the old one.
+    """
+    material = f"{user.id}|{user.email}|{user.password_hash or ''}|{user.google_sub or ''}"
+    return _b64(hmac.new(SECRET, material.encode(), hashlib.sha256).digest()[:16])
 
 
-def read_session(token: str | None) -> int | None:
-    subject = unsign("session", token)
+def _stamped(purpose: str, user: User, ttl_seconds: int) -> str:
+    return sign(purpose, f"{user.id}:{account_stamp(user)}", ttl_seconds)
+
+
+def _read_stamped(purpose: str, token: str | None) -> tuple[int, str] | None:
+    subject = unsign(purpose, token)
     try:
-        return int(subject) if subject is not None else None
+        user_id, stamp = (subject or "").split(":")
+        return int(user_id), stamp
     except ValueError:
         return None
 
 
-def make_verification_token(user_id: int) -> str:
-    return sign("verify", user_id, VERIFICATION_HOURS * 3600)
-
-
-def read_verification_token(token: str | None) -> int | None:
-    subject = unsign("verify", token)
-    try:
-        return int(subject) if subject is not None else None
-    except ValueError:
+def _user_for(db: Session, purpose: str, token: str | None) -> User | None:
+    """The account a token names, or None if it names a different one now."""
+    parsed = _read_stamped(purpose, token)
+    if parsed is None:
         return None
+    user = db.get(User, parsed[0])
+    if user is None or not hmac.compare_digest(parsed[1], account_stamp(user)):
+        return None
+    return user
 
 
-def _https_only() -> bool:
+def make_session(user: User) -> str:
+    return _stamped("session", user, SESSION_DAYS * 86400)
+
+
+def read_session(token: str | None) -> tuple[int, str] | None:
+    """(user id, stamp) from a well-signed cookie. Not proof of an account on
+    its own -- current_user() checks the stamp against the row."""
+    return _read_stamped("session", token)
+
+
+def make_verification_token(user: User) -> str:
+    return _stamped("verify", user, VERIFICATION_HOURS * 3600)
+
+
+def user_from_verification_token(db: Session, token: str | None) -> User | None:
+    return _user_for(db, "verify", token)
+
+
+def _secure(request: Request) -> bool:
     # Imported lazily: app.security imports fastapi, and auth is imported early.
-    from .security import https_only
+    from .security import cookie_secure
 
-    return https_only()
+    return cookie_secure(request)
 
 
-def set_session_cookie(response, user_id: int) -> None:
+def set_session_cookie(response, user: User, request: Request) -> None:
     response.set_cookie(
         SESSION_COOKIE,
-        make_session(user_id),
+        make_session(user),
         max_age=SESSION_DAYS * 86400,
         httponly=True,       # JS cannot read it, so an XSS cannot lift the session
         samesite="lax",       # not sent on cross-site POSTs, which is our CSRF defence
-        # Set automatically once PUBLIC_BASE_URL is https, so a real deployment
-        # gets it without anyone remembering to. Hard-coding True would silently
-        # break every login on the plain-http local demo.
-        secure=_https_only(),
+        # On for https and the public site, off for http on loopback -- see
+        # security.cookie_secure. Hard-coding True breaks the local dashboard.
+        secure=_secure(request),
     )
 
 
-def clear_session_cookie(response) -> None:
-    response.delete_cookie(SESSION_COOKIE)
+def clear_session_cookie(response, request: Request) -> None:
+    response.delete_cookie(
+        SESSION_COOKIE, httponly=True, samesite="lax", secure=_secure(request)
+    )
 
 
 # ---- FastAPI dependencies --------------------------------------------------
 
 def current_user(request: Request, db: Session = Depends(get_db)) -> User | None:
     """The signed-in user, or None. Never raises -- pages work signed out."""
-    user_id = read_session(request.cookies.get(SESSION_COOKIE))
-    return db.get(User, user_id) if user_id else None
+    return _user_for(db, "session", request.cookies.get(SESSION_COOKIE))
 
 
 # ---- registration / login --------------------------------------------------
@@ -230,6 +273,8 @@ def register(db: Session, email: str, password: str) -> User:
 
 
 def authenticate(db: Session, email: str, password: str) -> User:
+    if len(password or "") > MAX_PASSWORD_LEN:
+        raise AuthError("email or password is incorrect")
     user = db.execute(
         select(User).where(func.lower(User.email) == normalize_email(email))
     ).scalar_one_or_none()
@@ -270,6 +315,13 @@ def user_from_google(db: Session, sub: str, email: str, email_verified: bool) ->
         ).scalar_one_or_none()
         if user is not None:
             user.google_sub = sub          # link Google to the existing password account
+            if not user.email_verified:
+                # Nobody ever proved they own this address, so the password on
+                # it may be a squatter's: sign up with a victim's email, wait for
+                # them to use Google, share their account. Google has now proved
+                # ownership; the unproven password goes, and with it (through
+                # account_stamp) every session it issued.
+                user.password_hash = None
 
     if user is None:
         if not email_verified:

@@ -175,7 +175,7 @@ def matches_page(own_db):
 
     app.dependency_overrides[get_db] = lambda: session_factory()
     c = TestClient(app)
-    c.cookies.set(SESSION_COOKIE, make_session(uid))
+    c.cookies.set(SESSION_COOKIE, make_session(user))
     yield c, cid
     app.dependency_overrides.clear()
 
@@ -232,7 +232,7 @@ def test_the_toggle_is_offered_even_when_nothing_was_ticked(own_db):
 
     app.dependency_overrides[get_db] = lambda: session_factory()
     c = TestClient(app)
-    c.cookies.set(SESSION_COOKIE, make_session(uid))
+    c.cookies.set(SESSION_COOKIE, make_session(user))
 
     # Default: nothing was ticked, so nothing is hidden...
     body = c.get(f"/c/{cid}").text
@@ -282,7 +282,7 @@ def test_the_way_back_survives_zero_matches(own_db):
 
     app.dependency_overrides[get_db] = lambda: session_factory()
     c = TestClient(app)
-    c.cookies.set(SESSION_COOKIE, make_session(uid))
+    c.cookies.set(SESSION_COOKIE, make_session(user))
 
     body = c.get(f"/c/{cid}").text
     assert "0 open tenders" in body, "the strict answer should hide the one tender"
