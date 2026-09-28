@@ -201,7 +201,7 @@ input[type=checkbox]{width:1.1rem;height:1.1rem;min-height:0;padding:0;border-ra
    without tinting the model */
 :root:not([data-theme=light]) .hero3d.on + .wrap{text-shadow:0 1px 3px rgba(0,0,0,.7),0 2px 18px rgba(0,0,0,.55)}
 :root:not([data-theme=light]) .hero3d.on + .wrap :is(.lede,.eyebrow,.hint,.bignum em){color:var(--ink)}
-.hero3d.on + .wrap .grad-text{text-shadow:none}
+.hero3d.on + .wrap :is(.grad-text,.stats){text-shadow:none}   /* the cards carry their own backgrounds */
 .hero .eyebrow{display:flex;align-items:center;flex-wrap:wrap;gap:.5rem 0}
 .heroTop{display:grid;gap:2rem;align-items:end;padding-block:1.75rem 0}
 @media (min-width:64rem){.heroTop{grid-template-columns:minmax(0,1fr) auto;gap:4rem}}
@@ -514,6 +514,8 @@ pre#err:empty{display:none}
   color:transparent;-webkit-text-stroke:1px var(--stone-2);user-select:none;white-space:nowrap}
 .fnote .wrap{padding-block:2rem 3rem;font-size:.8rem;color:var(--faint);line-height:1.6}
 .fnote p{max-width:80ch}
+.fnote p + p{margin-top:1rem}
+.fnote a{font-size:inherit;text-decoration:underline;text-underline-offset:2px}
 
 @media (prefers-reduced-motion:reduce){
  html{scroll-behavior:auto}
