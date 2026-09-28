@@ -34,15 +34,8 @@ function renderPreview(matches){
   }
   const top = matches[0].score;
   box.innerHTML = '<h2>' + matches.length + ' matching tenders</h2><ol class=rows>'
-    + matches.map(m =>
-      '<li class="row '+rankClass(m.score, top)+'">'
-      + '<div class=n>' + esc(m.score) + '</div><div>'
-      + '<a class=t href="/t/' + esc(m.tender.id) + '">'
-      + esc(m.tender.title) + '</a>'
-      + '<p class=m>' + esc(m.tender.organization || 'unnamed buyer')
-      + ' &middot; closes <time datetime="' + esc(m.tender.deadline) + '">'
-      + esc(m.tender.deadline) + '</time></p>' + synopsis(m.tender) + extra(m.tender) + facts(m.tender) + docLinks(m.tender)
-      + tags(m.reasons) + '</div></li>').join('')
+    + matches.map(m => card(m.tender, String(m.score), rankClass(m.score, top),
+        tags(m.reasons))).join('')
     + '</ol><p class=hint>Nothing here was saved. '
     + '<a href="/signup">Create an account</a> to keep these answers.</p>';
   box.scrollIntoView({behavior:'smooth',block:'nearest'});
@@ -59,8 +52,8 @@ function go(e){
   document.getElementById('preview').innerHTML = '<div class=sk aria-busy=true>'
     + '<p class=hint role=status>' + (signedIn ? 'Saving your answers&hellip;'
       : 'Scoring your answers against every open tender&hellip;') + '</p>'
-    + '<ol class=rows><li class=row><div class=n><div class="b g"></div></div>'
-    + '<div><div class=b></div><div class="b s"></div></div></li></ol></div>';
+    + '<ol class=rows><li class=row><div class=rmain><div class="b g"></div><div class=b></div>'
+    + '<div class="b s"></div></div><div class=rside><div class=b></div></div></li></ol></div>';
   if(signedIn){
     saveProfile(body).then(d=>location.assign('/c/'+d.id))
       .catch(err=>{ document.getElementById('preview').innerHTML='';

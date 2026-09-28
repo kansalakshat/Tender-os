@@ -6,29 +6,56 @@
 function esc(s){return String(s??'').replace(/[<>&"']/g,
   c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c]));}
 
-// Second meta line on a tender row. Mirrors extra_line() in web.py, for the rows
-// that arrive as JSON instead of server-rendered HTML.
+// The small facts under a row's title, as chips. Mirrors extra_line() in
+// _macros.html, for the rows that arrive as JSON instead of server-rendered HTML.
 function extra(t){
   const b=[];
   if(t.external_ref) b.push('ID '+esc(t.external_ref));
-  if(t.published_date) b.push('published <time datetime="'+esc(t.published_date)+'">'
+  if(t.published_date) b.push('Published <time datetime="'+esc(t.published_date)+'">'
     +esc(t.published_date)+'</time>');
   if(t.department && t.department!==t.organization) b.push(esc(t.department));
-  return b.length ? '<p class="m x">'+b.join(' &middot; ')+'</p>' : '';
+  return b.map(x=>'<li>'+x+'</li>').join('');
 }
 
-// Value, EMD, quantity, closing time... Mirrors fact_strip() in _macros.html;
-// the pairs arrive preformatted from app/facts.py.
-function facts(t){
-  if(!t.facts || !t.facts.length) return '';
-  return '<dl class=pf>'+t.facts.map(f=>'<div><dt>'+esc(f[0])+'</dt><dd>'
-    +esc(f[1])+'</dd></div>').join('')+'</dl>';
+// Time left, as the row labels it. Mirrors days_left() in web.py. Display only:
+// whether a tender still counts as open is decided by the server's clock.
+function left(d){
+  if(!d) return ['', 's0'];
+  const ms = Date.parse(d+'T00:00:00');
+  if(isNaN(ms)) return ['', 's0'];
+  // Midnight today, not Date.now(): measured from the current instant, a tender
+  // closing tonight came out as -1 day and every row on the page read "closed".
+  const today = new Date(); today.setHours(0,0,0,0);
+  const n = Math.round((ms - today.getTime())/864e5);
+  if(n < 0) return ['closed', 's0'];
+  if(n === 0) return ['today', 's3'];
+  return [n+'d', n<=3 ? 's3' : n<=10 ? 's2' : 's1'];
 }
 
-// The one-line synopsis. Mirrors the rowsum paragraph in _macros.html; the
-// sentence is built server-side (summary_for in web.py) so both say the same.
-function synopsis(t){
-  return t.summary ? '<p class=rowsum>'+esc(t.summary)+'</p>' : '';
+// One list row as a fixed card. Mirrors row() in _macros.html; the facts arrive
+// preformatted from app/facts.py, the synopsis from summary_for in web.py.
+function card(t, gutter, rank, tagsHtml){
+  const f = Object.fromEntries(t.facts || []);
+  const days = left(t.deadline)[0];
+  const value = f['Estimated value'], emd = f['EMD (bid security)'];
+  const chips = (f.Where ? '<li class=loc>'+ico('map-pin')+esc(f.Where)+'</li>' : '')
+    + extra(t)
+    + ['Quantity','Bid type','Contract period'].filter(k=>f[k])
+        .map(k=>'<li>'+k+': '+esc(f[k])+'</li>').join('');
+  const url = '/t/'+esc(t.id);
+  return '<li class="row '+rank+'"><div class=rmain>'
+    + '<p class=rhead>'+(gutter && gutter!==days ? '<span class=n>'+esc(gutter)+'</span>' : '')
+    + '<b class=rorg>'+esc(t.organization||'unnamed buyer')+'</b>'
+    + (f.Source ? '<span class=src>'+esc(f.Source)+'</span>' : '')+'</p>'
+    + '<a class=t href="'+url+'">'+esc(t.title)+'</a>'
+    + (t.summary ? '<p class=rowsum>'+esc(t.summary)+'</p>' : '')
+    + '<ul class=chips>'+chips+'</ul>'+docLinks(t)+(tagsHtml||'')
+    + '</div><div class=rside>'
+    + '<div class=box><span>'+(value?'Est. value':emd?'EMD':'Value')+'</span>'
+    +   (value||emd ? '<b>'+esc(value||emd)+'</b>' : '<b class=none>not stated</b>')+'</div>'
+    + '<div class="box due"><span>Closes'+(days?' <em>'+days+'</em>':'')+'</span><b>'
+    +   '<time datetime="'+esc(t.deadline||'')+'">'+esc(f['Bids close']||t.deadline||'not stated')+'</time></b></div>'
+    + '<a class="btn sm" href="'+url+'">View details</a></div></li>';
 }
 
 // Documents the bid points at. Mirrors doc_links() in _macros.html.
