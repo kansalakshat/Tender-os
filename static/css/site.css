@@ -56,13 +56,15 @@
 [hidden]{display:none !important}
 a,button,input,select,label{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
-/* Linear: one fixed red glow anchoring the page, nothing repeating */
+/* Linear: one fixed red glow anchoring the page, nothing repeating. It is a
+   position:fixed layer, not background-attachment:fixed: the latter makes the
+   browser repaint the whole viewport on every scroll frame, which lagged. */
 body{margin:0;background-color:var(--paper);color:var(--ink);
-  background-image:var(--bg-image);background-size:var(--bg-size);
-  background-repeat:var(--bg-repeat);background-attachment:fixed;
   font:400 17px/1.6 var(--sans);letter-spacing:-.011em;
   -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
   min-height:100dvh;display:flex;flex-direction:column;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background-image:var(--bg-image);background-size:var(--bg-size);background-repeat:var(--bg-repeat)}
 ::selection{background:var(--accent);color:var(--on-accent)}
 ::-webkit-scrollbar{width:12px}
 ::-webkit-scrollbar-track{background:var(--bone)}
@@ -616,7 +618,8 @@ pre#err:empty{display:none}
  --display:Righteous,system-ui,sans-serif;
  --sans:Poppins,system-ui,-apple-system,"Segoe UI",sans-serif;
 }
-:root[data-theme=light] body{background-attachment:scroll}
+:root[data-theme=light] body::before{position:absolute}  /* the grid scrolls with the page */
+:root[data-theme=light] body{position:relative}
 :root[data-theme=light] :is(h1,h2,h3,legend,.brand,.bignum b,.stats dd,.capnum,.livenum,.wordmark){
   font-weight:400;letter-spacing:-.02em}
 :root[data-theme=light] .lede,:root[data-theme=light] .capList p,
