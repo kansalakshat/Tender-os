@@ -26,6 +26,10 @@ on:
         description: "Pages per shard; shards x pages must cover the listing"
         default: "750"
 
+# Read-only token: these jobs only check out code and talk to the database.
+permissions:
+  contents: read
+
 concurrency:
   # Same group as daily-ingest, so this waits rather than crawling GeM twice
   # over at once. cancel-in-progress stays false: a half-done shard is a gap.
@@ -39,11 +43,15 @@ jobs:
       matrix: ${{ steps.build.outputs.matrix }}
     steps:
       - id: build
+        # Inputs arrive as env vars, never substituted into script text.
+        env:
+          SHARDS: ${{ inputs.shards }}
+          PER: ${{ inputs.pages_per_shard }}
         run: |
           python3 - <<'PY' >> "$GITHUB_OUTPUT"
           import json, os
-          n = int("${{ inputs.shards }}")
-          per = int("${{ inputs.pages_per_shard }}")
+          n = int(os.environ["SHARDS"])
+          per = int(os.environ["PER"])
           print("matrix=" + json.dumps({"include":
               [{"shard": i, "start": 1 + i * per} for i in range(n)]}))
           PY
@@ -61,19 +69,21 @@ jobs:
         with:
           python-version: "3.13"
           cache: pip
-      - run: pip install -r requirements.txt
+      - run: pip install -r requirements.txt "playwright>=1.47.0"
       - run: playwright install --with-deps chromium
       - name: "GeM pages ${{ matrix.start }}+"
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           CONTACT_EMAIL: ${{ secrets.CONTACT_EMAIL }}
+          START: ${{ matrix.start }}
+          PER: ${{ inputs.pages_per_shard }}
         # app/cli.py reads DATABASE_URL from the environment via app/db.py, so no
         # .env.production is needed. Only GeM: the other connectors have nothing
         # to backfill.
         run: >
           python -u -m app.cli run GeM
-          --start-page ${{ matrix.start }}
-          --max-pages ${{ inputs.pages_per_shard }}
+          --start-page "$START"
+          --max-pages "$PER"
 
   # The listing walk only creates rows; every EMD, value, link and full title
   # comes from the bid document, one ~125 KB fetch each. 20,957 of those is

@@ -17,9 +17,8 @@ jinja2>=3.1
 pypdf>=5.0.0
 # Text extraction for the same documents: C, ~20x faster than pypdf's.
 pypdfium2>=4.30
-# Browser-driven connectors (app/connectors/gem.py). NOT installed on Vercel --
-# there is no Chromium in a serverless function, which is why /cron/ingest skips
-# connectors that declare requires_browser. Needed on whatever host runs
-# run_prod_worker.py.
-playwright>=1.47.0
+# playwright is deliberately absent too: only app/connectors/gem.py uses it, and
+# only on a host with Chromium. Vercel has none (/cron/ingest skips connectors
+# that declare requires_browser), so listing it here only bloated the function.
+# The Dockerfile and gem-catchup.yml install it themselves.
 

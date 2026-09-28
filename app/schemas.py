@@ -13,6 +13,8 @@ VALID_STATUSES = {"open", "closed", "awarded", "cancelled"}
 
 # Upper bound on any answer list, so one profile cannot make every search slow.
 MAX_LIST_ITEMS = 50
+# And on each entry. The longest buyer name in the corpus is ~130 characters.
+MAX_ITEM_LEN = 300
 
 
 class TenderRecord(BaseModel):
@@ -172,8 +174,10 @@ class CompanyIn(BaseModel):
 
     model_config = ConfigDict(str_strip_whitespace=True)
 
-    name: str
-    contact_email: str | None = None
+    # Length caps bound what one request can store or make the matcher chew on:
+    # the columns are Text and every keyword becomes a regex over every row.
+    name: str = Field(max_length=200)
+    contact_email: str | None = Field(None, max_length=254)
     sectors: list[str] = Field(default_factory=list)
     keywords: list[str] = Field(default_factory=list)
     districts: list[str] = Field(default_factory=list)
@@ -282,6 +286,8 @@ class CompanyIn(BaseModel):
         # bound on our own work, not a product limit anyone will hit honestly.
         if len(out) > MAX_LIST_ITEMS:
             raise ValueError(f"at most {MAX_LIST_ITEMS} keywords")
+        if any(len(k) > MAX_ITEM_LEN for k in out):
+            raise ValueError(f"each keyword must be at most {MAX_ITEM_LEN} characters")
         return out
 
     @field_validator("buyers", "exclude_buyers")
@@ -292,6 +298,8 @@ class CompanyIn(BaseModel):
         out = list(dict.fromkeys(b.strip() for b in v if b and b.strip()))
         if len(out) > MAX_LIST_ITEMS:
             raise ValueError(f"at most {MAX_LIST_ITEMS} buyers")
+        if any(len(b) > MAX_ITEM_LEN for b in out):
+            raise ValueError(f"each buyer must be at most {MAX_ITEM_LEN} characters")
         return out
 
     @model_validator(mode="after")

@@ -786,16 +786,16 @@ CPPP_PAGE_CSP = ("sandbox allow-popups allow-popups-to-escape-sandbox; "
                  "script-src 'none'; form-action https://eprocure.gov.in")
 
 
-def _cppp_limit(request: Request) -> None:
+def _cppp_limit(request: Request, db: Session) -> None:
     # Every request here costs CPPP a hit from our server's address.
-    security.enforce(f"cppp:{security.client_ip(request)}", 30, 3600,
+    security.enforce(db, f"cppp:{security.client_ip(request)}", 30, 3600,
                      "Too many CPPP lookups. Try again in an hour.")
 
 
 @router.get("/t/{tender_id}/cppp", response_class=HTMLResponse)
 def cppp_captcha(request: Request, tender_id: int, db: Session = Depends(get_db)):
     t = _cppp_tender(db, tender_id)
-    _cppp_limit(request)
+    _cppp_limit(request, db)
     try:
         return _cppp_captcha_page(t, cppp_relay.start(_cppp_url(t)))
     except cppp_relay.LinkRejected:
@@ -810,7 +810,7 @@ def cppp_captcha(request: Request, tender_id: int, db: Session = Depends(get_db)
 def cppp_captcha_json(request: Request, tender_id: int, db: Session = Depends(get_db)):
     """The CAPTCHA for the box on the tender page, loaded by its script."""
     t = _cppp_tender(db, tender_id)
-    _cppp_limit(request)
+    _cppp_limit(request, db)
     try:
         cap = cppp_relay.start(_cppp_url(t))
     except cppp_relay.LinkRejected:
@@ -825,7 +825,7 @@ def cppp_captcha_json(request: Request, tender_id: int, db: Session = Depends(ge
 @router.post("/t/{tender_id}/cppp", response_class=HTMLResponse)
 async def cppp_open(request: Request, tender_id: int, db: Session = Depends(get_db)):
     t = _cppp_tender(db, tender_id)
-    _cppp_limit(request)
+    _cppp_limit(request, db)
     form = parse_qs((await request.body()).decode(errors="replace"))
     state = form.get("state", [""])[0]
     captcha = form.get("captcha", [""])[0].strip()[:20]

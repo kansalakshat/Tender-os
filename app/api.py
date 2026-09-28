@@ -13,7 +13,7 @@ from pathlib import Path
 from fastapi import Body, Depends, FastAPI, HTTPException, Query, Request, Response
 from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.middleware.gzip import GZipMiddleware
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.exception_handlers import http_exception_handler
@@ -95,7 +95,16 @@ async def harden(request: Request, call_next):
     """
     nonce = security.make_nonce()
     request.state.csp_nonce = nonce
-    response = await call_next(request)
+    # CSRF, second layer. SameSite=Lax keeps the session cookie off cross-site
+    # POSTs, but a cross-site form can still hit /auth/logout (the response's
+    # Set-Cookie clears the session) or /auth/login (signs the victim into the
+    # attacker's account). Browsers label every request with Sec-Fetch-Site;
+    # curl and API clients send none and are unaffected.
+    if (request.method not in ("GET", "HEAD", "OPTIONS")
+            and request.headers.get("sec-fetch-site") == "cross-site"):
+        response = JSONResponse({"detail": "cross-site request refused"}, status_code=403)
+    else:
+        response = await call_next(request)
     # Read off the app rather than hard-coded, so moving docs_url moves the
     # exemption with it.
     is_docs = request.url.path in DOCS_PATHS
@@ -361,7 +370,7 @@ def signup(
     password: str = Body(..., embed=True),
 ):
     security.enforce(
-        f"signup:{security.client_ip(request)}",
+        db, f"signup:{security.client_ip(request)}",
         security.SIGNUP_LIMIT, security.SIGNUP_WINDOW,
         "too many accounts created from this address; try again later",
     )
@@ -375,12 +384,13 @@ def signup(
 
 
 @app.post("/auth/resend-verification")
-def resend_verification(request: Request, user: User | None = Depends(current_user)):
+def resend_verification(request: Request, db: Session = Depends(get_db),
+                        user: User | None = Depends(current_user)):
     if user is None:
         raise HTTPException(status_code=401, detail="sign in first")
     # Without this, one account is a free mail cannon pointed at its own address.
     security.enforce(
-        f"verify:{user.id}", security.MAIL_LIMIT, security.MAIL_WINDOW,
+        db, f"verify:{user.id}", security.MAIL_LIMIT, security.MAIL_WINDOW,
         "too many verification emails requested; try again later",
     )
     if user.email_verified:
@@ -490,21 +500,21 @@ def login(
     address = (email or "").strip().lower()
     key = f"login:{ip}:{address}"
     security.enforce(
-        key, security.LOGIN_LIMIT, security.LOGIN_WINDOW,
+        db, key, security.LOGIN_LIMIT, security.LOGIN_WINDOW,
         "too many sign-in attempts; try again in a few minutes",
     )
     # And per account from everywhere, or an attacker with many addresses gets
     # LOGIN_LIMIT guesses per address. Higher, so a victim is not trivially
     # locked out by someone spraying their email.
     security.enforce(
-        f"login-any:{address}", security.LOGIN_ACCOUNT_LIMIT, security.LOGIN_WINDOW,
+        db, f"login-any:{address}", security.LOGIN_ACCOUNT_LIMIT, security.LOGIN_WINDOW,
         "too many sign-in attempts; try again in a few minutes",
     )
     try:
         user = authenticate(db, email, password)
     except AuthError as exc:
         raise HTTPException(status_code=401, detail=str(exc))
-    security.reset_key(key)          # a success clears the failure budget
+    security.reset_key(db, key)      # a success clears the failure budget
     set_session_cookie(response, user, request)
     # Same landing rule as the Google callback. "/" would bounce an operator
     # with no company profile to /profile.
@@ -513,7 +523,15 @@ def login(
 
 
 @app.post("/auth/logout")
-def logout(request: Request, response: Response):
+def logout(request: Request, response: Response, db: Session = Depends(get_db),
+           user: User | None = Depends(current_user)):
+    # Deleting the cookie only cleans this browser. Bumping the epoch revokes
+    # the session itself, so a copy of the cookie taken earlier stops working.
+    # ponytail: revokes every device's session, not just this one; a sessions
+    # table is the upgrade if per-device sign-out is ever wanted.
+    if user is not None:
+        user.session_epoch = (user.session_epoch or 0) + 1
+        db.commit()
     clear_session_cookie(response, request)
     return {"status": "signed out"}
 
@@ -639,7 +657,7 @@ def match_preview(
     endpoint here: it scans every open tender and runs regexes over each one.
     """
     security.enforce(
-        f"match:{security.client_ip(request)}", 30, 300,
+        db, f"match:{security.client_ip(request)}", 30, 300,
         "too many preview requests; sign in or try again shortly",
     )
     return [

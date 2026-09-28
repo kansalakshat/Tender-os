@@ -21,6 +21,10 @@ on:
     - cron: "0 3 * * *"
   workflow_dispatch:      # so a missed day can be made up without waiting
 
+# Read-only token: these jobs only check out code and talk to the database.
+permissions:
+  contents: read
+
 concurrency:
   # Two ingests writing at once would crawl the same pages twice for no gain.
   # Never cancel a run in flight: rows commit in batches, but a half-finished

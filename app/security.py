@@ -1,26 +1,25 @@
 """Rate limiting and response hardening.
 
-Both on the standard library. A rate limiter is a dict of timestamps and a
-comparison; a dependency for that would be more code to audit, not less.
+Both on the standard library plus the database the app already has. A rate
+limiter is a counter per key and a comparison; a dependency for that would be
+more code to audit, not less.
 
-ponytail: the limiter is per-process and in memory, so counters reset on restart
-and are not shared between workers. That is honest for a single-process
-deployment. Behind more than one worker, or behind a load balancer, move the
-buckets to Redis or Postgres -- the `hit()` signature does not change.
+The counters live in Postgres, not process memory. In memory they were per
+instance, and Vercel runs many short-lived instances that share nothing else,
+so the login throttle there protected almost nothing.
 """
 from __future__ import annotations
 
-import logging
 import os
+import random
 import secrets
 import time
-from collections import defaultdict, deque
 
 from fastapi import HTTPException, Request
+from sqlalchemy import text
+from sqlalchemy.orm import Session
 
 # --- rate limiting ----------------------------------------------------------
-
-_BUCKETS: dict[str, deque[float]] = defaultdict(deque)
 
 # Failed sign-ins per (ip, email). Low, because a real person mistyping a
 # password three times is normal and thirty times is not.
@@ -30,17 +29,21 @@ LOGIN_ACCOUNT_LIMIT = 30                    # per email, from every address
 SIGNUP_LIMIT, SIGNUP_WINDOW = 5, 3600       # 5 per hour
 MAIL_LIMIT, MAIL_WINDOW = 4, 3600           # 4 verification mails per hour
 
-_MAX_BUCKETS = 20_000
+# Rows idle this long are deleted. Longer than any window above.
+_STALE_SECONDS = 86400
 
-# Serverless invocations do not share memory, so these buckets protect almost
-# nothing there. Say so loudly rather than letting the deployment quietly believe
-# it is throttled.
-if os.getenv("VERCEL") or os.getenv("AWS_LAMBDA_FUNCTION_NAME"):
-    logging.getLogger(__name__).warning(
-        "Rate limiting is in-process and this looks like a serverless runtime: "
-        "login throttling is NOT effective here. Move the buckets to Postgres or "
-        "Redis before exposing this publicly."
-    )
+# One atomic statement, so two instances counting the same key at once cannot
+# both read "7" and both let the eighth guess through. Same syntax on Postgres
+# and SQLite (3.35+), which is what the tests run on.
+_HIT = text("""
+    INSERT INTO rate_limits (key, window_start, count) VALUES (:key, :now, 1)
+    ON CONFLICT (key) DO UPDATE SET
+        count = CASE WHEN rate_limits.window_start <= :cutoff THEN 1
+                     ELSE rate_limits.count + 1 END,
+        window_start = CASE WHEN rate_limits.window_start <= :cutoff THEN :now
+                            ELSE rate_limits.window_start END
+    RETURNING count
+""")
 
 
 _LOOPBACK = {"127.0.0.1", "::1"}
@@ -64,28 +67,26 @@ def client_ip(request: Request) -> str:
     return peer
 
 
-def hit(key: str, limit: int, window: int) -> bool:
-    """Record an attempt. False when the caller is over the limit."""
-    now = time.monotonic()
-    bucket = _BUCKETS[key]
-    while bucket and now - bucket[0] > window:
-        bucket.popleft()
-    if not bucket:
-        _BUCKETS.pop(key, None)
-        bucket = _BUCKETS[key]
-    # Unbounded growth is itself a denial of service: an attacker rotating keys
-    # would otherwise fill memory. Drop the whole table rather than serve wrong.
-    if len(_BUCKETS) > _MAX_BUCKETS:
-        _BUCKETS.clear()
-        bucket = _BUCKETS[key]
-    if len(bucket) >= limit:
-        return False
-    bucket.append(now)
-    return True
+def hit(db: Session, key: str, limit: int, window: int) -> bool:
+    """Record an attempt. False when the caller is over the limit.
+
+    Fixed windows: the count restarts `window` seconds after the first attempt.
+    Committed at once, so a request that then fails still counts.
+    """
+    now = time.time()
+    count = db.execute(_HIT, {"key": key[:300], "now": now,
+                              "cutoff": now - window}).scalar_one()
+    # Keys rotate (every ip, every email), so old rows would pile up forever.
+    # One request in a hundred sweeps; nothing else needs to remember to.
+    if random.random() < 0.01:
+        db.execute(text("DELETE FROM rate_limits WHERE window_start < :t"),
+                   {"t": now - _STALE_SECONDS})
+    db.commit()
+    return count <= limit
 
 
-def enforce(key: str, limit: int, window: int, message: str) -> None:
-    if not hit(key, limit, window):
+def enforce(db: Session, key: str, limit: int, window: int, message: str) -> None:
+    if not hit(db, key, limit, window):
         raise HTTPException(
             status_code=429,
             detail=message,
@@ -93,15 +94,11 @@ def enforce(key: str, limit: int, window: int, message: str) -> None:
         )
 
 
-def reset_key(key: str) -> None:
-    """Clear one bucket. Called after a successful sign-in so a person who
+def reset_key(db: Session, key: str) -> None:
+    """Clear one counter. Called after a successful sign-in so a person who
     finally remembers their password is not still locked out."""
-    _BUCKETS.pop(key, None)
-
-
-def reset() -> None:
-    """Test hook. Never called by the app."""
-    _BUCKETS.clear()
+    db.execute(text("DELETE FROM rate_limits WHERE key = :key"), {"key": key[:300]})
+    db.commit()
 
 
 # --- response hardening -----------------------------------------------------
