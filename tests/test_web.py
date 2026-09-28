@@ -425,3 +425,17 @@ def test_hero_models_follow_the_profile_sectors():
     assert hero_models(["manpower_security", "maintenance_amc", "medical_pharma"])         == (["workers.glb", "medical_kit.glb"], "")
     assert hero_models(["agriculture", "vehicle_hire", "it_services",
                         "office_supplies"])[0] ==         ["farm_tools.glb", "truck.glb", "chip.glb"][:HERO_MAX]
+
+
+def test_every_hero_model_is_credited(client):
+    """The models are CC BY: each must be credited. Each .glb carries its own
+    Sketchfab source URL in its asset metadata, so a new model without a footer
+    credit fails here."""
+    import json
+    import struct
+    html = client.get("/").text
+    for f in (STATIC / "models").glob("*.glb"):
+        b = f.read_bytes()
+        (n,) = struct.unpack("<I", b[12:16])
+        source = json.loads(b[20:20 + n])["asset"]["extras"]["source"]
+        assert source in html, f"{f.name} is not credited"
