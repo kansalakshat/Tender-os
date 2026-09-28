@@ -114,6 +114,23 @@ FAVICON = (
 )
 
 
+_TILE_SKIP = {"of", "the", "and", "for", "in", "&", "-", "ltd", "limited", "pvt", "private"}
+
+
+def initials(name: str) -> str:
+    """Two letters for a buyer's monogram tile. Mirrors initials() in
+    static/js/strip.js. There are no logo files to show: the CSP allows images
+    only from this origin, and the portals publish none."""
+    words = [w for w in re.split(r"[^A-Za-z0-9]+", name or "") if w and w.lower() not in _TILE_SKIP]
+    return "".join(w[0] for w in words[:2]).upper() or "?"
+
+
+def tile_tone(name: str) -> int:
+    """Which of six tile colours a buyer gets: stable per name, so the same
+    buyer is the same colour everywhere. Mirrors tone() in strip.js."""
+    return sum(ord(c) for c in name or "") % 6
+
+
 def days_left(deadline: date | None, today: date | None = None) -> tuple[str, str]:
     """The gutter label for a tender, and its rail weight. Mirrors left() in
     static/js/site.js, which does the same job on rows fetched by JSON."""
@@ -198,6 +215,7 @@ _env = Environment(
 _env.globals.update(
     icon=icon, asset=asset, favicon=FAVICON, days_left=days_left,
     rank_class=rank_class, summary_for=summary_for, preview_facts=preview_facts,
+    initials=initials, tile_tone=tile_tone,
     tender_links=tender_links,
 )
 _env.filters["num"] = lambda n: f"{n:,}"
@@ -798,6 +816,94 @@ def browse(db: Session = Depends(get_db)) -> str:
     return shared(db, ("browse",), 300, lambda db: render(
         "browse.html", title="Browse tenders",
         sources=db.execute(select(Source).order_by(Source.name)).scalars().all()))
+
+
+# ---- buyers ----------------------------------------------------------------
+#
+# The strip on the home pages and the page each name in it opens. Buyers are
+# exactly the strings in tenders.organization, so a click is an exact match,
+# never a substring that pulls in a neighbouring office.
+
+def _open_buyers(db: Session, today: date) -> list[tuple[str, int]]:
+    """Every buyer with an open notice, busiest first, shared for ten minutes."""
+    def compute(db):
+        is_open = or_(Tender.deadline.is_(None), Tender.deadline >= today)
+        return [tuple(r) for r in db.execute(
+            select(Tender.organization, func.count())
+            .where(Tender.organization.is_not(None), Tender.duplicate_of.is_(None), is_open)
+            .group_by(Tender.organization)
+            .order_by(func.count().desc(), Tender.organization)
+        )]
+    return shared(db, ("open_buyers", today), 600, compute)
+
+
+@router.get("/buyers/strip")
+def buyers_strip(db: Session = Depends(get_db)) -> JSONResponse:
+    """All buyers for the home-page strip. Fetched after the page shows, so the
+    thousand-odd names do not weigh down every home page load."""
+    return JSONResponse([[n, c] for n, c in _open_buyers(db, date.today())])
+
+
+BUYER_PAGE = 30
+
+
+@router.get("/buyer", response_class=HTMLResponse)
+def buyer_page(name: str = "", sort: str = "", page: int = 1,
+               db: Session = Depends(get_db),
+               user: User | None = Depends(current_user)) -> str:
+    """One buyer's open tenders, by relevance to your answers or closing soonest.
+
+    Relevance needs a profile to rank against. Without one the page says so and
+    lists by deadline, rather than pretending some other order is "relevant".
+    """
+    name = name.strip()
+    if not name:
+        raise HTTPException(status_code=404, detail="no buyer named")
+    today = date.today()
+    profile = _profile_of(db, user)
+    if sort not in ("relevance", "deadline"):
+        sort = "relevance" if profile is not None else "deadline"
+    page = max(page, 1)
+    live = (Tender.organization == name, Tender.duplicate_of.is_(None),
+            or_(Tender.deadline.is_(None), Tender.deadline >= today))
+    by_deadline = select(Tender.id).where(*live).order_by(
+        Tender.deadline.is_(None), Tender.deadline, Tender.id)
+
+    score_of: dict[int, tuple[int, tuple]] = {}
+    if profile is not None:
+        ids = set(db.scalars(select(Tender.id).where(*live)))
+        # Relaxed on purpose: on one buyer's page a saved state boundary would
+        # hide most of what the visitor clicked through to see.
+        d = match_digest(db, profile, today, strict=set())
+        score_of = {tid: (s, r) for s, r, tid in d.scored if tid in ids}
+
+    if sort == "relevance" and profile is not None:
+        ranked = sorted(score_of, key=lambda tid: -score_of[tid][0])
+        order = ranked + [i for i in db.scalars(by_deadline) if i not in score_of]
+        total = len(order)
+        page_ids = order[(page - 1) * BUYER_PAGE: page * BUYER_PAGE]
+    else:
+        total = db.scalar(select(func.count()).select_from(Tender).where(*live)) or 0
+        page_ids = list(db.scalars(by_deadline.offset((page - 1) * BUYER_PAGE).limit(BUYER_PAGE)))
+
+    rows_by_id = hydrate(db, page_ids)
+    top = max((s for s, _r in score_of.values()), default=0)
+    shown = []
+    for tid in page_ids:
+        t = rows_by_id.get(tid)
+        if t is None:
+            continue
+        if tid in score_of:
+            s, r = score_of[tid]
+            shown.append((t, str(s), rank_class(s, top), list(r)))
+        else:
+            gutter, rank = days_left(t.deadline, today)
+            shown.append((t, gutter, rank, []))
+    return render("buyer.html", title=name, buyer=name, sort=sort, page=page,
+                  pages=max(1, -(-total // BUYER_PAGE)), total=total,
+                  matched=len(score_of) if profile is not None else None,
+                  has_profile=profile is not None, shown=shown,
+                  tile=initials(name), tone=tile_tone(name))
 
 
 # ---- wishlist --------------------------------------------------------------

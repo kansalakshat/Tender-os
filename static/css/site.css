@@ -746,3 +746,45 @@ pre#err:empty{display:none}
 :root:not([data-theme=light]) .capList .capnum{-webkit-text-stroke-color:var(--accent)}
 :root:not([data-theme=light]) .buyerGrid b{color:#FF4D6D}
 :root:not([data-theme=light]) .search{border-color:rgba(230,0,42,.35)}
+
+/* --- buyer strip: every buyer, running across the page ---------------------- */
+.bstrip{position:relative;overflow:hidden;margin-top:clamp(2.5rem,5vw,4rem);padding:.9rem 0;
+  border-block:var(--bw) solid var(--stone);background:var(--bone);
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent);
+  mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent)}
+.btrack{display:flex;width:max-content;margin:0;padding:0;list-style:none}
+.bstrip.run .btrack{animation:bmarquee var(--dur,120s) linear infinite}
+.bstrip:hover .btrack,.bstrip:focus-within .btrack{animation-play-state:paused}
+@keyframes bmarquee{to{transform:translateX(-50%)}}
+/* margin, not gap: gap would leave the two copies one gap unequal and the loop
+   would jump */
+.btrack li{margin-right:.75rem}
+.bchip{display:flex;align-items:center;gap:.65rem;padding:.4rem .9rem .4rem .4rem;white-space:nowrap;
+  border:var(--bw) solid var(--stone);border-radius:var(--r-lg);background:var(--glass-bg);
+  color:var(--ink);text-decoration:none;transition:border-color .2s,transform .32s var(--ease),background .2s}
+.bchip:hover{color:var(--ink);border-color:var(--accent);transform:translateY(-2px)}
+.bname{font:600 .9rem/1 var(--sans);max-width:22rem;overflow:hidden;text-overflow:ellipsis}
+.bchip b{font:700 .72rem/1 var(--mono);padding:.3rem .45rem;border-radius:var(--r-sm);
+  background:color-mix(in srgb,var(--accent) 16%,transparent);color:var(--accent-h)}
+/* The tile colours are fixed, not theme tokens: a logo stays the same colour
+   whichever theme you read it in. */
+.logo{display:grid;place-items:center;flex:none;width:2.2rem;height:2.2rem;border-radius:var(--r);
+  font:700 .78rem/1 var(--display);letter-spacing:.02em;color:#0A0A0B}
+.logo.t0{background:#E6002A;color:#fff} .logo.t1{background:#D8FF3E} .logo.t2{background:#FF9DB0}
+.logo.t3{background:#FFE066} .logo.t4{background:#C4B5FF} .logo.t5{background:#9AD7F5}
+.logo.big{width:4rem;height:4rem;font-size:1.3rem;border-radius:var(--r-lg)}
+:root:not([data-theme=light]) .bstrip{background:linear-gradient(90deg,rgba(230,0,42,.14),rgba(14,15,17,.9) 30%,rgba(14,15,17,.9) 70%,rgba(230,0,42,.14));
+  border-color:rgba(230,0,42,.4)}
+:root[data-theme=light] .bstrip{border-color:#0A0A0B;background:var(--butter)}
+:root[data-theme=light] .bchip{border-color:#0A0A0B;box-shadow:3px 3px 0 0 #0A0A0B}
+:root[data-theme=light] .logo{border:2px solid #0A0A0B}
+/* Reduced motion: no running strip, just a row you can scroll yourself */
+@media (prefers-reduced-motion:reduce){
+ .bstrip{overflow-x:auto}
+ .bstrip.run .btrack{animation:none}
+}
+
+/* --- one buyer's page -------------------------------------------------------- */
+.bhead{display:flex;align-items:center;gap:1.1rem}
+.bhead .detailHead{margin-top:.2rem}
+.pager .count{margin:0;align-self:center}

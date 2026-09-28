@@ -345,3 +345,49 @@ def test_asset_version_follows_content_not_mtime(tmp_path, monkeypatch):
     os.utime(f, (1540000000, 1540000000))
     web._digest.cache_clear()   # a new deploy is a new process
     assert web.asset("a.css") != before
+
+
+def test_buyer_strip_and_page_show_only_that_buyers_open_tenders(client, session_factory):
+    """The strip lists every buyer with an open notice; a click is an exact
+    match on the buyer, closing soonest first, and never shows a closed one."""
+    with session_factory() as db:
+        src = db.query(Source).first()
+        today = date.today()
+        db.add_all([
+            Tender(source_id=src.id, external_ref="b1", title="Pump sets later",
+                   organization="Indian Army", deadline=today + timedelta(days=20),
+                   source_url="u1"),
+            Tender(source_id=src.id, external_ref="b2", title="Boots sooner",
+                   organization="Indian Army", deadline=today + timedelta(days=2),
+                   source_url="u2"),
+            Tender(source_id=src.id, external_ref="b3", title="Old closed notice",
+                   organization="Indian Army", deadline=today - timedelta(days=3),
+                   source_url="u3"),
+            Tender(source_id=src.id, external_ref="b4", title="Navy radar",
+                   organization="Indian Army Navy Wing", deadline=today + timedelta(days=5),
+                   source_url="u4"),
+        ])
+        db.commit()
+    strip = dict(client.get("/buyers/strip").json())
+    assert strip["Indian Army"] == 2 and "MP Poorv Kshetra Vidyut Vitaran" in strip
+
+    html = client.get("/buyer", params={"name": "Indian Army"}).text
+    assert html.index("Boots sooner") < html.index("Pump sets later")   # closing soonest
+    assert "Old closed notice" not in html and "Navy radar" not in html  # exact, open only
+    assert "sign in</a> to use it" in html     # relevance needs a profile
+    assert client.get("/buyer").status_code == 404
+    assert '/buyer?name=' in client.get("/").text   # the strip links here
+
+    # Signed in with a profile that wants pumps: relevance puts the later-closing
+    # pump tender first, closing soonest still puts the boots first.
+    client.post("/auth/signup", json={"email": "buyer@example.invalid",
+                                      "password": "coconut-husk-2026"})
+    client.post("/companies", json={
+        "name": "Pump Co", "sectors": [], "keywords": ["pump"], "states": [],
+        "districts": [], "buyers": [], "exclude_keywords": [], "exclude_buyers": [],
+        "min_lead_days": 0, "max_project_value": None,
+    })
+    rel = client.get("/buyer", params={"name": "Indian Army"}).text
+    assert rel.index("Pump sets later") < rel.index("Boots sooner")
+    soon = client.get("/buyer", params={"name": "Indian Army", "sort": "deadline"}).text
+    assert soon.index("Boots sooner") < soon.index("Pump sets later")

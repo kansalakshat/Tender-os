@@ -40,7 +40,7 @@
 {#- The attachments the bid document itself points at -- specification sheets,
     the general terms, annexures. They are link annotations inside the PDF, so
     they are invisible to anyone reading its text, and they are the documents a
-    bidder actually has to read before deciding. Same list the rows show. -#}
+    bidder actually has to read before deciding. Shown here only, not on list rows. -#}
 {%- set ls = tender_links(t) %}{% if ls %}
  <h3>Referenced in that document</h3>
  <ul class=docs>{% for l in ls %}<li><a href="{{ l.url }}" target=_blank rel="noopener noreferrer">{{ l.label }}</a></li>{% endfor %}</ul>

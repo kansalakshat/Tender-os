@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "_macros.html" import row, buyer_grid %}
+{% from "_macros.html" import row, buyer_grid, buyer_strip %}
 {#- The home page for someone who has answered the questions. Everything on it is
     their own result set: the notices closing soonest are their matches re-sorted
     by deadline, and the buyer index counts only buyers in those matches. #}
@@ -34,7 +34,7 @@
 </dl>
 </div></section>{% endblock %}
 
-{% block body %}<section class=sec><div class=wrap>
+{% block body %}{{ buyer_strip(buyers) }}<section class=sec><div class=wrap>
 <div class="secHead reveal">
  <h2>Closing soonest for you</h2>
  <p class=kicker>{{ n_soon|num }} of your matches close within seven days</p>
