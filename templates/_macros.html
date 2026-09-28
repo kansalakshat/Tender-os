@@ -1,26 +1,14 @@
 {#- Pieces shared by several pages. Everything printed here is autoescaped:
     titles and buyer names come off scraped pages and go straight into HTML. -#}
 
-{#- Second meta line on a tender row: tender ID, publication date and the buyer's
-    office. Department is skipped when it only repeats the buyer, which is every
-    CPPP row. Mirrored by extra() in static/js/site.js for rows that arrive as JSON. -#}
+{#- The small facts under a row's title, as chips: tender ID, publication date
+    and the buyer's office. Department is skipped when it only repeats the buyer,
+    which is every CPPP row. Mirrored by extra() in static/js/site.js for rows
+    that arrive as JSON. -#}
 {% macro extra_line(t) -%}
-{%- set dept = t.department and t.department != t.organization -%}
-{%- if t.external_ref or t.published_date or dept -%}
-<p class='m x'>
-{%- if t.external_ref %}ID {{ t.external_ref }}{% endif %}
-{%- if t.published_date %}{% if t.external_ref %} &middot; {% endif %}published <time datetime='{{ t.published_date }}'>{{ t.published_date }}</time>{% endif %}
-{%- if dept %}{% if t.external_ref or t.published_date %} &middot; {% endif %}{{ t.department }}{% endif -%}
-</p>
-{%- endif -%}
-{%- endmacro %}
-
-{#- Everything else we know about the tender: value, EMD, quantity, contract
-    period, closing time... Built by app/facts.py; drawn the same way by facts()
-    in static/js/site.js for JSON rows. -#}
-{% macro fact_strip(t) -%}
-{%- set fs = preview_facts(t) -%}
-{%- if fs %}<dl class=pf>{% for label, value in fs %}<div><dt>{{ label }}</dt><dd>{{ value }}</dd></div>{% endfor %}</dl>{% endif -%}
+{%- if t.external_ref %}<li>ID {{ t.external_ref }}</li>{% endif -%}
+{%- if t.published_date %}<li>Published <time datetime='{{ t.published_date }}'>{{ t.published_date }}</time></li>{% endif -%}
+{%- if t.department and t.department != t.organization %}<li>{{ t.department }}</li>{% endif -%}
 {%- endmacro %}
 
 {#- Documents the bid points at, read off the PDF's link annotations by
@@ -46,26 +34,41 @@
 <li>Copy of EFT Mandate duly certified by Bank.</li></ol></div>
 {%- endmacro %}
 
-{#- One list row. The title opens our own page rather than the source portal:
-    eprocure.gov.in serves "Invalid Url" for any tendersfullview link that arrives
-    without a Referer from its own domain, so linking out directly was a dead end
-    on every row. -#}
+{#- One list row, laid out as a fixed card so every tender reads the same way:
+    buyer and source on top, the title, a synopsis, then chips; the money and
+    the deadline always sit in the same two boxes on the right, whether or not
+    they are known. The title opens our own page rather than the source portal:
+    eprocure.gov.in serves "Invalid Url" for any tendersfullview link that
+    arrives without a Referer from its own domain. Mirrored by card() in
+    static/js/site.js for rows fetched as JSON. -#}
 {% macro row(gutter, rank, t, tags=(), summary=true) -%}
-<li class="row {{ rank }}"><div class=n>{{ gutter }}</div><div>
-{{- '' }}<a class=t href="/t/{{ t.id }}">{{ t.title }}</a>
+{%- set f = dict(preview_facts(t)) -%}
+{%- set days = days_left(t.deadline)[0] -%}
+{%- set value = f.get('Estimated value') -%}
+{%- set emd = f.get('EMD (bid security)') -%}
+<li class="row {{ rank }}"><div class=rmain>
+<p class=rhead>{% if gutter and gutter != days %}<span class=n>{{ gutter }}</span>{% endif -%}
+<b class=rorg>{{ t.organization or 'unnamed buyer' }}</b>
+{%- if f.Source %}<span class=src>{{ f.Source }}</span>{% endif %}</p>
+<a class=t href="/t/{{ t.id }}">{{ t.title }}</a>
 {%- if summary %}<p class=rowsum>{{ summary_for(t) }}</p>{% endif -%}
-<p class=m>{{ t.organization or 'unnamed buyer' }} &middot; closes <time datetime='{{ t.deadline }}'>{{ t.deadline }}</time></p>
+<ul class=chips>{% if f.Where %}<li class=loc>{{ icon('map-pin') }}{{ f.Where }}</li>{% endif -%}
 {{- extra_line(t) -}}
-{{- fact_strip(t) -}}
+{%- for k in ('Quantity', 'Bid type', 'Contract period') if f[k] %}<li>{{ k }}: {{ f[k] }}</li>{% endfor -%}
+</ul>
 {{- doc_links(t) -}}
 {%- if tags %}<ul class=tags>{% for tag in tags %}<li class=tag>{{ tag }}</li>{% endfor %}</ul>{% endif -%}
+</div><div class=rside>
+<div class=box><span>{{ 'Est. value' if value else 'EMD' if emd else 'Value' }}</span>{% if value or emd %}<b>{{ value or emd }}</b>{% else %}<b class=none>not stated</b>{% endif %}</div>
+<div class="box due"><span>Closes{% if days %} <em>{{ days }}</em>{% endif %}</span><b><time datetime='{{ t.deadline or '' }}'>{{ f.get('Bids close') or t.deadline or 'not stated' }}</time></b></div>
+<a class="btn sm" href="/t/{{ t.id }}">View details</a>
 </div></li>
 {%- endmacro %}
 
 {#- A pulsing placeholder row, for lists that are still loading. -#}
 {% macro skeleton_row(cls="row") -%}
-<li class="{{ cls }}"><div class=n><div class="b g"></div></div>
-  <div><div class=b></div><div class="b s"></div></div></li>
+<li class="{{ cls }}"><div class=rmain><div class="b g"></div><div class=b></div><div class="b s"></div></div>
+  <div class=rside><div class=b></div><div class=b></div></div></li>
 {%- endmacro %}
 
 {#- Buyers, numbered like an index. Each links to a filter GET /tenders supports. -#}

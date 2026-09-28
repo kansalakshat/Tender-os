@@ -116,7 +116,7 @@ FAVICON = (
 
 def days_left(deadline: date | None, today: date | None = None) -> tuple[str, str]:
     """The gutter label for a tender, and its rail weight. Mirrors left() in
-    static/js/browse.js, which does the same job on rows fetched by JSON."""
+    static/js/site.js, which does the same job on rows fetched by JSON."""
     if deadline is None:
         return "", "s0"
     n = (deadline - (today or date.today())).days

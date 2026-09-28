@@ -235,41 +235,56 @@ main h2{display:flex;align-items:center}
 .secHead .i,.panel h2 .i{margin-right:.6rem}
 .secHead + .hint{margin:-1.25rem 0 2rem}
 
-.rows{list-style:none;margin:0;padding:0;border-top:var(--bw) solid var(--stone)}
-.row{position:relative;display:grid;grid-template-columns:5.5rem minmax(0,1fr);gap:1.25rem;
-  padding:1.3rem .75rem 1.4rem 1rem;border-bottom:var(--bw) solid var(--stone);
-  transition:background .25s var(--ease),transform .32s var(--ease)}
-.row::before{content:"";position:absolute;left:0;top:1.3rem;bottom:1.4rem;width:2px;
-  background:var(--accent);opacity:0;border-radius:2px;transition:opacity .2s,transform .2s}
+/* A tender is a fixed card (the Tenderbook / Tender247 listing shape): buyer
+   and source on top, title and synopsis clamped so every card has the same
+   rhythm, a chip row, and the money and deadline always in the same two boxes
+   on the right -- the eye finds them in one place on every row. */
+.rows{list-style:none;margin:0;padding:0;display:grid;gap:.9rem}
+.row{position:relative;display:grid;grid-template-columns:minmax(0,1fr) 16rem;gap:1.25rem 2rem;
+  padding:1.35rem 1.5rem 1.4rem 1.7rem;border:var(--bw) solid var(--stone);border-radius:var(--r-lg);
+  background:var(--glass-bg);box-shadow:var(--sh-soft);
+  transition:transform .32s var(--ease),box-shadow .32s var(--ease),border-color .2s}
+.row::before{content:"";position:absolute;left:0;top:1.1rem;bottom:1.1rem;width:3px;
+  background:var(--accent);opacity:0;border-radius:0 3px 3px 0}
 .row.s1::before{opacity:.3} .row.s2::before{opacity:.65} .row.s3::before{opacity:1}
-.row:hover{background:color-mix(in srgb,var(--ink) 2%,transparent)}
-@media (hover:hover) and (pointer:fine){.row:hover{transform:translateX(4px)}}
-.n{font:700 .85rem/1.6 var(--mono);text-transform:uppercase;letter-spacing:.02em;
-  font-variant-numeric:tabular-nums;color:var(--ink);transition:color .2s}
-.row.s0 .n,.browse .n{color:var(--faint)}
-.row:hover .n{color:var(--accent-h)}
-.t{color:var(--ink);text-decoration:none;font-weight:600;font-size:1.12rem;line-height:1.38;
-  letter-spacing:-.012em;text-wrap:pretty;transition:color .2s}
-.t:hover,.row:hover .t{color:var(--ink);text-decoration:underline;text-decoration-color:var(--accent)}
-.rowsum{margin:.45rem 0 0;max-width:72ch;font-size:.98rem;font-weight:300;color:var(--muted)}
-.m{margin:.55rem 0 0;color:var(--muted);font-size:.9rem;font-family:var(--mono);letter-spacing:0}
-.m time,.m .v{font-variant-numeric:tabular-nums}
-.m.x{margin-top:.2rem;font-size:.82rem;color:var(--faint)}
-.pf{display:flex;flex-wrap:wrap;gap:.4rem 1.4rem;margin:.7rem 0 0;font-size:.84rem}
-.pf div{display:flex;gap:.45rem;align-items:baseline;min-width:0}
-.pf dt{font:500 .66rem/1.3 var(--sans);text-transform:uppercase;letter-spacing:.16em;color:var(--faint)}
-.pf dd{margin:0;font-family:var(--mono);font-weight:700;color:var(--ink);
-  font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+@media (hover:hover) and (pointer:fine){.row:hover{transform:var(--lift);box-shadow:var(--sh-lift);border-color:var(--stone-2)}}
+.rmain{min-width:0}
+.rhead{display:flex;flex-wrap:wrap;align-items:center;gap:.4rem .6rem;margin:0 0 .5rem}
+.rorg{font:600 .92rem/1.3 var(--sans);color:var(--ink)}
+.src,.n{font:600 .64rem/1 var(--sans);text-transform:uppercase;letter-spacing:.12em;
+  padding:.35rem .5rem;border:var(--bw) solid var(--stone);border-radius:var(--r-sm);background:var(--butter);color:var(--ink)}
+.n{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-variant-numeric:tabular-nums}
+.t{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+  color:var(--ink);text-decoration:none;font:600 1.1rem/1.4 var(--sans);letter-spacing:-.012em;transition:color .2s}
+.t:hover{text-decoration:underline;text-decoration-color:var(--accent)}
+.rowsum{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+  margin:.4rem 0 0;max-width:80ch;font-size:.94rem;font-weight:300;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:.4rem;margin:.85rem 0 0;padding:0;list-style:none}
+.chips li{display:inline-flex;align-items:center;gap:.3rem;padding:.3rem .55rem;font-size:.78rem;line-height:1.2;
+  color:var(--muted);border:var(--bw) solid var(--stone);border-radius:var(--r-sm);max-width:100%;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chips li.loc{background:var(--sky);color:var(--ink)}
+.chips .i{width:.95em;height:.95em;color:var(--accent)}
+.rside{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;align-content:start}
+.box{display:grid;gap:.35rem;padding:.6rem .7rem;border:var(--bw) solid var(--stone);border-radius:var(--r);
+  background:var(--lime);min-width:0}
+.box span{display:flex;align-items:center;justify-content:space-between;gap:.3rem;
+  font:500 .6rem/1.2 var(--sans);text-transform:uppercase;letter-spacing:.14em;color:var(--faint)}
+.box b{font:700 .82rem/1.3 var(--mono);color:var(--ink);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.box b.none{font-weight:400;color:var(--faint)}
+.box.due{background:var(--blush)}
+.box em{font-style:normal;font-weight:700;letter-spacing:.06em;color:var(--accent-h)}
+.row.s3 .box.due{border-color:color-mix(in srgb,var(--accent) 55%,transparent)}
+.rside .btn{grid-column:1/-1;width:100%}
 .tags{display:flex;flex-wrap:wrap;gap:.35rem;margin:.75rem 0 0;padding:0;list-style:none}
 .tag{font:500 .72rem/1 var(--sans);text-transform:uppercase;letter-spacing:.1em;color:var(--muted);
   border:var(--bw) solid var(--stone);background:color-mix(in srgb,var(--ink) 3%,transparent);padding:.4rem .55rem;
-  border-radius:var(--r-sm);transition:border-color .2s,color .2s}
-.row:hover .tag{border-color:var(--stone-2);color:var(--ink)}
+  border-radius:var(--r-sm)}
 .count{margin:0 0 1.25rem;font:500 .72rem/1.4 var(--sans);text-transform:uppercase;
   letter-spacing:.2em;color:var(--faint);font-variant-numeric:tabular-nums}
-@media (max-width:34rem){
- .row{grid-template-columns:minmax(0,1fr);gap:.3rem;padding-left:.9rem}
- .n{font-size:.72rem;color:var(--faint)}
+.row.sk{grid-template-columns:minmax(0,1fr) 16rem}
+@media (max-width:50rem){
+ .row,.row.sk{grid-template-columns:minmax(0,1fr);padding:1.15rem 1.1rem 1.2rem 1.3rem}
 }
 
 .panel{overflow:hidden}
@@ -280,8 +295,10 @@ main h2{display:flex;align-items:center}
 .panel h2 .lbl{display:inline-flex;align-items:center;color:var(--ink)}
 .panel h2 .i{color:var(--accent)}
 .panel h2 span{font-variant-numeric:tabular-nums}
-.panel .rows{border-top:0}
-.panel .row{padding-left:1.4rem;padding-right:1.4rem;grid-template-columns:4.75rem minmax(0,1fr)}
+/* Inside a panel the rows are its sections, not cards on a card */
+.panel .rows{gap:0}
+.panel .row{border:0;border-bottom:var(--bw) solid var(--stone);border-radius:0;box-shadow:none;background:transparent}
+.panel .row:hover{transform:none;box-shadow:none;background:color-mix(in srgb,var(--ink) 3%,transparent)}
 .panel .row:last-of-type{border-bottom:0}
 a.more{display:flex;align-items:center;justify-content:space-between;padding:1.15rem 1.4rem;
   border-top:var(--bw) solid var(--stone);text-decoration:none;font:700 .8rem/1 var(--sans);
@@ -452,7 +469,9 @@ pre#err:empty{display:none}
 .empty p + p{margin-top:1rem}
 .sk .b{height:1rem;border-radius:4px;background:var(--stone);animation:pulse 1.4s ease-in-out infinite}
 .sk .b.s{height:.75rem;max-width:20rem;margin-top:.6rem}
-.sk .b.g{width:2.5rem}
+.sk .b.g{width:9rem}
+.sk .b + .b{margin-top:.7rem}
+.sk .rside .b{height:3.2rem;margin:0}
 .rows[aria-busy=true]{opacity:.5;transition:opacity .2s ease}
 @keyframes pulse{50%{opacity:.35}}
 /* Placeholders for anything filled in after the page shows: never a blank gap. */
@@ -606,12 +625,14 @@ pre#err:empty{display:none}
 :root[data-theme=light] .grad-text{background-image:none;color:var(--accent-h)}
 :root[data-theme=light] .bignum{border-left:4px solid var(--accent)}
 /* List rules stay thin, or fifty rows read as a ruled ledger */
-:root[data-theme=light] :is(.row,.facts > div,.elig li){border-bottom:1px solid var(--hair)}
+:root[data-theme=light] :is(.facts > div,.elig li){border-bottom:1px solid var(--hair)}
+:root[data-theme=light] .row{border-color:#0A0A0B}
+:root[data-theme=light] .panel .row{border-bottom:1px solid var(--hair)}
 :root[data-theme=light] .buyerGrid a{border-top:1px solid var(--hair)}
-:root[data-theme=light] .row::before{width:4px}
+:root[data-theme=light] .row::before{width:5px}
 :root[data-theme=light] .panel h2,:root[data-theme=light] .panel .lbl{color:var(--ink);font-weight:700}
 :root[data-theme=light] a.more{border-top:2px solid var(--ink)}
-:root[data-theme=light] .panel .row:hover,:root[data-theme=light] .row:hover{background:var(--bone)}
+:root[data-theme=light] .panel .row:hover{background:var(--bone)}
 :root[data-theme=light] .top nav a[aria-current=page]{border-color:var(--ink)}
 :root[data-theme=light] :is(button,.btn):not(.themebtn,.userbtn,.clearbtn,.heart){box-shadow:4px 4px 0 0 var(--ink)}
 :root[data-theme=light] :is(button,.btn):not(.themebtn,.userbtn,.clearbtn,.heart):hover{transform:translate(2px,2px);
