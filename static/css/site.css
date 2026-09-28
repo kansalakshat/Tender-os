@@ -769,12 +769,9 @@ pre#err:empty{display:none}
   border-block:var(--bw) solid var(--stone);background:var(--bone);
   -webkit-mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent);
   mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent)}
-.btrack{display:flex;width:max-content;margin:0;padding:0;list-style:none}
-.bstrip.run .btrack{animation:bmarquee var(--dur,120s) linear infinite}
-.bstrip:hover .btrack,.bstrip:focus-within .btrack{animation-play-state:paused}
-@keyframes bmarquee{to{transform:translateX(-50%)}}
-/* margin, not gap: gap would leave the two copies one gap unequal and the loop
-   would jump */
+.btrack{display:flex;width:max-content;margin:0;padding:0;list-style:none;will-change:transform}
+/* margin, not gap: strip.js measures a chip's width plus its margin as the
+   distance to the next chip's left edge */
 .btrack li{margin-right:.75rem}
 .bchip{display:flex;align-items:center;gap:.65rem;padding:.4rem .9rem .4rem .4rem;white-space:nowrap;
   border:var(--bw) solid var(--stone);border-radius:var(--r-lg);background:var(--glass-bg);
@@ -798,7 +795,6 @@ pre#err:empty{display:none}
 /* Reduced motion: no running strip, just a row you can scroll yourself */
 @media (prefers-reduced-motion:reduce){
  .bstrip{overflow-x:auto}
- .bstrip.run .btrack{animation:none}
 }
 
 /* --- one buyer's page -------------------------------------------------------- */
