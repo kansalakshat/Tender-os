@@ -142,9 +142,11 @@ def csp(nonce: str) -> str:
         "default-src 'self'",
         f"script-src 'self' 'nonce-{nonce}'",
         f"style-src 'self' 'nonce-{nonce}'",
-        "img-src 'self' data:",
+        # blob: is the hero model: GLTFLoader unpacks its embedded textures
+        # into blob: URLs and fetches (Chrome) or <img>-loads (others) them.
+        "img-src 'self' data: blob:",
         "form-action 'self'",
-        "connect-src 'self'",
+        "connect-src 'self' blob:",
         "frame-ancestors 'none'",       # clickjacking
         "base-uri 'none'",              # stops <base> hijacking relative URLs
         "object-src 'none'",

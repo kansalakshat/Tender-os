@@ -190,7 +190,11 @@ input[type=checkbox]{width:1.1rem;height:1.1rem;min-height:0;padding:0;border-ra
 }
 
 /* --- hero ------------------------------------------------------------------ */
-.hero .wrap{padding-block:clamp(4rem,9vw,8rem) clamp(3rem,6vw,5rem)}
+.hero{position:relative;overflow:hidden}
+.hero .wrap{position:relative;padding-block:clamp(4rem,9vw,8rem) clamp(3rem,6vw,5rem)}
+/* 3D model behind the copy; fades in once hero3d.js has a frame to show */
+.hero3d{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:0;transition:opacity 1.2s var(--ease)}
+.hero3d.on{opacity:.35}
 .hero .eyebrow{display:flex;align-items:center;flex-wrap:wrap;gap:.5rem 0}
 .heroTop{display:grid;gap:2rem;align-items:end;padding-block:1.75rem 0}
 @media (min-width:64rem){.heroTop{grid-template-columns:minmax(0,1fr) auto;gap:4rem}}
