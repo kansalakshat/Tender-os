@@ -56,14 +56,11 @@ def never_send_real_email(monkeypatch, tmp_path):
     project's own outbox.log."""
     monkeypatch.setenv("SMTP_HOST", "")
     monkeypatch.setattr("app.mailer.OUTBOX", tmp_path / "outbox.log")
-    # Rate-limit buckets are module-level and would otherwise carry across tests:
-    # the sixth signup in the whole session would 429 regardless of which test
-    # made it. Each test starts with a clean budget.
-    from app import db, matching, security
+    # Read caches are module-level: each test builds its own corpus, and a stamp
+    # or a cached page from the previous one must not answer for it. (Rate-limit
+    # counters live in each test's own database, so they need no clearing.)
+    from app import db, matching
 
-    security.reset()
-    # Same for the read caches: each test builds its own corpus, and a stamp or
-    # a cached page from the previous one must not answer for it.
     matching._DIGESTS.clear()
     matching._CANDIDATES.clear()
     db._SHARED.clear()

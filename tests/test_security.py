@@ -10,9 +10,10 @@ from fastapi.testclient import TestClient
 
 from app import security
 from app.api import app
-from app.auth import email_problem
+from app import auth
+from app.auth import SESSION_COOKIE, email_problem
 from app.db import get_db
-from app.models import Source, Tender
+from app.models import RateLimit, Source, Tender, User
 
 SOON = date.today() + timedelta(days=30)
 PROFILE = {"name": "Acme", "sectors": ["electrical_power"], "min_lead_days": 7}
@@ -125,12 +126,33 @@ def test_verification_mail_is_rate_limited(client):
     assert 429 in codes, "an account could be used as a mail cannon"
 
 
-def test_rate_limit_table_cannot_grow_without_bound():
-    """Rotating keys must not be a way to exhaust memory."""
-    security.reset()
-    for i in range(security._MAX_BUCKETS + 50):
-        security.hit(f"k{i}", 5, 60)
-    assert len(security._BUCKETS) <= security._MAX_BUCKETS + 1
+def test_old_rate_limit_rows_are_swept(session_factory, monkeypatch):
+    """Rotating keys must not be a way to fill the table forever."""
+    monkeypatch.setattr(security.random, "random", lambda: 0.0)   # always sweep
+    with session_factory() as db:
+        db.add(RateLimit(key="old", window_start=0.0, count=3))
+        db.commit()
+        security.hit(db, "new", 5, 60)
+        assert {r.key for r in db.query(RateLimit)} == {"new"}
+
+
+def test_rate_limit_is_shared_between_instances(session_factory):
+    """The hole this closes: counters in process memory were per serverless
+    instance. Two sessions stand in for two instances on one database."""
+    a, b = session_factory(), session_factory()
+    assert all(security.hit(a, "login:x", 2, 60) for _ in range(2))
+    assert security.hit(b, "login:x", 2, 60) is False
+    a.close(); b.close()
+
+
+def test_rate_limit_window_restarts(session_factory, monkeypatch):
+    clock = [1000.0]
+    monkeypatch.setattr(security.time, "time", lambda: clock[0])
+    with session_factory() as db:
+        assert security.hit(db, "k", 1, 60)
+        assert not security.hit(db, "k", 1, 60)
+        clock[0] += 61
+        assert security.hit(db, "k", 1, 60)
 
 
 # ---- response hardening ----
@@ -423,3 +445,60 @@ def test_session_cookie_is_secure_except_on_local_http(monkeypatch):
     assert not security.cookie_secure(req("http://localhost:8000/"))
     monkeypatch.setenv("PUBLIC_BASE_URL", "http://127.0.0.1:8000")
     assert not security.cookie_secure(req("http://tunnel.example/"))
+
+
+# ---- 28 Sep 2026 pass ----
+
+def test_cross_site_writes_are_refused(client):
+    # A form on another site POSTing to logout would clear the session through
+    # the response's Set-Cookie; to login, sign the victim into another account.
+    for path in ("/auth/logout", "/auth/login"):
+        r = client.post(path, json=CREDS, headers={"Sec-Fetch-Site": "cross-site"})
+        assert r.status_code == 403, path
+        assert "Content-Security-Policy" in r.headers
+
+
+def test_same_origin_and_non_browser_writes_still_work(client):
+    assert client.post("/auth/logout", headers={"Sec-Fetch-Site": "same-origin"}).status_code == 200
+    assert client.post("/auth/logout").status_code == 200          # curl, API clients
+    assert client.get("/health", headers={"Sec-Fetch-Site": "cross-site"}).status_code == 200
+
+
+@pytest.mark.parametrize("field,value", [
+    ("name", "x" * 201),
+    ("contact_email", "a" * 250 + "@b.in"),
+    ("keywords", ["k" * 301]),
+    ("buyers", ["b" * 301]),
+])
+def test_profile_fields_are_length_capped(client, field, value):
+    r = client.post("/match", json={**PROFILE, field: value})
+    assert r.status_code == 422, r.text
+
+
+def test_sign_out_revokes_a_copied_session_cookie(client):
+    assert client.post("/auth/signup", json=CREDS).status_code == 201
+    stolen = client.cookies.get(SESSION_COOKIE)
+    assert client.get("/me").json()["user"] is not None
+    client.post("/auth/logout")
+    client.cookies.set(SESSION_COOKIE, stolen)
+    assert client.get("/me").json()["user"] is None
+
+
+def test_sessions_from_before_the_epoch_column_stay_valid(session_factory):
+    """Epoch 0 is left out of the stamp, so deploying this signs nobody out."""
+    with session_factory() as db:
+        user = User(email="a@acme.invalid", password_hash="scrypt$x")
+        db.add(user); db.commit()
+        base = f"{user.id}|{user.email}|{user.password_hash}|"
+        legacy = auth._b64(auth.hmac.new(auth.SECRET, base.encode(),
+                                         auth.hashlib.sha256).digest()[:16])
+        assert auth.account_stamp(user) == legacy
+
+
+def test_sign_out_does_not_break_an_unclicked_verification_link(session_factory):
+    with session_factory() as db:
+        user = User(email="b@acme.invalid", password_hash="scrypt$x")
+        db.add(user); db.commit()
+        link = auth.make_verification_token(user)
+        user.session_epoch = 5; db.commit()
+        assert auth.user_from_verification_token(db, link) is not None

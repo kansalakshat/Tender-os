@@ -53,3 +53,10 @@ gem_catchup*.log.out
 gem_catchup*.log.err
 server.log
 server.err
+bin/
+
+# Local run output: tunnel URLs, worker logs, shard stdout.
+*.log
+*.err
+*.out
+probe_results*.json

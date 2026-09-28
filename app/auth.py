@@ -143,7 +143,7 @@ def unsign(purpose: str, token: str | None) -> str | None:
         return None
 
 
-def account_stamp(user: User) -> str:
+def account_stamp(user: User, purpose: str = "session") -> str:
     """Binds a token to one account, not just to a row number.
 
     A bare user id was the whole session once, and it was a real hole: the same
@@ -155,13 +155,20 @@ def account_stamp(user: User) -> str:
     also revokes every outstanding session when any of those change: a new
     password, or a Google sign-in that strips a squatter's password (see
     user_from_google), logs out whoever held the old one.
+
+    Sessions also carry session_epoch, which sign-out bumps, so a cookie copied
+    before sign-out stops working. Left out while 0, so sessions issued before
+    the column existed stay valid; left out of verification links, so signing
+    out does not break an unclicked confirmation mail.
     """
     material = f"{user.id}|{user.email}|{user.password_hash or ''}|{user.google_sub or ''}"
+    if purpose == "session" and user.session_epoch:
+        material += f"|{user.session_epoch}"
     return _b64(hmac.new(SECRET, material.encode(), hashlib.sha256).digest()[:16])
 
 
 def _stamped(purpose: str, user: User, ttl_seconds: int) -> str:
-    return sign(purpose, f"{user.id}:{account_stamp(user)}", ttl_seconds)
+    return sign(purpose, f"{user.id}:{account_stamp(user, purpose)}", ttl_seconds)
 
 
 def _read_stamped(purpose: str, token: str | None) -> tuple[int, str] | None:
@@ -179,7 +186,7 @@ def _user_for(db: Session, purpose: str, token: str | None) -> User | None:
     if parsed is None:
         return None
     user = db.get(User, parsed[0])
-    if user is None or not hmac.compare_digest(parsed[1], account_stamp(user)):
+    if user is None or not hmac.compare_digest(parsed[1], account_stamp(user, purpose)):
         return None
     return user
 

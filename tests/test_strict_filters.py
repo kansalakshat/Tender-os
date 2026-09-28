@@ -31,16 +31,11 @@ def _clear_digest_cache():
     """match_digest memoises on (answers, corpus, day). Two tests with the same
     number of tenders and the same timestamps produce the same corpus stamp, so
     without this one test is served the other's results."""
-    from app import matching, security
+    from app import matching
 
     matching._DIGESTS.clear()
-    # And the rate limiter, which another module's tests deliberately fill to
-    # its cap. Left there, the page requests below are throttled rather than
-    # served, and the failure looks like a matching bug.
-    security._BUCKETS.clear()
     yield
     matching._DIGESTS.clear()
-    security._BUCKETS.clear()
 
 
 class Profile:

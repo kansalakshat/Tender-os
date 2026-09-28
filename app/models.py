@@ -4,7 +4,8 @@ from datetime import date, datetime, timezone
 from decimal import Decimal
 
 from sqlalchemy import (
-    JSON, Boolean, Date, DateTime, ForeignKey, Index, Numeric, String, Text, UniqueConstraint,
+    JSON, Boolean, Date, DateTime, Float, ForeignKey, Index, Integer, Numeric, String, Text,
+    UniqueConstraint,
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
@@ -158,6 +159,22 @@ class User(Base):
     google_sub: Mapped[str | None] = mapped_column(Text, unique=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime)
+    # Part of every session's stamp (app/auth.py). Signing out bumps it, which
+    # revokes every session cookie issued before -- a copied cookie included.
+    session_epoch: Mapped[int] = mapped_column(Integer, default=0, server_default="0",
+                                               nullable=False)
+
+
+class RateLimit(Base):
+    """One fixed-window counter per key (app/security.py). In the database, not
+    in memory, because serverless instances share nothing else."""
+
+    __tablename__ = "rate_limits"
+
+    key: Mapped[str] = mapped_column(Text, primary_key=True)
+    # Epoch seconds: compared as numbers on Postgres and SQLite alike.
+    window_start: Mapped[float] = mapped_column(Float, nullable=False)
+    count: Mapped[int] = mapped_column(Integer, nullable=False)
 
 
 class WishlistItem(Base):
