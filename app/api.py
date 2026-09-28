@@ -518,6 +518,15 @@ def logout(request: Request, response: Response):
     return {"status": "signed out"}
 
 
+@app.get("/healthz")
+def healthz():
+    """For .github/workflows/keep-warm.yml. Loading this app is ~2 s of a
+    Vercel cold start, and a ping every few minutes keeps an instance loaded.
+    No database dependency on purpose: Neon may keep scaling to zero, so the
+    warm-up does not spend its free compute hours."""
+    return {"ok": True}
+
+
 @app.get("/me")
 def me(db: Session = Depends(get_db), user: User | None = Depends(current_user)):
     """Who am I, and which profile is mine. Drives the form's pre-fill."""
