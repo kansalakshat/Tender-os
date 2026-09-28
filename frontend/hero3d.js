@@ -16,11 +16,8 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 export default async function start(canvas) {
   const hero = canvas.parentElement;
-  // 1x pixels, no antialias: it sits at 35% opacity, so extra resolution is
-  // invisible and only costs GPU time the scroll needs.
-  const renderer = new WebGLRenderer({ canvas, alpha: true, antialias: false,
-                                       powerPreference: 'low-power' });
-  renderer.setPixelRatio(1);
+  const renderer = new WebGLRenderer({ canvas, alpha: true, antialias: devicePixelRatio < 2 });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
 
   const scene = new Scene();
   scene.add(new HemisphereLight(0xffffff, 0x444444, 2.2));
@@ -54,24 +51,16 @@ export default async function start(canvas) {
   fit();
 
   // Only animate while the hero is on screen; the rAF loop stops otherwise.
-  // Draws at most 30 fps and not at all mid-scroll, so a scrolling frame never
-  // waits on WebGL. The timer keeps running, so it resumes without a jump.
   const timer = new Timer();
-  let on = false, last = 0, scrolling = 0;
-  addEventListener('scroll', () => {
-    clearTimeout(scrolling);
-    scrolling = setTimeout(() => { scrolling = 0; }, 150);
-  }, { passive: true });
+  let on = false;
   const tick = (t) => {
     if (!on) return;
-    requestAnimationFrame(tick);
-    if (scrolling || t - last < 33) return;
     timer.update(t);
-    const dt = Math.min(timer.getDelta(), 0.1);
-    last = t;
+    const dt = timer.getDelta();
     mixer.update(dt);
     model.rotation.y += dt * 0.08;
     renderer.render(scene, camera);
+    requestAnimationFrame(tick);
   };
   new IntersectionObserver(([e]) => {
     const was = on;
