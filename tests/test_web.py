@@ -58,11 +58,11 @@ def test_signed_in_home_has_no_unfilled_placeholder(client):
     html = client.get("/", follow_redirects=True).text
     assert not re.findall(r"__[A-Z_]+__", html)
     assert "Placeholder Test Co" in html        # really the signed-in template
-    assert 'class="hero3d' in html               # the hero model, same as public
+    assert 'class=hero3d' in html               # the hero model, same as public
 
 
 def test_public_home_has_hero_model(client):
-    assert 'class="hero3d"' in client.get("/").text
+    assert 'class=hero3d' in client.get("/").text
 
 
 @pytest.mark.parametrize("path", PAGES)
