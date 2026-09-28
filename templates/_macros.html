@@ -11,15 +11,6 @@
 {%- if t.department and t.department != t.organization %}<li>{{ t.department }}</li>{% endif -%}
 {%- endmacro %}
 
-{#- Documents the bid points at, read off the PDF's link annotations by
-    app/enrich.py. Mirrored by docLinks() in static/js/site.js. These leave the
-    site for a third-party host, hence target/rel; the scheme was already
-    checked in app/facts.py links(). -#}
-{% macro doc_links(t) -%}
-{%- set ls = tender_links(t) -%}
-{%- if ls %}<ul class=docs>{% for l in ls %}<li><a href="{{ l.url }}" target=_blank rel="noopener noreferrer">{{ l.label }}</a></li>{% endfor %}</ul>{% endif -%}
-{%- endmacro %}
-
 {#- The paperwork nearly every Indian public buyer asks for before it can pay a
     new supplier. Written once here and included by the row, the tender page and
     the JSON rows' renderer, so the three cannot drift.
@@ -39,7 +30,8 @@
     the deadline always sit in the same two boxes on the right, whether or not
     they are known. The title opens our own page rather than the source portal:
     eprocure.gov.in serves "Invalid Url" for any tendersfullview link that
-    arrives without a Referer from its own domain. Mirrored by card() in
+    arrives without a Referer from its own domain. Attachments are left to the
+    tender's own page, not repeated down a list. Mirrored by card() in
     static/js/site.js for rows fetched as JSON. -#}
 {% macro row(gutter, rank, t, tags=(), summary=true) -%}
 {%- set f = dict(preview_facts(t)) -%}
@@ -56,7 +48,6 @@
 {{- extra_line(t) -}}
 {%- for k in ('Quantity', 'Bid type', 'Contract period') if f[k] %}<li>{{ k }}: {{ f[k] }}</li>{% endfor -%}
 </ul>
-{{- doc_links(t) -}}
 {%- if tags %}<ul class=tags>{% for tag in tags %}<li class=tag>{{ tag }}</li>{% endfor %}</ul>{% endif -%}
 </div><div class=rside>
 <div class=box><span>{{ 'Est. value' if value else 'EMD' if emd else 'Value' }}</span>{% if value or emd %}<b>{{ value or emd }}</b>{% else %}<b class=none>not stated</b>{% endif %}</div>
@@ -71,9 +62,25 @@
   <div class=rside><div class=b></div><div class=b></div></div></li>
 {%- endmacro %}
 
-{#- Buyers, numbered like an index. Each links to a filter GET /tenders supports. -#}
+{#- Buyers, numbered like an index. Each opens that buyer's own page. -#}
 {% macro buyer_grid(buyers) -%}
 <ul class=buyerGrid>
-{%- for name, n in buyers %}<li class=reveal><a href="/browse?organization={{ name|urlquote }}"><span>{{ name }}</span><b>{{ n|num }}</b></a></li>{% endfor -%}
+{%- for name, n in buyers %}<li class=reveal><a href="/buyer?name={{ name|urlquote }}"><span>{{ name }}</span><b>{{ n|num }}</b></a></li>{% endfor -%}
 </ul>
+{%- endmacro %}
+
+
+{#- A buyer's monogram tile. Mirrors chip() in static/js/strip.js. -#}
+{% macro buyer_chip(name, n) -%}
+<li><a class=bchip href="/buyer?name={{ name|urlquote }}"><span class="logo t{{ tile_tone(name) }}" aria-hidden=true>{{ initials(name) }}</span><span class=bname>{{ name }}</span><b>{{ n|num }}</b></a></li>
+{%- endmacro %}
+
+{#- Every buyer with an open notice, running across the page. The busiest few
+    are rendered here so the strip is never empty; static/js/strip.js swaps in
+    the full list from GET /buyers/strip and sets it moving. -#}
+{% macro buyer_strip(buyers) -%}
+<section class=bstrip aria-label="Buyers with open tenders" data-src="/buyers/strip">
+<ul class=btrack>{% for name, n in buyers %}{{ buyer_chip(name, n) }}{% endfor %}</ul>
+</section>
+<script defer src="{{ asset('js/strip.js') }}"></script>
 {%- endmacro %}

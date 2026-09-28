@@ -49,26 +49,13 @@ function card(t, gutter, rank, tagsHtml){
     + (f.Source ? '<span class=src>'+esc(f.Source)+'</span>' : '')+'</p>'
     + '<a class=t href="'+url+'">'+esc(t.title)+'</a>'
     + (t.summary ? '<p class=rowsum>'+esc(t.summary)+'</p>' : '')
-    + '<ul class=chips>'+chips+'</ul>'+docLinks(t)+(tagsHtml||'')
+    + '<ul class=chips>'+chips+'</ul>'+(tagsHtml||'')
     + '</div><div class=rside>'
     + '<div class=box><span>'+(value?'Est. value':emd?'EMD':'Value')+'</span>'
     +   (value||emd ? '<b>'+esc(value||emd)+'</b>' : '<b class=none>not stated</b>')+'</div>'
     + '<div class="box due"><span>Closes'+(days?' <em>'+days+'</em>':'')+'</span><b>'
     +   '<time datetime="'+esc(t.deadline||'')+'">'+esc(f['Bids close']||t.deadline||'not stated')+'</time></b></div>'
     + '<a class="btn sm" href="'+url+'">View details</a></div></li>';
-}
-
-// Documents the bid points at. Mirrors doc_links() in _macros.html.
-// rel=noopener because these open a third-party host in a new tab, and the
-// scheme is re-checked here: esc() makes an href safe to print, not safe to
-// follow, and only app/facts.py filtering stands between a stored value and a
-// javascript: URL.
-function docLinks(t){
-  if(!t.links || !t.links.length) return '';
-  const ok = t.links.filter(l=>/^https?:\/\//i.test(l.url||''));
-  if(!ok.length) return '';
-  return '<ul class=docs>'+ok.map(l=>'<li><a href="'+esc(l.url)+'"'
-    +' target=_blank rel="noopener noreferrer">'+esc(l.label)+'</a></li>').join('')+'</ul>';
 }
 
 function flash(html, kind){

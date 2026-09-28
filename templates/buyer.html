@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% from "_macros.html" import row %}
+{#- One buyer's open tenders. Relevance ranks them against the signed-in
+    company's answers; without an account there is nothing to rank against, so
+    the page says so and lists by deadline. #}
+{% block content %}<div class=backlink><a href="/">{{ icon('caret-left') }}Home</a></div>
+<div class=bhead><span class="logo big t{{ tone }}" aria-hidden=true>{{ tile }}</span>
+ <div><p class=kicker>Buyer</p><h1 class=detailHead>{{ buyer }}</h1></div></div>
+<p class=lede>{{ total|num }} open tender{{ '' if total == 1 else 's' }}
+{%- if matched is not none %}, {{ matched|num }} of them scored against your answers{% endif %}.</p>
+<form class=sortbar method=get>
+ <input type=hidden name=name value="{{ buyer }}">
+ <span class=toggle>
+  <button name=sort value=relevance aria-pressed="{{ 'true' if sort == 'relevance' and has_profile else 'false' }}">Relevance</button>
+  <button name=sort value=deadline aria-pressed="{{ 'true' if sort == 'deadline' or not has_profile else 'false' }}">Closing soonest</button>
+ </span>
+</form>
+{%- if not has_profile %}
+<p class=hint>Relevance ranks this buyer's tenders against what your company does.
+<a href="/signup">Create an account</a> or <a href="/login">sign in</a> to use it. Until then they are listed closing soonest first.</p>
+{%- elif sort == 'relevance' %}
+<p class=hint>Your best matches first, by score; the rest follow, closing soonest first.</p>
+{%- endif %}
+{%- if shown %}
+<ol class=rows>{% for t, gutter, rank, tags in shown %}{{ row(gutter, rank, t, tags) }}{% endfor %}</ol>
+{%- if pages > 1 %}<p class=pager>
+{%- if page > 1 %}<a class="btn ghost" href="?name={{ buyer|urlquote }}&amp;sort={{ sort }}&amp;page={{ page - 1 }}">{{ icon('caret-left') }}Previous</a>{% endif %}
+<span class=count>Page {{ page }} of {{ pages }}</span>
+{%- if page < pages %}<a class="btn ghost" href="?name={{ buyer|urlquote }}&amp;sort={{ sort }}&amp;page={{ page + 1 }}">Next{{ icon('caret-right') }}</a>{% endif -%}
+</p>{% endif %}
+{%- else %}
+<div class=empty><p>No open tenders from this buyer right now. <a href="/browse">Browse everything</a>.</p></div>
+{%- endif %}{% endblock %}
