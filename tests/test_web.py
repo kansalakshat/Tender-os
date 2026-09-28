@@ -442,3 +442,11 @@ def test_every_hero_model_is_credited(client):
         (n,) = struct.unpack("<I", b[12:16])
         source = json.loads(b[20:20 + n])["asset"]["extras"]["source"]
         assert source in html, f"{f.name} is not credited"
+
+
+def test_healthz_answers_without_the_database():
+    """The keep-warm ping must not wake Neon, so /healthz takes no session."""
+    r = TestClient(app).get("/healthz")
+    assert r.status_code == 200 and r.json() == {"ok": True}
+    route = next(r for r in app.routes if getattr(r, "path", "") == "/healthz")
+    assert not route.dependant.dependencies   # no get_db, so no connection

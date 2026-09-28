@@ -1,0 +1,23 @@
+# Keeps a Vercel instance of the app loaded, so a visitor after a quiet spell
+# does not wait out a cold start (measured 3-20 s for the first byte, against
+# ~0.2 s warm). It hits /healthz, which never touches the database: Neon still
+# scales to zero, so the first page after a quiet spell may still wait on the
+# database waking, but not on the app loading.
+#
+# GitHub runs schedules on a best-effort basis and can skip or delay them under
+# load, so this narrows cold starts rather than ruling them out. Free here: the
+# repository is public. A failed ping is not an alert; the step never fails the
+# run, or an outage would also mean an email every five minutes.
+name: keep-warm
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - run: curl -sS -o /dev/null -w "%{http_code} in %{time_total}s\n" --max-time 60 https://tender-0s.vercel.app/healthz || true
