@@ -3,7 +3,8 @@
 {#- The home page for someone who has answered the questions. Everything on it is
     their own result set: the notices closing soonest are their matches re-sorted
     by deadline, and the buyer index counts only buyers in those matches. #}
-{% block hero %}<section class=hero><div class=wrap><div class=heroTop>
+{% block hero %}<section class=hero><canvas class=hero3d aria-hidden=true
+ data-src="{{ asset('js/hero3d.js') }}" data-model="{{ asset('models/workers.glb') }}"></canvas><div class=wrap><div class=heroTop>
 <div>
  <p class=eyebrow><span class=badge>AI Smart Bidding</span>
  Signed in as {{ company.name }}{% if last %} &middot; collected {{ last.strftime('%d %b') }}{% endif %}</p>
