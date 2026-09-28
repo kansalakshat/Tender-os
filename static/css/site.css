@@ -41,7 +41,11 @@
  --nav-bg:rgba(8,9,10,.6); --glass-bg:rgba(18,19,22,.72);
  --sh-panel:inset 0 1px 0 0 rgba(226,244,255,.14),0 18px 50px -24px rgba(0,0,0,.9);
  --sh-panel-hover:inset 0 1px 0 0 rgba(226,244,255,.24),0 30px 70px -28px #000;
- --bg-image:radial-gradient(58rem 40rem at 50% -14rem,rgba(230,0,42,.12),transparent 70%);
+ /* Three fixed red glows: the top anchor, one down the left, one low right,
+    so the red follows you down the page instead of ending at the hero. */
+ --bg-image:radial-gradient(60rem 42rem at 50% -14rem,rgba(230,0,42,.28),transparent 70%),
+   radial-gradient(40rem 34rem at -8% 55%,rgba(230,0,42,.14),transparent 70%),
+   radial-gradient(44rem 36rem at 108% 95%,rgba(255,84,112,.12),transparent 70%);
  --bg-size:auto; --bg-repeat:no-repeat;
  --display:"Space Grotesk",system-ui,-apple-system,"Segoe UI",sans-serif;
  --sans:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
@@ -656,7 +660,7 @@ pre#err:empty{display:none}
    Near-black planes with a hint of hue in dark, vivid blocks in light. Grids
    cycle through them so no row comes out one flat colour. Red, grass and the
    inverted ink card redefine --ink locally, so everything inside follows. */
-:root{--lime:#17191D;--grass:#0F1A15;--blush:#1A1418;--butter:#1A1712;--violet:#15151F;--sky:#121A20;
+:root{--lime:#1C2112;--grass:#0F2419;--blush:#2A121C;--butter:#261E10;--violet:#1B1834;--sky:#0F2230;
  --red:#E6002A;--inv-bg:#F5F5F7;--inv-fg:#08090A;--inv-muted:#4A4A4C}
 :root[data-theme=light]{--lime:#D8FF3E;--grass:#0F5132;--blush:#FF9DB0;--butter:#FFE066;--violet:#C4B5FF;
  --sky:#9AD7F5;--red:#E60029;--inv-bg:#0A0A0B;--inv-fg:#FAFAF7;--inv-muted:#A1A1A6}
@@ -708,3 +712,37 @@ pre#err:empty{display:none}
 :root[data-theme=light] .panel h2{border-bottom:2px solid #0A0A0B}
 :root[data-theme=light] .tag{border-color:#0A0A0B}
 :root[data-theme=light] :is(input,select,textarea):focus-visible{background:var(--lime)}
+
+/* --- dark, with more red ------------------------------------------------------
+   The dark theme leans on the accent: red primary buttons, red-washed panel
+   heads and deadline boxes, red rails and hover edges. Light keeps its own
+   brutalist palette, so all of this is scoped away from it. */
+:root:not([data-theme=light]){--accent-h:#FF4D6D}
+:root:not([data-theme=light]) :is(button,.btn):not(.ghost,.themebtn,.userbtn,.clearbtn,.heart,.toggle button,.sortbar button,.pager button){
+  background:var(--accent);border-color:var(--accent);color:#fff;
+  box-shadow:0 10px 30px -12px rgba(230,0,42,.7)}
+:root:not([data-theme=light]) :is(button,.btn):not(.ghost,.themebtn,.userbtn,.clearbtn,.heart,.toggle button,.sortbar button,.pager button):hover{
+  background:#FF1F47;border-color:#FF1F47;color:#fff;box-shadow:0 14px 40px -12px rgba(230,0,42,.9)}
+:root:not([data-theme=light]) .panel h2{background:linear-gradient(90deg,rgba(230,0,42,.28),rgba(230,0,42,.06) 70%);
+  border-bottom-color:rgba(230,0,42,.35)}
+:root:not([data-theme=light]) .panel{border-color:rgba(230,0,42,.3)}
+:root:not([data-theme=light]) .row{background:linear-gradient(100deg,rgba(230,0,42,.07),rgba(18,19,22,.72) 35%)}
+:root:not([data-theme=light]) .panel .row{background:transparent}
+:root:not([data-theme=light]) .row:hover{border-color:rgba(230,0,42,.6);
+  box-shadow:0 0 0 1px rgba(230,0,42,.25),0 24px 60px -24px rgba(230,0,42,.45)}
+:root:not([data-theme=light]) .box.due{background:rgba(230,0,42,.16);border-color:rgba(230,0,42,.5)}
+:root:not([data-theme=light]) .src{background:rgba(230,0,42,.18);border-color:rgba(230,0,42,.5)}
+:root:not([data-theme=light]) .chips li.loc{background:rgba(230,0,42,.12);border-color:rgba(230,0,42,.4)}
+:root:not([data-theme=light]) .secHead h2{background:linear-gradient(96deg,#fff 30%,#ff5470 75%,#e6002a);
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+:root:not([data-theme=light]) .flow > h1{background:linear-gradient(96deg,#fff 40%,#ff5470 80%,#e6002a);
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+:root:not([data-theme=light]) .stats > div:nth-child(4n+2){box-shadow:0 20px 60px -20px rgba(230,0,42,.7)}
+:root:not([data-theme=light]) .top > .wrap{border-color:rgba(230,0,42,.35);
+  box-shadow:0 1px 0 0 rgba(255,255,255,.08) inset,0 20px 50px -24px rgba(230,0,42,.45)}
+:root:not([data-theme=light]) .foot{border-top:1px solid rgba(230,0,42,.5);
+  background:radial-gradient(60rem 20rem at 50% 0,rgba(230,0,42,.16),transparent 70%),var(--bone)}
+:root:not([data-theme=light]) .wordmark{-webkit-text-stroke-color:rgba(230,0,42,.55)}
+:root:not([data-theme=light]) .capList .capnum{-webkit-text-stroke-color:var(--accent)}
+:root:not([data-theme=light]) .buyerGrid b{color:#FF4D6D}
+:root:not([data-theme=light]) .search{border-color:rgba(230,0,42,.35)}
