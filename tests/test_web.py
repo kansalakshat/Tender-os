@@ -329,3 +329,19 @@ def test_shared_serves_stale_while_one_thread_refreshes(monkeypatch):
             t.join(5)
     assert calls == ["req", "fresh"]
     assert web.shared("req", ("k",), 60, compute) == 2
+
+
+def test_asset_version_follows_content_not_mtime(tmp_path, monkeypatch):
+    """Vercel gives every deployed file the same mtime; the version must still
+    move when the file does, or browsers keep an "immutable" old stylesheet."""
+    import os
+    from app import web
+    monkeypatch.setattr(web, "_STATIC", tmp_path)
+    f = tmp_path / "a.css"
+    f.write_text("old")
+    os.utime(f, (1540000000, 1540000000))
+    before = web.asset("a.css")
+    f.write_text("new")
+    os.utime(f, (1540000000, 1540000000))
+    web._digest.cache_clear()   # a new deploy is a new process
+    assert web.asset("a.css") != before

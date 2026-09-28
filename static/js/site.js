@@ -131,6 +131,13 @@ fetch('/me').then(r=>r.json()).then(d=>{
             +'the link goes to <code>outbox.log</code>)</i>'));
   }
 });
+// Dark (the blended system) or light (the brutalist one). theme.js applied the
+// saved choice before first paint; this only flips it and remembers.
+function toggleTheme(){
+  const next = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
+  document.documentElement.dataset.theme = next;
+  try { localStorage.setItem('tos-theme', next); } catch(e) { /* private mode */ }
+}
 function signout(){
   fetch('/auth/logout',{method:'POST'}).then(()=>location.assign('/'));}
 
@@ -265,6 +272,7 @@ document.addEventListener('click', function(e){
   if(el.dataset.action === 'signout') signout();
   if(el.dataset.action === 'resend') resend();
   if(el.dataset.action === 'copy') copyId(el);
+  if(el.dataset.action === 'theme') toggleTheme();
 });
 // Matches page: picking a new sort key applies it at once, in the direction
 // already selected, instead of waiting for Ascending/Descending to be clicked again.
