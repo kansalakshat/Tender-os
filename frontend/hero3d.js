@@ -10,7 +10,7 @@
 // textures 256px WebP, weld, quantize. 4.5 MB -> 288 KB, ~170 KB gzipped.
 import {
   WebGLRenderer, Scene, PerspectiveCamera, HemisphereLight, DirectionalLight,
-  AnimationMixer, Box3, Vector3, Timer,
+  AnimationMixer, Box3, Vector3, Timer, Group,
 } from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
@@ -27,16 +27,18 @@ export default async function start(canvas) {
 
   const gltf = await new GLTFLoader().loadAsync(canvas.dataset.model);
   const model = gltf.scene;
-  scene.add(model);
-
-  // Frame whatever the model's native scale is: centre it, back the camera off
-  // far enough to fit its bounding sphere, look down a little.
+  // Fill the whole hero like background-size:cover: look steeply down (55deg)
+  // so the ground plane, not empty sky, is behind the copy. The model spins on
+  // a pivot at its centre, so the ground's corners swing; the distances below
+  // were measured to keep them off-screen through a full turn.
   const box = new Box3().setFromObject(model);
   const r = box.getSize(new Vector3()).length() / 2;
   model.position.sub(box.getCenter(new Vector3()));
+  const pivot = new Group();
+  pivot.add(model);
+  scene.add(pivot);
   const camera = new PerspectiveCamera(35, 1, r / 100, r * 20);
-  camera.position.set(r * 1.6, r * 0.9, r * 2.2);
-  camera.lookAt(0, -r * 0.1, 0);
+  const tilt = 55 * Math.PI / 180;
 
   const mixer = new AnimationMixer(model);
   for (const clip of gltf.animations) mixer.clipAction(clip).play();
@@ -46,6 +48,10 @@ export default async function start(canvas) {
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
+    // wider hero -> wider view -> come closer so the ground still spans it
+    const d = r * Math.min(0.62, 1 / camera.aspect);
+    camera.position.set(0, Math.sin(tilt) * d, Math.cos(tilt) * d);
+    camera.lookAt(0, -r * 0.2, 0);
   };
   new ResizeObserver(fit).observe(hero);
   fit();
@@ -58,7 +64,7 @@ export default async function start(canvas) {
     timer.update(t);
     const dt = timer.getDelta();
     mixer.update(dt);
-    model.rotation.y += dt * 0.08;
+    pivot.rotation.y += dt * 0.08;
     renderer.render(scene, camera);
     requestAnimationFrame(tick);
   };
