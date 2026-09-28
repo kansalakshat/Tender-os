@@ -18,6 +18,10 @@ export default async function start(canvas) {
   const hero = canvas.parentElement;
   const renderer = new WebGLRenderer({ canvas, alpha: true, antialias: devicePixelRatio < 2 });
   renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+  // Clear to the exact colour the flat mud ground renders at under these
+  // lights (measured), so the ground reads as endless and its edges vanish.
+  // Re-measure if the lights or the ground material change.
+  renderer.setClearColor(0xae6f1c, 1);
 
   const scene = new Scene();
   scene.add(new HemisphereLight(0xffffff, 0x444444, 2.2));
@@ -27,10 +31,8 @@ export default async function start(canvas) {
 
   const gltf = await new GLTFLoader().loadAsync(canvas.dataset.model);
   const model = gltf.scene;
-  // Fill the whole hero like background-size:cover: look steeply down (55deg)
-  // so the ground plane, not empty sky, is behind the copy. The model spins on
-  // a pivot at its centre, so the ground's corners swing; the distances below
-  // were measured to keep them off-screen through a full turn.
+  // Look down 45deg from far enough to see both workers and the whole frame.
+  // The model spins on a pivot at its centre.
   const box = new Box3().setFromObject(model);
   const r = box.getSize(new Vector3()).length() / 2;
   model.position.sub(box.getCenter(new Vector3()));
@@ -38,7 +40,7 @@ export default async function start(canvas) {
   pivot.add(model);
   scene.add(pivot);
   const camera = new PerspectiveCamera(35, 1, r / 100, r * 20);
-  const tilt = 55 * Math.PI / 180;
+  const tilt = 45 * Math.PI / 180;
 
   const mixer = new AnimationMixer(model);
   for (const clip of gltf.animations) mixer.clipAction(clip).play();
@@ -48,8 +50,8 @@ export default async function start(canvas) {
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
-    // wider hero -> wider view -> come closer so the ground still spans it
-    const d = r * Math.min(0.62, 1 / camera.aspect);
+    // a narrow (phone) hero backs off so the scene still fits its width
+    const d = r * 1.3 * Math.max(1, 1 / camera.aspect);
     camera.position.set(0, Math.sin(tilt) * d, Math.cos(tilt) * d);
     camera.lookAt(0, -r * 0.2, 0);
   };
