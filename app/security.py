@@ -140,7 +140,9 @@ def csp(nonce: str) -> str:
     """
     return "; ".join([
         "default-src 'self'",
-        f"script-src 'self' 'nonce-{nonce}'",
+        # wasm-unsafe-eval lets the hero model's meshopt decoder compile its
+        # WebAssembly. It does not allow eval() or new Function() for JS.
+        f"script-src 'self' 'nonce-{nonce}' 'wasm-unsafe-eval'",
         f"style-src 'self' 'nonce-{nonce}'",
         # blob: is the hero model: GLTFLoader unpacks its embedded textures
         # into blob: URLs and fetches (Chrome) or <img>-loads (others) them.

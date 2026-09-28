@@ -205,6 +205,42 @@ def summary_for(t: Tender) -> str:
     return _summary(t, sectors, places, days_left(t.deadline)[0])
 
 
+# ---- hero model -------------------------------------------------------------
+
+# The 3D models behind the home hero, per sector: files under static/models,
+# made with frontend/compress-model.mjs. Several sectors may share one. Sectors
+# not listed (maintenance_amc) and signed-out visitors get HERO_DEFAULT.
+HERO_MODELS = {
+    "agriculture": "farm_tools.glb",
+    "civil_construction": "road.glb",
+    "electrical_power": "circuit_board.glb",
+    "industrial_supply": "tools.glb",
+    "it_services": "chip.glb",
+    "manpower_security": "workers.glb",
+    "medical_pharma": "medical_kit.glb",
+    "office_supplies": "furniture.glb",
+    "scrap_auction": "crane.glb",
+    "vehicle_hire": "truck.glb",
+}
+HERO_DEFAULT = "workers.glb"
+# Models that are a whole scene with a flat ground rather than an object. Shown
+# alone, the canvas clears to the colour that ground renders at (measured), so
+# it fills the hero edge to edge.
+HERO_GROUND = {"workers.glb": "#ae6f1c"}
+# Every model is its own download, after the page has loaded. Three keeps the
+# worst case (crane + medical kit + furniture) near 450 KB over the wire.
+HERO_MAX = 3
+
+
+def hero_models(sectors=()) -> tuple[list[str], str]:
+    """The model files for these sectors, in profile order, without repeats and
+    at most HERO_MAX; and the ground colour when a single scene is shown."""
+    files = list(dict.fromkeys(HERO_MODELS[s] for s in sectors or () if s in HERO_MODELS))
+    files = files[:HERO_MAX] or [HERO_DEFAULT]
+    ground = HERO_GROUND.get(files[0], "") if len(files) == 1 else ""
+    return files, ground
+
+
 # ---- templates --------------------------------------------------------------
 
 _env = Environment(
@@ -216,7 +252,7 @@ _env.globals.update(
     icon=icon, asset=asset, favicon=FAVICON, days_left=days_left,
     rank_class=rank_class, summary_for=summary_for, preview_facts=preview_facts,
     initials=initials, tile_tone=tile_tone,
-    tender_links=tender_links,
+    tender_links=tender_links, hero_models=hero_models,
 )
 _env.filters["num"] = lambda n: f"{n:,}"
 # For rendering a list of strict field keys as the words a bidder used.
