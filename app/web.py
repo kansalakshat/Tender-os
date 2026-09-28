@@ -13,10 +13,12 @@ icon set are all served from our own origin under /static.
 """
 from __future__ import annotations
 
+import hashlib
 import logging
 import platform
 import re
 from datetime import date, timedelta
+from functools import lru_cache
 from pathlib import Path
 from urllib.parse import parse_qs, quote
 
@@ -84,12 +86,21 @@ def icon(name: str, cls: str = "i") -> Markup:
 
 
 def asset(path: str) -> str:
-    """URL for a file under /static, versioned by its modification time, so a
-    deploy that changes site.js is fetched fresh instead of served from cache."""
+    """URL for a file under /static, versioned by a hash of its content, so a
+    deploy that changes site.js is fetched fresh instead of served from cache.
+    Not the mtime: Vercel stamps every deployed file with the same one, so the
+    version never moved and browsers kept a year-old "immutable" stylesheet."""
     try:
-        return f"/static/{path}?v={int((_STATIC / path).stat().st_mtime)}"
+        f = _STATIC / path
+        return f"/static/{path}?v={_digest(str(f), f.stat().st_mtime_ns)}"
     except OSError:
         return f"/static/{path}"
+
+
+@lru_cache(maxsize=64)
+def _digest(file: str, _mtime: int) -> str:
+    # mtime is only in the cache key, so a local edit re-hashes
+    return hashlib.sha256(Path(file).read_bytes()).hexdigest()[:12]
 
 
 # A ranked-list mark: three rules of decreasing width. Inline data: URI because

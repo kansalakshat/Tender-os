@@ -2,11 +2,12 @@
  content="width=device-width,initial-scale=1"><title>{{ title }}</title>
 <meta name=description content="Open Indian government tender notices, collected
  from official procurement portals and ranked against what your company does.">
-<meta name=color-scheme content="dark">
+<meta name=color-scheme content="dark light">
 <meta name=theme-color content="#08090A">
 <link rel=icon href="{{ favicon }}">
 {#- Styles and scripts are files under /static, not inline blocks: script-src and
     style-src 'self' already allow them, so the strict CSP needs no nonce here. #}
+<script src="{{ asset('js/theme.js') }}"></script>
 <link rel=stylesheet href="{{ asset('css/site.css') }}">
 {#- Body and heading faces, fetched alongside the stylesheet instead of after it. #}
 <link rel=preload href="/static/fonts/Inter.woff2" as=font type=font/woff2 crossorigin>
@@ -23,6 +24,10 @@
   <b>Tender</b><span>OS</span></a>
  <nav aria-label="Main"><a href="/">Home</a><a href="/matches">Matches</a>
  <a href="/browse">Browse</a><a href="/wishlist">Saved</a><a href="/docs">API</a></nav>
+ <button class=themebtn type=button data-action=theme aria-label="Switch theme" title="Switch theme">
+  <svg class="i sun" viewBox="0 0 24 24" fill=none stroke=currentColor stroke-width=2 aria-hidden=true><circle cx=12 cy=12 r=4.5 /><path stroke-linecap=round d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M19.1 4.9l-1.8 1.8M6.7 17.3l-1.8 1.8"/></svg>
+  <svg class="i moon" viewBox="0 0 24 24" fill=none stroke=currentColor stroke-width=2 aria-hidden=true><path stroke-linecap=round stroke-linejoin=round d="M20.5 14.3A8.5 8.5 0 019.7 3.5a8.5 8.5 0 1010.8 10.8z"/></svg>
+ </button>
  <span class=acct id=me></span>
 </div></header>
 {#- Icons for markup that site.js builds (the account menu). #}

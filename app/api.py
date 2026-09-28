@@ -49,7 +49,7 @@ from .schemas import (
     TenderDetailOut,
     TenderOut,
 )
-from .web import render, router as web_router
+from .web import asset, render, router as web_router
 
 log = logging.getLogger(__name__)
 
@@ -114,7 +114,7 @@ async def harden(request: Request, call_next):
     if not request.url.path.startswith("/static/"):
         response.headers.setdefault("Cache-Control", "no-store, private")
     elif "v=" in request.url.query:
-        # asset() stamps the file's mtime into ?v=, so this URL's content never
+        # asset() stamps a hash of the file into ?v=, so this URL's content never
         # changes: the browser need not even ask again.
         response.headers.setdefault("Cache-Control", "public, max-age=31536000, immutable")
     else:
@@ -179,7 +179,7 @@ def docs() -> HTMLResponse:
         swagger_favicon_url="/static/favicon.svg",
     ).body.decode()
     page = page.replace(
-        "</head>", '<link rel="stylesheet" href="/static/docs.css"></head>', 1
+        "</head>", f'<link rel="stylesheet" href="{asset("docs.css")}"></head>', 1
     )
     return HTMLResponse(page.replace("<body>", "<body>" + DOCS_BAR, 1))
 
