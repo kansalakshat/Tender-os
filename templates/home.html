@@ -3,7 +3,8 @@
 {#- The hero is full-bleed, so it sits outside <main>. The search box is a plain
     GET form to /browse: no JS, works before the script runs, and lands on a URL
     the browse page already knows how to restore. #}
-{% block hero %}<section class=hero><div class=wrap>
+{% block hero %}<section class=hero><canvas class=hero3d aria-hidden=true
+ data-src="{{ asset('js/hero3d.js') }}" data-model="{{ asset('models/workers.glb') }}"></canvas><div class=wrap>
 <p class=eyebrow><span class=badge>AI Smart Bidding</span>{{ n_sources }} official portals
 {%- if last %} &middot; last collected {{ last.strftime('%d %b %Y') }}{% endif %}</p>
 <div class=heroTop>

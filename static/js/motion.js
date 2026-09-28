@@ -101,3 +101,15 @@ if(window.gsap){
   // counters' scroll triggers need their offsets re-measured.
   document.fonts && document.fonts.ready.then(() => ScrollTrigger.refresh());
 }
+
+// Hero 3D model. Nothing is fetched until the page has fully loaded and the
+// browser is idle, so it costs first paint nothing; reduced-motion and
+// data-saver visitors never download it at all.
+(() => {
+  const c = document.querySelector('canvas.hero3d');
+  if (!c || matchMedia('(prefers-reduced-motion: reduce)').matches
+      || (navigator.connection && navigator.connection.saveData)) return;
+  const go = () => (window.requestIdleCallback || setTimeout)(() =>
+    import(c.dataset.src).then(m => m.default(c)).catch(() => c.remove()));
+  document.readyState === 'complete' ? go() : addEventListener('load', go);
+})();
