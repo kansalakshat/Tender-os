@@ -273,3 +273,13 @@ document.addEventListener('change', e => {
   if (!s.matches('.sortbar select')) return;
   s.form.requestSubmit(s.form.querySelector('button[aria-pressed="true"]'));
 });
+
+// The floating nav tucks away while you scroll down and returns on the way up.
+// Never while the account menu is open, or its panel would leave with it.
+let _lastY = scrollY;
+addEventListener('scroll', () => {
+  const y = scrollY, top = document.querySelector('.top');
+  const open = document.querySelector('.usermenu .menu:not([hidden])');
+  top.classList.toggle('away', y > 160 && y > _lastY && !open);
+  _lastY = y;
+}, {passive:true});

@@ -151,10 +151,10 @@ if _STATIC.is_dir():
 DOCS_BAR = """<div class=tos-bar><div class=wrap>
  <a class=tos-brand href="/">
   <svg class=tos-mark viewBox="0 0 32 32" aria-hidden="true">
-   <rect width="32" height="32" fill="#2A1608"/>
-   <g fill="#EFD7A5"><rect x="7" y="9" width="18" height="3"/>
+   <rect width="32" height="32" fill="#E6002A"/>
+   <g fill="#FFFFFF"><rect x="7" y="9" width="18" height="3"/>
    <rect x="7" y="14.5" width="12" height="3"/></g>
-   <rect x="7" y="20" width="6" height="3" fill="#8EA439"/>
+   <rect x="7" y="20" width="6" height="3" fill="#FFFFFF" fill-opacity=".55"/>
   </svg>
   <b>Tender</b><span>OS</span></a>
  <nav class=tos-nav><a href="/">Home</a><a href="/matches">Matches</a>

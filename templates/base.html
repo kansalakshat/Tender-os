@@ -2,16 +2,15 @@
  content="width=device-width,initial-scale=1"><title>{{ title }}</title>
 <meta name=description content="Open Indian government tender notices, collected
  from official procurement portals and ranked against what your company does.">
-<meta name=color-scheme content="light dark">
-<meta name=theme-color content="#8EA439" media="(prefers-color-scheme:light)">
-<meta name=theme-color content="#8EA439" media="(prefers-color-scheme:dark)">
+<meta name=color-scheme content="dark">
+<meta name=theme-color content="#08090A">
 <link rel=icon href="{{ favicon }}">
 {#- Styles and scripts are files under /static, not inline blocks: script-src and
     style-src 'self' already allow them, so the strict CSP needs no nonce here. #}
 <link rel=stylesheet href="{{ asset('css/site.css') }}">
 {#- Body and heading faces, fetched alongside the stylesheet instead of after it. #}
-<link rel=preload href="/static/fonts/Nunito.woff2" as=font type=font/woff2 crossorigin>
-<link rel=preload href="/static/fonts/Quicksand.woff2" as=font type=font/woff2 crossorigin>
+<link rel=preload href="/static/fonts/Inter.woff2" as=font type=font/woff2 crossorigin>
+<link rel=preload href="/static/fonts/SpaceGrotesk.woff2" as=font type=font/woff2 crossorigin>
 <a class=skip href="#main">Skip to content</a>
 <header class=top><div class=wrap>
  <a class=brand href="/">
@@ -66,6 +65,7 @@
   <ul><li><a href="/sources">Sources and licences</a></li>
    <li><a href="/docs">API reference</a></li></ul>
  </div>
+ <p class=wordmark aria-hidden=true>Tender OS</p>
 </div>
 <div class=fnote><div class=wrap><p>Every record carries the portal it came from
  and that portal's licence. GeM is deliberately absent: its robots.txt disallows

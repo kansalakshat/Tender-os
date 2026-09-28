@@ -96,10 +96,10 @@ def asset(path: str) -> str:
 # img-src is 'self' data: and a favicon is somewhere CSS cannot reach.
 FAVICON = (
     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'"
-    "%3E%3Crect width='32' height='32' fill='%238EA439'/%3E%3Cg fill='%232A1608'"
+    "%3E%3Crect width='32' height='32' fill='%23E6002A'/%3E%3Cg fill='%23FFFFFF'"
     "%3E%3Crect x='7' y='9' width='18' height='3'/%3E%3Crect x='7' y='14.5'"
     " width='12' height='3'/%3E%3C/g%3E%3Crect x='7' y='20' width='6' height='3'"
-    " fill='%23EFD7A5'/%3E%3C/svg%3E"
+    " fill='%23FFFFFF' fill-opacity='.55'/%3E%3C/svg%3E"
 )
 
 

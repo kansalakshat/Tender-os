@@ -76,11 +76,6 @@ if(window.gsap){
     plan('.reveal', {opacity:0, y:26, scale:.99},
          {duration:.65, stagger:.07, ease:'power3.out'});
 
-    // The wash drifts a little slower than the page. Transform only, and
-    // nothing here can hide content, so ScrollTrigger is the right tool.
-    gsap.to('.hero',{backgroundPositionY:'22%', ease:'none',
-      scrollTrigger:{trigger:'.hero', start:'top top', end:'bottom top', scrub:.6}});
-
     // Counters. The figures are the product's whole claim, so they count up
     // once, on arrival, from the value already rendered in the HTML -- which
     // is also why this one may stay on a scroll trigger: if it never fires the
@@ -102,14 +97,7 @@ if(window.gsap){
     };
   });
 
-  // Outside matchMedia on purpose: condensing the bar is a state change, and
-  // reduced motion only needs to skip the transition, not the behaviour.
-  ScrollTrigger.create({
-    start: 'top -64', end: 99999,
-    toggleClass: { targets: '.top', className: 'scrolled' }
-  });
-
-  // Fonts land after first paint and change every element's height. Only the
-  // two scroll triggers left above care, and neither of them hides anything.
+  // Fonts land after first paint and change every element's height; the
+  // counters' scroll triggers need their offsets re-measured.
   document.fonts && document.fonts.ready.then(() => ScrollTrigger.refresh());
 }
