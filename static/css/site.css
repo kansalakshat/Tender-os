@@ -218,8 +218,6 @@ input[type=checkbox]{width:1.1rem;height:1.1rem;min-height:0;padding:0;border-ra
 .stats dd{margin:1.1rem 0 0;font:700 clamp(2.1rem,1rem + 2.6vw,3.4rem)/.9 var(--display);
   letter-spacing:-.045em;font-variant-numeric:tabular-nums}
 .stats.big dd{font-size:clamp(2.4rem,1rem + 3.4vw,4.4rem)}
-.stats .mine{border-color:color-mix(in srgb,var(--accent) 35%,transparent)}
-.stats .mine dd{color:var(--accent-h)}
 
 /* --- sections and lists ---------------------------------------------------- */
 /* Apple: space does the separating, not rules */
@@ -607,18 +605,14 @@ pre#err:empty{display:none}
 /* Stripe's gradient type has no brutalist equivalent: flat accent instead */
 :root[data-theme=light] .grad-text{background-image:none;color:var(--accent-h)}
 :root[data-theme=light] .bignum{border-left:4px solid var(--accent)}
-:root[data-theme=light] .stats .mine{background-color:var(--accent)}
-:root[data-theme=light] .stats .mine :is(dt,dd){color:var(--ink)}
 /* List rules stay thin, or fifty rows read as a ruled ledger */
 :root[data-theme=light] :is(.row,.facts > div,.elig li){border-bottom:1px solid var(--hair)}
 :root[data-theme=light] .buyerGrid a{border-top:1px solid var(--hair)}
 :root[data-theme=light] .row::before{width:4px}
 :root[data-theme=light] .panel h2,:root[data-theme=light] .panel .lbl{color:var(--ink);font-weight:700}
-:root[data-theme=light] .panel h2{background:var(--bone);border-bottom:2px solid var(--ink)}
 :root[data-theme=light] a.more{border-top:2px solid var(--ink)}
 :root[data-theme=light] .panel .row:hover,:root[data-theme=light] .row:hover{background:var(--bone)}
 :root[data-theme=light] .top nav a[aria-current=page]{border-color:var(--ink)}
-:root[data-theme=light] .top nav a:hover{background:#D8FF3E;border-color:var(--ink)}
 :root[data-theme=light] :is(button,.btn):not(.themebtn,.userbtn,.clearbtn,.heart){box-shadow:4px 4px 0 0 var(--ink)}
 :root[data-theme=light] :is(button,.btn):not(.themebtn,.userbtn,.clearbtn,.heart):hover{transform:translate(2px,2px);
   box-shadow:2px 2px 0 0 var(--ink)}
@@ -627,7 +621,6 @@ pre#err:empty{display:none}
 :root[data-theme=light] .foot{background:var(--bone);border-top:2px solid var(--ink)}
 :root[data-theme=light] .wordmark{-webkit-text-stroke:2px var(--ink)}
 :root[data-theme=light] .capnum{-webkit-text-stroke:2px var(--ink)}
-:root[data-theme=light] .elig li.ok > b{background:#D8FF3E;color:var(--ink);border-color:var(--ink)}
 :root[data-theme=light] .notice{background:var(--panel);border:2px solid var(--ink);box-shadow:4px 4px 0 0 var(--accent)}
 :root[data-theme=light] .notice.good{box-shadow:4px 4px 0 0 var(--ok)}
 :root[data-theme=light] input,:root[data-theme=light] select,:root[data-theme=light] textarea,
@@ -637,3 +630,60 @@ pre#err:empty{display:none}
  :root[data-theme=light] :is(button,.btn):hover{transform:none}
 }
 @media (max-width:56rem){.themebtn{margin-left:auto}.top .acct{margin-left:.2rem}}
+
+/* --- tones: E-Cell's card palette ---------------------------------------------
+   Near-black planes with a hint of hue in dark, vivid blocks in light. Grids
+   cycle through them so no row comes out one flat colour. Red, grass and the
+   inverted ink card redefine --ink locally, so everything inside follows. */
+:root{--lime:#17191D;--grass:#0F1A15;--blush:#1A1418;--butter:#1A1712;--violet:#15151F;--sky:#121A20;
+ --red:#E6002A;--inv-bg:#F5F5F7;--inv-fg:#08090A;--inv-muted:#4A4A4C}
+:root[data-theme=light]{--lime:#D8FF3E;--grass:#0F5132;--blush:#FF9DB0;--butter:#FFE066;--violet:#C4B5FF;
+ --sky:#9AD7F5;--red:#E60029;--inv-bg:#0A0A0B;--inv-fg:#FAFAF7;--inv-muted:#A1A1A6}
+
+.stats > div:nth-child(4n+1){background-color:var(--lime)}
+.stats > div:nth-child(4n+2){background-color:var(--red);border-color:var(--red);
+  --ink:#FFFFFF;--faint:rgba(255,255,255,.85);color:var(--ink)}
+.stats > div:nth-child(4n+3){background-color:var(--blush)}
+.stats > div:nth-child(4n+4){background-color:var(--inv-bg);border-color:var(--inv-bg);
+  --ink:var(--inv-fg);--faint:var(--inv-muted);color:var(--ink)}
+.stats > div{color:var(--ink)}
+
+.capList li:nth-child(4n+1){background-color:var(--butter)}
+.capList li:nth-child(4n+2){background-color:var(--violet)}
+.capList li:nth-child(4n+3){background-color:var(--sky)}
+.capList li:nth-child(4n+4){background-color:var(--grass);
+  --ink:#F5F5F7;--muted:rgba(245,245,247,.82);color:var(--ink)}
+.capList li{color:var(--ink)}
+.capList .capnum{-webkit-text-stroke-color:var(--ink)}
+
+.panel h2{background:var(--lime)}
+.sourcebox{background-color:var(--sky)}
+.docbox{background-color:var(--butter)}
+.fit{background-color:var(--violet)}
+.empty{background-color:var(--blush)}
+.buyerGrid a:hover{background:var(--lime)}
+.elig li.ok > b{background:var(--lime)}
+.tags .tag:nth-child(5n+1){background:var(--lime)}
+.tags .tag:nth-child(5n+2){background:var(--blush)}
+.tags .tag:nth-child(5n+3){background:var(--butter)}
+.tags .tag:nth-child(5n+4){background:var(--violet)}
+.tags .tag:nth-child(5n+5){background:var(--sky)}
+.tag{color:var(--ink)}
+
+/* Tabs: nav, the strict/everything switch, the sort direction. Lime under the
+   pointer, accent when chosen -- E-Cell's filter row. */
+.top nav a:hover{background:var(--lime);color:var(--ink)}
+:root :is(.toggle,.sortbar) button{background:var(--paper);color:var(--ink);border-color:var(--stone)}
+:root :is(.toggle,.sortbar) button:hover{background:var(--lime);color:var(--ink);border-color:var(--stone-2)}
+:root :is(.toggle,.sortbar) button[aria-pressed=true]{background:var(--accent);color:var(--on-accent);
+  border-color:var(--accent)}
+.pager button{background:var(--paper);color:var(--ink);border-color:var(--stone)}
+.pager button:hover{background:var(--lime);color:var(--ink)}
+
+:root[data-theme=light] :is(.stats > div,.capList li,.sourcebox,.docbox,.fit,.empty){border-color:#0A0A0B}
+:root[data-theme=light] :is(.toggle,.sortbar,.pager) button,
+:root[data-theme=light] .top nav a:hover,
+:root[data-theme=light] .elig li.ok > b{border-color:#0A0A0B}
+:root[data-theme=light] .panel h2{border-bottom:2px solid #0A0A0B}
+:root[data-theme=light] .tag{border-color:#0A0A0B}
+:root[data-theme=light] :is(input,select,textarea):focus-visible{background:var(--lime)}
