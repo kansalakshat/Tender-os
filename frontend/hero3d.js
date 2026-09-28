@@ -2,8 +2,8 @@
 // drawn behind the hero copy. Source for static/js/hero3d.js -- rebuild with
 //   npx esbuild frontend/hero3d.js --bundle --minify --format=esm --outfile=static/js/hero3d.js
 // (three and esbuild installed anywhere outside the repo; nothing is vendored
-// but the tree-shaken bundle). motion.js imports it only after window load, so
-// it never competes with the page for bandwidth. Models come from
+// but the tree-shaken bundle). motion.js imports it once the HTML is parsed, when
+// the page's own CSS and fonts are already in flight. Models come from
 // frontend/compress-model.mjs; which ones a page shows is HERO_MODELS in
 // app/web.py.
 //
@@ -23,11 +23,14 @@ import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.j
 
 const CELL = 2.2;   // spacing of models normalised to radius 1
 
-export default async function start(canvas) {
-  const urls = JSON.parse(canvas.dataset.models);
+// `buffers` resolves to the models' bytes, which motion.js starts fetching
+// alongside this script rather than after it.
+export default async function start(canvas, buffers) {
   const bg = canvas.dataset.bg;
-  const renderer = new WebGLRenderer({ canvas, alpha: true, antialias: devicePixelRatio < 2 });
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+  // 1x pixels with antialiasing: it sits behind the copy, where extra
+  // resolution does not show, and measured ~40% less GPU time than 1.5x.
+  const renderer = new WebGLRenderer({ canvas, alpha: true, antialias: true });
+  renderer.setPixelRatio(1);
   // The colour the scene model's flat ground renders at under these lights
   // (measured, see HERO_MODELS). Re-measure if the lights change.
   if (bg) renderer.setClearColor(bg, 1);
@@ -39,7 +42,7 @@ export default async function start(canvas) {
   scene.add(sun);
 
   const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
-  const gltfs = await Promise.all(urls.map((u) => loader.loadAsync(u)));
+  const gltfs = await Promise.all((await buffers).map((b) => loader.parseAsync(b, '')));
 
   // Centre every model on its own pivot. Objects are also scaled so each fits
   // a cylinder of radius 1 and height 2 -- the shape a model sweeps as it
@@ -101,6 +104,9 @@ export default async function start(canvas) {
   };
   new ResizeObserver(fit).observe(canvas);
   fit();
+  // Compile the shaders off the main thread where the browser can
+  // (KHR_parallel_shader_compile), so the first frame does not stall the page.
+  await renderer.compileAsync(scene, camera);
 
   // Only animate while the canvas is on screen; the rAF loop stops otherwise.
   const timer = new Timer();
