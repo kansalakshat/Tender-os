@@ -107,8 +107,10 @@ if(window.gsap){
 // data-saver visitors never download it at all.
 (() => {
   const c = document.querySelector('canvas.hero3d');
-  if (!c || matchMedia('(prefers-reduced-motion: reduce)').matches
-      || (navigator.connection && navigator.connection.saveData)) return;
+  if (!c) return;
+  // a skipped model must not leave its reserved band standing empty
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches
+      || (navigator.connection && navigator.connection.saveData)) return c.remove();
   const go = () => (window.requestIdleCallback || setTimeout)(() =>
     import(c.dataset.src).then(m => m.default(c)).catch(() => c.remove()));
   document.readyState === 'complete' ? go() : addEventListener('load', go);
