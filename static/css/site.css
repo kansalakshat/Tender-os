@@ -197,9 +197,6 @@ input[type=checkbox]{width:1.1rem;height:1.1rem;min-height:0;padding:0;border-ra
 /* 3D model behind the copy; fades in once hero3d.js has a frame to show */
 .hero3d{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:0;transition:opacity 1.2s var(--ease)}
 .hero3d.on{opacity:1}
-/* separate objects (not one scene) get their own band in the hero, sized up
-   front so the page does not move when they arrive */
-.hero3d.band{position:static;display:block;height:clamp(13rem,22vw,20rem);margin-bottom:2rem}
 /* the copy sits on the model's bright ground; a shadow keeps it legible
    without tinting the model */
 :root:not([data-theme=light]) .hero3d.on + .wrap{text-shadow:0 1px 3px rgba(0,0,0,.7),0 2px 18px rgba(0,0,0,.55)}

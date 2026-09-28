@@ -1,16 +1,9 @@
 {#- The hero's 3D background. Signed in, the models follow the company's
     sectors; signed out, it is the default. See HERO_MODELS in app/web.py.
-
-    A single scene with a ground (the workers) fills the hero behind the copy;
-    objects get their own band, so they never sit behind text. Call it twice:
-    band=False as the hero's first child, band=True where the band goes. Only
-    the call matching the mode renders. tojson escapes quotes, so the JSON is
-    safe inside the single-quoted attribute. #}
-{% macro hero3d(sectors=(), band=False) -%}
+    tojson escapes quotes, so the JSON is safe inside the single-quoted attribute. #}
+{% macro hero3d(sectors=()) -%}
 {%- set files, ground = hero_models(sectors) -%}
-{%- if band == (not ground) -%}
 {%- set urls = [] -%}{%- for f in files %}{% set _ = urls.append(asset('models/' ~ f)) %}{% endfor -%}
-<canvas class="hero3d{% if band %} band{% endif %}" aria-hidden=true data-src="{{ asset('js/hero3d.js') }}"
+<canvas class=hero3d aria-hidden=true data-src="{{ asset('js/hero3d.js') }}"
  data-models='{{ urls|tojson }}'{% if ground %} data-bg="{{ ground }}"{% endif %}></canvas>
-{%- endif -%}
 {%- endmacro %}

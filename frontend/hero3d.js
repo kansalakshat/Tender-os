@@ -11,9 +11,9 @@
 // - scene: one model with a ground colour (data-bg), e.g. workers.glb. The
 //   canvas clears to that colour so the ground reads as endless, and the camera
 //   looks down on it across the whole hero.
-// - objects: everything else, in the canvas's own band (templates/_hero3d.html).
-//   Each model is scaled to the same size and they sit in a row, each
-//   spinning on its own pivot.
+// - objects: everything else, also behind the copy. Each model is scaled to
+//   the same size and they sit in a row across the hero, each spinning on its
+//   own pivot.
 import {
   WebGLRenderer, Scene, PerspectiveCamera, HemisphereLight, DirectionalLight,
   AnimationMixer, Box3, Vector3, Timer, Group,
