@@ -409,8 +409,11 @@ def test_hero_models_exist_and_fit_the_budget():
     for file in {*HERO_MODELS.values(), HERO_DEFAULT}:
         f = STATIC / "models" / file
         assert f.stat().st_size <= MODEL_BUDGET, f"{file} is over budget"
+    css = (STATIC / "css" / "site.css").read_text(encoding="utf-8")
     for file, colour in HERO_GROUND.items():
         assert re.fullmatch(r"#[0-9a-f]{6}", colour), file
+        # site.css paints the ground before the model loads; same colour
+        assert f'.hero3d[data-bg="{colour}"]{{opacity:1;background:{colour}}}' in css, file
 
 
 def test_hero_models_follow_the_profile_sectors():

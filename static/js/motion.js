@@ -1,5 +1,4 @@
 if(window.gsap){
-  gsap.registerPlugin(ScrollTrigger);
   const mm = gsap.matchMedia();
 
   mm.add('(prefers-reduced-motion: no-preference)', () => {
@@ -76,18 +75,8 @@ if(window.gsap){
     plan('.reveal', {opacity:0, y:26, scale:.99},
          {duration:.65, stagger:.07, ease:'power3.out'});
 
-    // Counters. The figures are the product's whole claim, so they count up
-    // once, on arrival, from the value already rendered in the HTML -- which
-    // is also why this one may stay on a scroll trigger: if it never fires the
-    // number is still sitting there, already correct.
-    document.querySelectorAll('.stats dd').forEach(el => {
-      const target = parseFloat(el.textContent.replace(/,/g,''));
-      if(!isFinite(target)) return;
-      const box = {v:0};
-      gsap.to(box,{v:target, duration:1.4, ease:'power2.out',
-        scrollTrigger:{trigger:el, start:'top 92%', once:true},
-        onUpdate(){ el.textContent = Math.round(box.v).toLocaleString(); }});
-    });
+    // No count-up on the .stats figures: it reset the rendered number to 0
+    // and made the real one look late. They show as the server sent them.
 
     return () => {
       io && io.disconnect();
@@ -96,20 +85,20 @@ if(window.gsap){
                {clearProps:'opacity,transform'});
     };
   });
-
-  // Fonts land after first paint and change every element's height; the
-  // counters' scroll triggers need their offsets re-measured.
-  document.fonts && document.fonts.ready.then(() => ScrollTrigger.refresh());
 }
 
-// Hero 3D model. Nothing is fetched until the page has fully loaded and the
-// browser is idle, so it costs first paint nothing; reduced-motion and
-// data-saver visitors never download it at all.
+// Hero 3D model. This file is deferred, so it runs once the HTML is parsed and
+// the CSS and fonts are already on their way; the script and the models then
+// download together, straight away. Waiting for load and an idle moment, as it
+// used to, left the hero empty for seconds on a cold visit. Reduced-motion and
+// data-saver visitors never download them; their canvas goes, so nothing
+// (not even the ground colour) stands in for it.
 (() => {
   const c = document.querySelector('canvas.hero3d');
-  if (!c || matchMedia('(prefers-reduced-motion: reduce)').matches
-      || (navigator.connection && navigator.connection.saveData)) return;
-  const go = () => (window.requestIdleCallback || setTimeout)(() =>
-    import(c.dataset.src).then(m => m.default(c)).catch(() => c.remove()));
-  document.readyState === 'complete' ? go() : addEventListener('load', go);
+  if (!c) return;
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches
+      || (navigator.connection && navigator.connection.saveData)) return c.remove();
+  const models = Promise.all(JSON.parse(c.dataset.models).map(u =>
+    fetch(u).then(r => r.ok ? r.arrayBuffer() : Promise.reject(r.status))));
+  import(c.dataset.src).then(m => m.default(c, models)).catch(() => c.remove());
 })();
