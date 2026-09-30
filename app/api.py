@@ -63,6 +63,12 @@ async def lifespan(_app):
     # Not on serverless: a frozen instance would never finish the load.
     if not os.getenv("VERCEL"):
         threading.Thread(target=warm_candidates, daemon=True).start()
+    # The fetching laptop starts the day's run with the server (mac/start.sh),
+    # so the admin page opens onto it already going.
+    job = os.getenv("AUTOSTART_JOB", "").strip()
+    from . import adminjobs
+    if job and adminjobs.can_run_jobs():
+        log.info("autostart %s: %s", job, adminjobs.start(job)[1])
     yield
 
 

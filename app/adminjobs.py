@@ -17,6 +17,7 @@ process has nothing to show anyway -- the thread died with it.
 """
 from __future__ import annotations
 
+import logging
 import os
 import threading
 from collections import deque
@@ -26,6 +27,10 @@ from .models import utcnow
 
 # The name that means "read bid documents" rather than "fetch a listing".
 ENRICH_JOB = "Bid documents"
+# The whole daily cycle -- purge, every source, documents, dedup -- exactly as
+# run_prod_worker.py --once runs it, with its log on the panel. What the
+# fetching laptop starts every day (mac/start.sh sets AUTOSTART_JOB to this).
+DAILY_JOB = "Daily run"
 # Workers are threads; the PDF parse runs in app/enrich.py's process pool, so
 # a worker spends its time waiting on the download, the database or a free
 # core. 16 keeps every core fed while each thread waits on I/O; the cap is
@@ -98,6 +103,35 @@ def _enrich(job: Job, workers: int, limit: int) -> int:
     return sum(done)
 
 
+class _ToPanel(logging.Handler):
+    """Sends the daily cycle's own log lines to the job panel as they happen."""
+
+    def __init__(self, job: Job):
+        super().__init__(logging.INFO)
+        self.job = job
+
+    def emit(self, record: logging.LogRecord) -> None:
+        self.job.log(f"{record.levelname.lower()}: {record.getMessage()}"
+                     if record.levelno >= logging.WARNING else record.getMessage())
+
+
+def _daily(job: Job) -> None:
+    import run_prod_worker
+
+    handler = _ToPanel(job)
+    loggers = [logging.getLogger(n) for n in ("app", "prod-worker")]
+    levels = [lg.level for lg in loggers]
+    for lg in loggers:
+        lg.addHandler(handler)
+        lg.setLevel(logging.INFO)
+    try:
+        run_prod_worker.run_once(since_hours=48.0)
+    finally:
+        for lg, level in zip(loggers, levels):
+            lg.removeHandler(handler)
+            lg.setLevel(level)
+
+
 def _run(job: Job, name: str, max_pages: int | None, since_hours: float | None,
          then_enrich: int = 0, workers: int = 4) -> None:
     global _current
@@ -106,6 +140,13 @@ def _run(job: Job, name: str, max_pages: int | None, since_hours: float | None,
     from .connectors import REGISTRY
 
     try:
+        if name == DAILY_JOB:
+            job.log("daily run: purge, every source, bid documents, dedup")
+            _daily(job)
+            job.summary = "daily run finished"
+            job.status = "ok"
+            job.log(job.summary)
+            return
         if name == ENRICH_JOB:
             job.log(f"reading bid documents, {workers} workers, up to {then_enrich}")
             changed = _enrich(job, workers, then_enrich)
@@ -163,7 +204,7 @@ def start(name: str, max_pages: int | None = None,
     global _current
     from .connectors import REGISTRY
 
-    if name != ENRICH_JOB and name not in REGISTRY:
+    if name not in (ENRICH_JOB, DAILY_JOB) and name not in REGISTRY:
         return False, f"unknown connector {name!r}"
     workers = max(1, min(workers, MAX_WORKERS))
     with _lock:
