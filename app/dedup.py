@@ -8,14 +8,17 @@ wrong guess is unrecoverable.
 """
 from __future__ import annotations
 
+import json
 import logging
+import os
 import re
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 from difflib import SequenceMatcher
+from types import SimpleNamespace
 
-from sqlalchemy import select
-from sqlalchemy.orm import Session, load_only
+from sqlalchemy import select, update
+from sqlalchemy.orm import Session
 
 from .db import SessionLocal
 from .models import Tender, utcnow
@@ -148,7 +151,99 @@ def _candidates(row: Tender, buckets: dict[object, list[Tender]],
     return pool
 
 
-def link_duplicates(db: Session | None = None, window_days: int = 120) -> int:
+# Only what is_duplicate() and survivor() read. survivor() only asks whether
+# there is a document, so its URL never crosses the network.
+_COLUMNS = (Tender.id, Tender.source_id, Tender.title, Tender.organization,
+            Tender.estimated_value, Tender.deadline,
+            Tender.document_url.is_not(None).label("document_url"),
+            Tender.duplicate_of, Tender.last_updated_at)
+_FIELDS = ("id", "source_id", "title", "organization", "estimated_value", "deadline",
+           "document_url", "duplicate_of")
+# A delta reaches back this far past the newest timestamp seen: writers run on
+# different machines whose clocks are not in step.
+_CLOCK_SLACK = timedelta(hours=1)
+# The cache is thrown away and rebuilt after this long, so a change nothing
+# timestamped cannot linger for more than a week.
+_CACHE_MAX_AGE = timedelta(days=7)
+
+
+def _row(r) -> SimpleNamespace:
+    return SimpleNamespace(**{f: getattr(r, f) for f in _FIELDS})
+
+
+def _in_scope(cutoff: date) -> tuple:
+    return (Tender.duplicate_of.is_(None),
+            (Tender.deadline.is_(None)) | (Tender.deadline >= cutoff))
+
+
+def _read_cache(path: str | None):
+    """(rows by id, stamp) from a previous run, or None to load everything."""
+    if not path or not os.path.exists(path):
+        return None
+    try:
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+        if datetime.now() - datetime.fromisoformat(data["written"]) > _CACHE_MAX_AGE:
+            return None
+        rows = {}
+        for i, src, title, org, value, deadline, has_doc in data["rows"]:
+            rows[i] = SimpleNamespace(
+                id=i, source_id=src, title=title, organization=org,
+                estimated_value=Decimal(value) if value is not None else None,
+                deadline=date.fromisoformat(deadline) if deadline else None,
+                document_url=has_doc, duplicate_of=None)
+        return rows, datetime.fromisoformat(data["stamp"])
+    except Exception:                        # a bad cache costs one full load, never a run
+        log.warning("dedup: ignoring unreadable cache %s", path, exc_info=True)
+        return None
+
+
+def _write_cache(path: str, rows: list, stamp: datetime | None) -> None:
+    if stamp is None:
+        return
+    data = {"written": datetime.now().isoformat(), "stamp": stamp.isoformat(), "rows": [
+        [r.id, r.source_id, r.title, r.organization,
+         str(r.estimated_value) if r.estimated_value is not None else None,
+         r.deadline.isoformat() if r.deadline else None, bool(r.document_url)]
+        for r in rows if r.duplicate_of is None]}
+    os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
+    tmp = path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(data, f)
+    os.replace(tmp, path)
+
+
+def _load(db: Session, cutoff: date, cache_path: str | None):
+    """(every row in scope, newest last_updated_at seen). With a cache, only rows
+    changed since the last run cross the network, plus the ids still in scope."""
+    cache = _read_cache(cache_path)
+    if cache is None:
+        fetched = db.execute(select(*_COLUMNS).where(*_in_scope(cutoff))).all()
+        rows = {r.id: _row(r) for r in fetched}
+        stamp = None
+    else:
+        cached, stamp = cache
+        ids = set(db.scalars(select(Tender.id).where(*_in_scope(cutoff))))
+        fetched = db.execute(select(*_COLUMNS).where(*_in_scope(cutoff)).where(
+            Tender.last_updated_at > stamp - _CLOCK_SLACK)).all()
+        rows = {i: r for i, r in cached.items() if i in ids}
+        rows.update((r.id, _row(r)) for r in fetched)
+        missing = list(ids - rows.keys())    # in scope but not cached: read them too
+        for n in range(0, len(missing), 5000):
+            extra = db.execute(select(*_COLUMNS).where(
+                Tender.id.in_(missing[n:n + 5000]))).all()
+            rows.update((r.id, _row(r)) for r in extra)
+            fetched += extra
+        log.info("dedup: %d rows in scope, %d fetched, the rest from %s",
+                 len(rows), len(fetched), cache_path)
+    stamps = [r.last_updated_at for r in fetched if r.last_updated_at]
+    if stamps:
+        stamp = max([*stamps, stamp] if stamp else stamps)
+    return sorted(rows.values(), key=lambda r: r.id), stamp
+
+
+def link_duplicates(db: Session | None = None, window_days: int = 120,
+                    cache_path: str | None = None) -> int:
     """Point each duplicate at its surviving twin. Returns links created.
 
     Which row survives is survivor()'s call, not id order: the downloadable copy
@@ -156,33 +251,25 @@ def link_duplicates(db: Session | None = None, window_days: int = 120) -> int:
     search and match query already filters duplicate_of IS NULL, so a hidden row
     vanishes from the product while staying auditable and reachable by URL.
 
+    `cache_path` (default: $DEDUP_CACHE) keeps the compared columns on disk
+    between runs, so a run downloads only what changed rather than every open
+    tender -- Neon's free plan has 5 GB of transfer a month. Every row is still
+    compared, exactly as without it.
+
     ponytail: O(n^2) within a deadline bucket. Buckets keep that tolerable at the
     tens-of-thousands scale we are at; if it stops being tolerable, block on a
     trigram index or a title MinHash instead of widening the loop.
     """
     own_session = db is None
     db = db or SessionLocal()
+    cache_path = cache_path or os.getenv("DEDUP_CACHE") or None
     linked = 0
     try:
         _INDEX_CACHE.clear()
         cutoff = date.today() - timedelta(days=window_days)
-        rows = list(
-            db.execute(
-                select(Tender)
-                # Only what matching and survivor() read. Whole rows were most of
-                # the Neon free plan's monthly transfer, once per ingest run.
-                .options(load_only(
-                    Tender.id, Tender.source_id, Tender.title, Tender.organization,
-                    Tender.estimated_value, Tender.deadline, Tender.document_url,
-                    Tender.duplicate_of,
-                ))
-                .where(Tender.duplicate_of.is_(None))
-                .where((Tender.deadline.is_(None)) | (Tender.deadline >= cutoff))
-                .order_by(Tender.id)
-            ).scalars()
-        )
+        rows, stamp = _load(db, cutoff, cache_path)
 
-        buckets: dict[object, list[Tender]] = {}
+        buckets: dict[object, list] = {}
         for row in rows:
             buckets.setdefault(row.deadline, []).append(row)
 
@@ -202,9 +289,6 @@ def link_duplicates(db: Session | None = None, window_days: int = 120) -> int:
                 if is_duplicate(row, other):
                     keep, hide = survivor(row, other)
                     hide.duplicate_of = keep.id
-                    # So the site's cached match list (matching._candidates)
-                    # picks the change up in its delta, not a full reload.
-                    hide.last_updated_at = utcnow()
                     linked += 1
                     if hide is row:
                         break
@@ -212,11 +296,17 @@ def link_duplicates(db: Session | None = None, window_days: int = 120) -> int:
         by_id = {r.id: r for r in rows}
         for row in rows:
             if row.duplicate_of is not None:
-                root = _root(row, by_id)
-                if root != row.id:
-                    row.duplicate_of = root
-                    row.last_updated_at = utcnow()
+                row.duplicate_of = _root(row, by_id)
+        # last_updated_at moves so the site's cached match list
+        # (matching._candidates) picks the link up in its delta.
+        now = utcnow()
+        changes = [{"id": r.id, "duplicate_of": r.duplicate_of, "last_updated_at": now}
+                   for r in rows if r.duplicate_of is not None]
+        if changes:
+            db.execute(update(Tender), changes)
         db.commit()
+        if cache_path:
+            _write_cache(cache_path, rows, stamp)
         log.info("dedup: linked %d duplicate tenders", linked)
     finally:
         if own_session:

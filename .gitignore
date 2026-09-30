@@ -60,3 +60,6 @@ bin/
 *.err
 *.out
 probe_results*.json
+
+# dedup's column cache (app/dedup.py)
+.cache/

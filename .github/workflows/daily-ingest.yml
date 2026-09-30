@@ -51,6 +51,14 @@ jobs:
       # install it), but app/scheduler.py imports it even for a one-shot run.
       - run: pip install -r requirements.txt apscheduler
 
+      # Dedup's column cache (app/dedup.py): with it a run downloads only the
+      # tenders changed since the last one, not all ~60,000 open ones.
+      - uses: actions/cache@v4
+        with:
+          path: .cache
+          key: dedup-${{ github.run_id }}
+          restore-keys: dedup-
+
       - name: Ingest
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}

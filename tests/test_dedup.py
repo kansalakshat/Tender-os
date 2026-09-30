@@ -211,3 +211,67 @@ def test_dedup_reads_each_row_once_and_marks_links_as_updates(session_factory):
     with session_factory() as db:
         row = db.get(Tender, hidden.id)
         assert row.duplicate_of is not None and row.last_updated_at > before
+
+
+def test_the_cache_downloads_only_what_changed_and_finds_the_same_pairs(session_factory, tmp_path):
+    """Each ingest re-read every open tender to compare titles: ~60,000 rows,
+    twice a day, against Neon's 5 GB a month. With the cache a run fetches only
+    rows changed since the last one -- and still compares a new row with every
+    old one."""
+    from datetime import timedelta
+    from app.models import utcnow
+    from sqlalchemy import event
+    cache = str(tmp_path / "dedup.json")
+    with session_factory() as db:
+        a, b = two_sources(db)
+        old = make(db, a, "A1", "Construction of boundary wall at Sector 12")
+        for n in range(20):
+            make(db, a, f"A{n+2}", f"Unrelated repair job number {n} at depot {n}")
+        db.commit()
+        # Written days before the next run; one row a day ago sets the stamp.
+        db.query(Tender).update({Tender.last_updated_at: utcnow() - timedelta(days=3)})
+        recent = make(db, a, "A99", "Painting of office building at depot 99")
+        recent.last_updated_at = utcnow() - timedelta(days=1)
+        db.commit()
+        recent_id = recent.id
+    with session_factory() as db:
+        assert link_duplicates(db, cache_path=cache) == 0          # builds the cache
+
+    with session_factory() as db:
+        twin = make(db, b, "B1", "Construction of boundary wall at Sector 12")
+        db.commit()
+        twin_id, old_id = twin.id, old.id
+
+    import app.dedup as dedup
+    built = []
+    real_row = dedup._row
+    dedup._row = lambda r: built.append(r.id) or real_row(r)
+    fetched = []
+    with session_factory() as db:
+        engine = db.get_bind()
+        def count(conn, cursor, stmt, params, context, many):
+            if stmt.lstrip().upper().startswith("SELECT") and "tenders.title" in stmt:
+                fetched.append(stmt)
+        event.listen(engine, "after_cursor_execute", count)
+        try:
+            assert link_duplicates(db, cache_path=cache) == 1
+        finally:
+            event.remove(engine, "after_cursor_execute", count)
+            dedup._row = real_row
+    assert len(fetched) == 1, "one delta query, no full reload"
+    # The newest row is re-read (the clock-skew margin), the rest come from disk.
+    assert set(built) == {twin_id, recent_id}, f"downloaded {len(built)} rows"
+    with session_factory() as db:
+        assert db.get(Tender, twin_id).duplicate_of == old_id
+
+
+def test_an_unreadable_cache_means_a_full_load_not_a_failed_run(session_factory, tmp_path):
+    cache = tmp_path / "dedup.json"
+    cache.write_text("{not json")
+    with session_factory() as db:
+        a, b = two_sources(db)
+        make(db, a, "A1", "Construction of boundary wall at Sector 12")
+        make(db, b, "B1", "Construction of boundary wall at Sector 12")
+        db.commit()
+    with session_factory() as db:
+        assert link_duplicates(db, cache_path=str(cache)) == 1
