@@ -82,7 +82,10 @@ def database_answers(url: str) -> str | None:
             conn.execute("select 1")
         return None
     except psycopg.Error as exc:
-        return str(exc).splitlines()[0][:300]
+        # psycopg tries every address; the IPv6 one fails first on runners
+        # without IPv6, which hides Neon's own reason further down.
+        lines = str(exc).splitlines() or ["unknown error"]
+        return next((x for x in lines if "quota" in x), lines[0]).strip()[:300]
 
 
 def main() -> int:
