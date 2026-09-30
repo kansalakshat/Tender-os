@@ -25,7 +25,7 @@ from urllib.parse import parse_qs, quote
 import httpx
 from fastapi import APIRouter, Body, Depends, HTTPException, Request
 from fastapi.concurrency import run_in_threadpool
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse, RedirectResponse
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from markupsafe import Markup, escape
 from sqlalchemy import distinct, func, or_, select
@@ -276,6 +276,47 @@ def _profile_of(db: Session, user: User | None) -> Company | None:
     return db.execute(
         select(Company).where(Company.user_id == user.id).order_by(Company.id.desc())
     ).scalars().first()
+
+
+# ---- crawlers ---------------------------------------------------------------
+
+# Every database read here counts against Neon's 5 GB monthly transfer, and a
+# crawler reads far more than a person. Tender and buyer pages stay indexable;
+# the JSON behind them, the per-visitor pages and endless sort/page variants do
+# not, and crawlers that only harvest for AI training or SEO tools are refused.
+ROBOTS = """User-agent: *
+Disallow: /tenders
+Disallow: /sources
+Disallow: /t/*/extras
+Disallow: /t/*/cppp
+Disallow: /buyers/strip
+Disallow: /buyer?*sort=
+Disallow: /buyer?*page=
+Disallow: /browse?
+Disallow: /c/
+Disallow: /companies/
+Disallow: /matches
+Disallow: /profile
+Disallow: /wishlist
+Disallow: /questionnaire
+Disallow: /me
+Disallow: /auth/
+Disallow: /admin
+Disallow: /runs
+Disallow: /cron/
+Disallow: /docs
+
+""" + "".join(f"User-agent: {bot}\n" for bot in (
+    "GPTBot", "ChatGPT-User", "CCBot", "ClaudeBot", "anthropic-ai", "Bytespider",
+    "PerplexityBot", "Amazonbot", "meta-externalagent", "Applebot-Extended",
+    "Google-Extended", "AhrefsBot", "SemrushBot", "MJ12bot", "DotBot", "PetalBot",
+    "DataForSeoBot", "BLEXBot",
+)) + "Disallow: /\n"
+
+
+@router.get("/robots.txt", response_class=PlainTextResponse)
+def robots() -> str:
+    return ROBOTS
 
 
 # ---- landing ---------------------------------------------------------------

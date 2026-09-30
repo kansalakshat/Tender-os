@@ -502,3 +502,28 @@ def test_sign_out_does_not_break_an_unclicked_verification_link(session_factory)
         link = auth.make_verification_token(user)
         user.session_epoch = 5; db.commit()
         assert auth.user_from_verification_token(db, link) is not None
+
+
+# ---- 1 Oct 2026: Neon's free-plan transfer ran out and took the site down ----
+
+def test_public_json_is_edge_cached_and_personal_pages_are_not(client):
+    """/tenders reads no session, so Vercel's CDN may answer repeats without
+    touching Neon. Anything personal must stay out of every shared cache."""
+    assert "s-maxage" in client.get("/tenders").headers["cache-control"]
+    assert "s-maxage" in client.get("/robots.txt").headers["cache-control"]
+    for path in ["/", "/me", "/browse", "/tenders/999999"]:     # 404s are not kept
+        cc = client.get(path).headers["cache-control"]
+        assert "no-store" in cc and "s-maxage" not in cc, f"{path}: {cc!r}"
+
+
+def test_robots_keeps_crawlers_off_the_expensive_urls(client):
+    body = client.get("/robots.txt").text
+    for path in ["/tenders", "/t/*/extras", "/buyer?*page=", "/admin"]:
+        assert f"Disallow: {path}\n" in body
+    assert "Disallow: /t/\n" not in body, "tender pages stay indexable"
+    assert "User-agent: GPTBot\n" in body
+
+
+def test_one_api_page_cannot_dump_the_corpus(client):
+    assert client.get("/tenders?limit=100").status_code == 200
+    assert client.get("/tenders?limit=500").status_code == 422

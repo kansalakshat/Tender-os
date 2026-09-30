@@ -86,6 +86,10 @@ app = FastAPI(
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 
+# Public JSON that reads no session: identical for everyone, so edge-cacheable.
+EDGE_CACHED = {"/tenders", "/sources", "/buyers/strip", "/robots.txt"}
+
+
 @app.middleware("http")
 async def harden(request: Request, call_next):
     """One nonce per response, and the headers that make the CSP meaningful.
@@ -120,7 +124,17 @@ async def harden(request: Request, call_next):
     # caching; everything else is personalised or live. JSON too: /me names the
     # signed-in account, and the site is served through a Cloudflare tunnel, so
     # nothing may be left for a shared cache to decide on its own.
-    if not request.url.path.startswith("/static/"):
+    if request.url.path in EDGE_CACHED or request.url.path.startswith("/tenders/"):
+        # The same for every visitor (no session read), so Vercel's CDN may keep
+        # a copy. Bots re-fetching the same URL then never reach Neon, whose free
+        # plan has 5 GB of transfer a month. Vercel drops s-maxage on the way to
+        # the browser.
+        if request.method == "GET" and response.status_code == 200:
+            response.headers.setdefault(
+                "Cache-Control", "public, s-maxage=300, stale-while-revalidate=600")
+        else:
+            response.headers.setdefault("Cache-Control", "no-store, private")
+    elif not request.url.path.startswith("/static/"):
         response.headers.setdefault("Cache-Control", "no-store, private")
     elif "v=" in request.url.query:
         # asset() stamps a hash of the file into ?v=, so this URL's content never
@@ -228,7 +242,7 @@ def list_tenders(
     include_closed: bool = Query(
         False, description="Include tenders whose deadline has already passed"
     ),
-    limit: int = Query(50, ge=1, le=500),
+    limit: int = Query(50, ge=1, le=100),
     offset: int = Query(0, ge=0),
     sort: str = Query("deadline", pattern="^(deadline|published_date|first_seen_at)$"),
 ):
