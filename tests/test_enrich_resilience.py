@@ -55,3 +55,18 @@ def test_the_skipped_tender_is_left_for_the_next_pass(three_tenders, monkeypatch
     monkeypatch.setattr(enrich, "enrich_one", always_deadlock)
     enrich.enrich_pending(limit=10, session_factory=three_tenders)
     assert len(enrich.needs_enrichment(limit=10)) == 3, "all three are still pending"
+
+
+def test_expired_tenders_are_not_queued_for_enrichment(three_tenders):
+    """They are purged, not bid on. Queued by soonest deadline, they came first
+    and used up the whole pass."""
+    from datetime import date, timedelta
+    with three_tenders() as db:
+        rows = db.query(Tender).order_by(Tender.id).all()
+        rows[0].deadline = date.today() - timedelta(days=1)
+        rows[1].deadline = date.today()
+        db.commit()
+        expired, today = rows[0].id, rows[1].id
+    pending = enrich.needs_enrichment(limit=10)
+    assert expired not in pending
+    assert today in pending and len(pending) == 2

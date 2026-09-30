@@ -31,7 +31,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 
 
 def run_once(since_hours: float) -> None:
-    """Every connector, then enrich, dedup, purge -- one pass, then return.
+    """Purge, then every connector, enrich and dedup -- one pass, then return.
 
     The window is wider than a day on purpose: the same overlap the scheduler
     uses, so a run that fails or is missed leaves no permanent hole.
@@ -52,6 +52,14 @@ def run_once(since_hours: float) -> None:
     if unknown:
         # Loud, because a typo here silently fetches a source you meant to skip.
         log.warning("SKIP_CONNECTORS names unknown connectors: %s", ", ".join(sorted(unknown)))
+
+    # Purge first. At the end it sat behind the crawl, enrichment and dedup, and
+    # for a week every run timed out or crashed before reaching it. It is cheap,
+    # and it also spares enrichment and dedup rows that are about to go.
+    try:
+        log.info("purged %d tender(s)", purge_expired())
+    except Exception:                         # the ingest still runs; purge.yml retries
+        log.exception("purge failed")
 
     since = utcnow() - timedelta(hours=since_hours)
     for name in REGISTRY:
@@ -92,7 +100,6 @@ def run_once(since_hours: float) -> None:
         ))
     log.info("enriched %d tender(s) with %d worker(s)", sum(counts), workers)
     log.info("linked %d duplicate(s)", link_duplicates())
-    log.info("purged %d tender(s)", purge_expired())
 
 
 def main() -> int:

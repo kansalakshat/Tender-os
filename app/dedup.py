@@ -15,7 +15,7 @@ from decimal import Decimal
 from difflib import SequenceMatcher
 
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, defer
 
 from .db import SessionLocal
 from .models import Tender
@@ -169,6 +169,8 @@ def link_duplicates(db: Session | None = None, window_days: int = 120) -> int:
         rows = list(
             db.execute(
                 select(Tender)
+                # Nothing here reads raw_payload, and it is most of a row's bytes.
+                .options(defer(Tender.raw_payload))
                 .where(Tender.duplicate_of.is_(None))
                 .where((Tender.deadline.is_(None)) | (Tender.deadline >= cutoff))
                 .order_by(Tender.id)
