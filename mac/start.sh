@@ -28,7 +28,7 @@ if [ -f .cache/server.pid ] && kill -0 "$(cat .cache/server.pid)" 2>/dev/null; t
 fi
 lsof -ti "tcp:$PORT" | xargs kill 2>/dev/null || true
 
-DATABASE_URL="$(grep '^DATABASE_URL=' .env.production | head -1 | cut -d= -f2- | tr -d '"' | tr -d "'")"
+DATABASE_URL="$(grep '^DATABASE_URL=' .env.production | head -1 | cut -d= -f2- | tr -d '"' | tr -d "'" | tr -d $'\r')"
 if [ -z "$DATABASE_URL" ]; then
   echo "No DATABASE_URL in .env.production -- run mac/setup.sh first"
   exit 1
