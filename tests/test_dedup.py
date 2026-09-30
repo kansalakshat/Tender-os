@@ -181,3 +181,33 @@ def test_old_tenders_fall_outside_the_window(session_factory):
         db.commit()
     with session_factory() as db:
         assert link_duplicates(db, window_days=120) == 0
+
+
+def test_dedup_reads_each_row_once_and_marks_links_as_updates(session_factory):
+    """Dedup loads only the columns it compares. Touching any other column
+    would lazy-load it row by row -- far more Neon transfer, not less. And a
+    link must move last_updated_at, or the site's cached match list keeps
+    showing the hidden row until its next full reload."""
+    from sqlalchemy import event
+    with session_factory() as db:
+        a, b = two_sources(db)
+        make(db, a, "A1", "Construction of boundary wall at Sector 12")
+        hidden = make(db, b, "B1", "Construction of boundary wall at Sector 12")
+        db.commit()
+        before = hidden.last_updated_at
+
+    selects = []
+    with session_factory() as db:
+        engine = db.get_bind()
+        listen = lambda *args: selects.append(args[2]) if args[2].lstrip().upper().startswith("SELECT") else None
+        event.listen(engine, "before_cursor_execute", listen)
+        try:
+            assert link_duplicates(db) == 1
+        finally:
+            event.remove(engine, "before_cursor_execute", listen)
+    assert len(selects) == 1, selects
+    assert "raw_payload" not in selects[0]
+
+    with session_factory() as db:
+        row = db.get(Tender, hidden.id)
+        assert row.duplicate_of is not None and row.last_updated_at > before

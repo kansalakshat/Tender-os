@@ -15,10 +15,10 @@ from decimal import Decimal
 from difflib import SequenceMatcher
 
 from sqlalchemy import select
-from sqlalchemy.orm import Session, defer
+from sqlalchemy.orm import Session, load_only
 
 from .db import SessionLocal
-from .models import Tender
+from .models import Tender, utcnow
 
 log = logging.getLogger(__name__)
 
@@ -169,8 +169,13 @@ def link_duplicates(db: Session | None = None, window_days: int = 120) -> int:
         rows = list(
             db.execute(
                 select(Tender)
-                # Nothing here reads raw_payload, and it is most of a row's bytes.
-                .options(defer(Tender.raw_payload))
+                # Only what matching and survivor() read. Whole rows were most of
+                # the Neon free plan's monthly transfer, once per ingest run.
+                .options(load_only(
+                    Tender.id, Tender.source_id, Tender.title, Tender.organization,
+                    Tender.estimated_value, Tender.deadline, Tender.document_url,
+                    Tender.duplicate_of,
+                ))
                 .where(Tender.duplicate_of.is_(None))
                 .where((Tender.deadline.is_(None)) | (Tender.deadline >= cutoff))
                 .order_by(Tender.id)
@@ -197,6 +202,9 @@ def link_duplicates(db: Session | None = None, window_days: int = 120) -> int:
                 if is_duplicate(row, other):
                     keep, hide = survivor(row, other)
                     hide.duplicate_of = keep.id
+                    # So the site's cached match list (matching._candidates)
+                    # picks the change up in its delta, not a full reload.
+                    hide.last_updated_at = utcnow()
                     linked += 1
                     if hide is row:
                         break
@@ -207,6 +215,7 @@ def link_duplicates(db: Session | None = None, window_days: int = 120) -> int:
                 root = _root(row, by_id)
                 if root != row.id:
                     row.duplicate_of = root
+                    row.last_updated_at = utcnow()
         db.commit()
         log.info("dedup: linked %d duplicate tenders", linked)
     finally:
