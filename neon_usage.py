@@ -1,12 +1,17 @@
-"""Warn before Neon's free plan runs out, not after.
+"""Warn before Neon's free plan runs out, and say so the day it does.
 
 On 2026-09-28 the month's 5 GB of network transfer ran out and Neon refused every
 connection: every page that reads the database returned 500 until the month
 turned over. Nothing had warned. This runs daily from .github/workflows/
 neon-usage.yml and exits 1 -- which GitHub emails to the repository owner --
-when a limit is already mostly spent, or when this month's pace would spend it.
+when the database refuses a connection, or when a limit is mostly spent.
 
-    NEON_API_KEY=... python neon_usage.py
+Neon's API reports storage on the free plan, but leaves transfer and compute at
+0 (its consumption endpoints are for paid plans). Those two are printed as "not
+reported" rather than as a reassuring 0, and checked if Neon ever fills them in.
+The console's Usage page is the only place transfer shows on this plan.
+
+    NEON_API_KEY=... NEON_PROJECT_ID=... DATABASE_URL=... python neon_usage.py
 """
 from __future__ import annotations
 
@@ -28,6 +33,7 @@ STORAGE_LIMIT = 0.5 * GB
 
 WARN_USED = 0.60        # this share of a monthly limit already gone
 WARN_PACE = 0.90        # or on course for this share by the month's end
+WARN_STORAGE = 0.70
 
 
 def get(path: str, key: str) -> dict:
@@ -50,6 +56,9 @@ def check(p: dict, now: datetime) -> list[str]:
     problems = []
     for field, label, limit, div, unit in LIMITS:
         used = p.get(field) or 0
+        if not used:
+            print(f"  {label}: not reported by Neon on this plan -- see the console's Usage page")
+            continue
         pace = used / elapsed
         line = (f"{label}: {used / div:.2f} of {limit / div:g} {unit} "
                 f"({used / limit:.0%}), on pace for {pace / limit:.0%} by {end:%d %b}")
@@ -59,9 +68,21 @@ def check(p: dict, now: datetime) -> list[str]:
     size = p.get("synthetic_storage_size") or 0
     line = f"storage: {size / GB:.3f} of {STORAGE_LIMIT / GB:g} GB ({size / STORAGE_LIMIT:.0%})"
     print("  " + line)
-    if size >= STORAGE_LIMIT * 0.7:
+    if size >= STORAGE_LIMIT * WARN_STORAGE:
         problems.append(line)
     return problems
+
+
+def database_answers(url: str) -> str | None:
+    """None if a query goes through, else why not ("exceeded the quota" when a
+    free-plan limit has been hit)."""
+    import psycopg
+    try:
+        with psycopg.connect(url, connect_timeout=30) as conn:
+            conn.execute("select 1")
+        return None
+    except psycopg.Error as exc:
+        return str(exc).splitlines()[0][:300]
 
 
 def main() -> int:
@@ -72,12 +93,23 @@ def main() -> int:
         return 1
     now = datetime.now(timezone.utc)
     problems = []
-    for item in get("/projects", key)["projects"]:
-        p = get(f"/projects/{item['id']}", key)["project"]
+
+    url = os.getenv("DATABASE_URL", "").strip()
+    if url:
+        why = database_answers(url)
+        print(f"database: {'answering' if why is None else 'REFUSING -- ' + why}")
+        if why is not None:
+            problems.append(f"the database is refusing connections: {why}")
+
+    # A project-scoped key may not list projects, so name the project outright.
+    ids = [os.environ["NEON_PROJECT_ID"]] if os.getenv("NEON_PROJECT_ID") else [
+        item["id"] for item in get("/projects", key)["projects"]]
+    for pid in ids:
+        p = get(f"/projects/{pid}", key)["project"]
         print(f"{p['name']} ({p['id']}):")
         problems += [f"{p['name']}: {x}" for x in check(p, now)]
     if problems:
-        print("\nOver the warning line -- the site goes down if a limit is reached:")
+        print("\nNeeds attention -- the site's database pages fail while Neon refuses:")
         print("\n".join("  " + x for x in problems))
         return 1
     print("\nAll within the free plan.")

@@ -24,3 +24,11 @@ def test_a_pace_that_would_run_out_warns_before_it_does():
 def test_mostly_spent_warns_and_so_does_nearly_full_storage():
     assert check(project(3.1 * GB), datetime(2026, 9, 29, tzinfo=timezone.utc))
     assert check(project(0.1 * GB, storage=0.4 * GB), NOW)
+
+
+def test_zero_is_not_reported_as_healthy_usage(capsys):
+    """The free plan's API leaves transfer and compute at 0 -- the day the
+    transfer limit was hit, it still said 0. Say "not reported", not "0%"."""
+    assert check(project(0, compute=0), NOW) == []
+    out = capsys.readouterr().out
+    assert "network transfer: not reported" in out and "0.00 of 5" not in out
