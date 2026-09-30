@@ -50,6 +50,14 @@ def db(session_factory):
 
 
 @pytest.fixture(autouse=True)
+def fresh_read_budget():
+    """The read throttle counts in memory for the process, and every test client
+    is one address. Without this the suite trips it partway through."""
+    from app import security
+    security._READS.clear()
+
+
+@pytest.fixture(autouse=True)
 def never_send_real_email(monkeypatch, tmp_path):
     """Belt and braces around the env guard above: even if something re-reads .env
     mid-run, no test may reach a real mail server, and no test may append to the

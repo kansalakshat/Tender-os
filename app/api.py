@@ -86,6 +86,9 @@ app = FastAPI(
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 
+# No database behind these (or, for cron, a secret in front), so no throttle.
+UNTHROTTLED = ("/static/", "/healthz", "/health", "/robots.txt", "/cron/")
+
 # Public JSON that reads no session: identical for everyone, so edge-cacheable.
 EDGE_CACHED = {"/tenders", "/sources", "/buyers/strip", "/robots.txt"}
 
@@ -104,9 +107,16 @@ async def harden(request: Request, call_next):
     # Set-Cookie clears the session) or /auth/login (signs the victim into the
     # attacker's account). Browsers label every request with Sec-Fetch-Site;
     # curl and API clients send none and are unaffected.
+    path = request.url.path
+    ip = None if path.startswith(UNTHROTTLED) else security.client_ip(request)
     if (request.method not in ("GET", "HEAD", "OPTIONS")
             and request.headers.get("sec-fetch-site") == "cross-site"):
         response = JSONResponse({"detail": "cross-site request refused"}, status_code=403)
+    elif ip and (security.over_read_budget(ip, security.READ_LIMIT) or (
+            path == "/tenders"
+            and security.over_read_budget("list:" + ip, security.LIST_LIMIT))):
+        response = JSONResponse({"detail": "Too many requests. Wait a minute."},
+                                status_code=429, headers={"Retry-After": "60"})
     else:
         response = await call_next(request)
     # Read off the app rather than hard-coded, so moving docs_url moves the

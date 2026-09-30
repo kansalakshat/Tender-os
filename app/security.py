@@ -61,6 +61,13 @@ def client_ip(request: Request) -> str:
     overwrites CF-Connecting-IP with the real client, and nothing but the local
     machine can open a loopback connection, so on that path it is trustworthy.
     """
+    if os.getenv("VERCEL"):
+        # Vercel overwrites this with the real client on every request, so it
+        # cannot be forged -- and the peer address there is Vercel's own proxy,
+        # which would put every visitor in one bucket.
+        fwd = request.headers.get("x-vercel-forwarded-for", "").split(",")[0].strip()
+        if fwd:
+            return fwd[:64]
     peer = request.client.host if request.client else "unknown"
     if peer in _LOOPBACK:
         return request.headers.get("cf-connecting-ip", "").strip()[:64] or peer
@@ -99,6 +106,31 @@ def reset_key(db: Session, key: str) -> None:
     finally remembers their password is not still locked out."""
     db.execute(text("DELETE FROM rate_limits WHERE key = :key"), {"key": key[:300]})
     db.commit()
+
+
+# --- read throttle ----------------------------------------------------------
+
+# A scraper, not a person, is what can read the database dry: Neon's free plan
+# has 5 GB of transfer a month, and running out takes the whole site down. A
+# person reads a page every few seconds; these only stop something much faster.
+READ_LIMIT, READ_WINDOW = 240, 60       # any page or API call, per ip a minute
+LIST_LIMIT = 40                         # GET /tenders (the JSON listing) a minute
+# ponytail: counted in memory, per instance, so the check itself costs Neon
+# nothing. Each warm instance allows the full budget; move to rate_limits if
+# scrapers start spreading across instances.
+_READS: dict[str, tuple[float, int]] = {}
+
+
+def over_read_budget(key: str, limit: int, window: int = READ_WINDOW) -> bool:
+    now = time.monotonic()
+    if len(_READS) > 20000:             # rotating addresses must not grow this forever
+        for k in [k for k, (start, _n) in _READS.items() if now - start > window]:
+            del _READS[k]
+    start, count = _READS.get(key, (now, 0))
+    if now - start > window:
+        start, count = now, 0
+    _READS[key] = (start, count + 1)
+    return count + 1 > limit
 
 
 # --- response hardening -----------------------------------------------------
