@@ -314,3 +314,30 @@ def test_home_sends_an_operator_to_the_dashboard_not_the_questionnaire(client):
     assert r.headers["location"] == "/admin"
     r = _as(c, ids["someone@example.com"]).get("/", follow_redirects=False)
     assert r.headers["location"] == "/profile"
+
+
+def test_the_daily_run_streams_its_log_to_the_panel(monkeypatch):
+    """The fetching laptop starts the whole daily cycle from the dashboard (or
+    with the server, via AUTOSTART_JOB) and watches it there, line by line."""
+    import logging, time
+    import run_prod_worker
+    from app import adminjobs
+
+    def fake_run_once(since_hours):
+        logging.getLogger("app.connectors.gem").info("GeM: page 3 of 500")
+        logging.getLogger("prod-worker").warning("purge failed")
+
+    monkeypatch.setattr(run_prod_worker, "run_once", fake_run_once)
+    ok, _ = adminjobs.start(adminjobs.DAILY_JOB)
+    assert ok
+    for _ in range(100):
+        job = adminjobs.current()
+        if job.status != "running":
+            break
+        time.sleep(0.05)
+    lines = "\n".join(job.lines)
+    assert job.status == "ok"
+    assert "GeM: page 3 of 500" in lines and "warning: purge failed" in lines
+    # The capture is removed afterwards: later log lines do not reach the panel.
+    logging.getLogger("app.x").info("after the run")
+    assert "after the run" not in "\n".join(adminjobs.current().lines)

@@ -1074,7 +1074,7 @@ def admin_home(request: Request, db: Session = Depends(get_db), user=Depends(cur
         disabled=admin_data.disabled_sources(db),
         enrichment=admin_data.enrichment_progress(db),
         runs=admin_data.recent_runs(db),
-        connectors=[adminjobs.ENRICH_JOB, *REGISTRY],
+        connectors=[adminjobs.DAILY_JOB, adminjobs.ENRICH_JOB, *REGISTRY],
         enrich_job=adminjobs.ENRICH_JOB,
         max_workers=adminjobs.MAX_WORKERS,
         job=job.as_dict() if job else None,

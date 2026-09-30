@@ -120,7 +120,8 @@ if(out && out.textContent.indexOf('No run started yet.') === -1){ follow(); }
 // the form asking for answers it will ignore.
 const kind = document.getElementById('jobkind');
 function syncKind(){
-  const docsOnly = kind.value === 'Bid documents';
+  // The daily run takes none of these: it runs the fixed daily cycle.
+  const docsOnly = kind.value === 'Bid documents' || kind.value === 'Daily run';
   for(const el of document.querySelectorAll('.forfetch')) el.hidden = docsOnly;
 }
 if(kind){ kind.addEventListener('change', syncKind); syncKind(); }

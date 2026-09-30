@@ -44,6 +44,9 @@ def run_once(since_hours: float) -> None:
     from app.scheduler import run_connector
 
     log = logging.getLogger("prod-worker")
+    # Dedup keeps the columns it compares here between runs and downloads only
+    # what changed (app/dedup.py). CI restores the same path from actions/cache.
+    os.environ.setdefault("DEDUP_CACHE", os.path.join(HERE, ".cache", "dedup.json"))
     # Where this runs decides what it can reach: GeM refuses datacenter
     # addresses outright, so a hosted runner names it here instead of spending
     # the run timing out against a host that will not answer.
@@ -132,9 +135,6 @@ def main() -> int:
 
     # Set before app.db is imported: the engine is built at import time from this.
     os.environ["DATABASE_URL"] = prod
-    # Dedup keeps the columns it compares here between runs and downloads only
-    # what changed (app/dedup.py). CI restores the same path from actions/cache.
-    os.environ.setdefault("DEDUP_CACHE", os.path.join(HERE, ".cache", "dedup.json"))
 
     logging.basicConfig(
         level=logging.INFO,
