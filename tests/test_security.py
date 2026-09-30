@@ -527,3 +527,32 @@ def test_robots_keeps_crawlers_off_the_expensive_urls(client):
 def test_one_api_page_cannot_dump_the_corpus(client):
     assert client.get("/tenders?limit=100").status_code == 200
     assert client.get("/tenders?limit=500").status_code == 422
+
+
+def test_a_scraper_is_throttled_and_a_person_is_not(client, monkeypatch):
+    """Neon's free plan has 5 GB of transfer a month; a scraper looping over
+    the API is what can spend it. A person browsing never gets near the limit."""
+    monkeypatch.setattr(security, "LIST_LIMIT", 5)
+    for _ in range(5):
+        assert client.get("/tenders").status_code == 200
+    blocked = client.get("/tenders")
+    assert blocked.status_code == 429 and blocked.headers["retry-after"] == "60"
+    assert "no-store" in blocked.headers["cache-control"], "a 429 must not be edge-cached"
+    # Other pages still answer, and things with no database are never counted.
+    assert client.get("/login").status_code == 200
+    monkeypatch.setattr(security, "READ_LIMIT", 0)
+    assert client.get("/healthz").status_code == 200
+    assert client.get("/robots.txt").status_code == 200
+    assert client.get("/login").status_code == 429
+
+
+def test_on_vercel_each_visitor_gets_their_own_bucket(monkeypatch):
+    """On Vercel the peer is Vercel's proxy. x-vercel-forwarded-for is set by
+    Vercel itself and cannot be forged by the client."""
+    from starlette.requests import Request
+    monkeypatch.setenv("VERCEL", "1")
+    req = Request({"type": "http", "client": ("10.0.0.1", 1), "headers": [
+        (b"x-vercel-forwarded-for", b"203.0.113.9")]})
+    assert security.client_ip(req) == "203.0.113.9"
+    no_header = Request({"type": "http", "client": ("10.0.0.1", 1), "headers": []})
+    assert security.client_ip(no_header) == "10.0.0.1"

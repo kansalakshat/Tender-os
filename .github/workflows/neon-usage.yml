@@ -1,0 +1,26 @@
+# Daily check of the Neon free plan's monthly limits. Fails -- and GitHub emails
+# the repository owner -- once transfer, compute or storage is mostly spent or on
+# pace to be, days before Neon would start refusing connections. See
+# neon_usage.py. Needs the NEON_API_KEY repository secret.
+name: neon-usage
+
+on:
+  schedule:
+    - cron: "30 4 * * *"      # 10:00 IST
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  usage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+        run: python neon_usage.py
