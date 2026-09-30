@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import hashlib
+import json
 import logging
 import time
 from abc import ABC, abstractmethod
@@ -51,6 +53,10 @@ def load_approved_sources() -> dict[str, dict]:
 def _block_gem(request: httpx.Request) -> None:
     """httpx hook: fires per request, so redirects are checked too."""
     assert_not_blocked(str(request.url))
+
+
+# Kept in raw_payload: a fingerprint of the listing as last applied. See _upsert.
+FP_KEY = "_listing_fp"
 
 
 class BaseConnector(ABC):
@@ -371,13 +377,22 @@ class BaseConnector(ABC):
 
     def _upsert(self, db: Session, src: Source, rec: TenderRecord) -> int:
         """Returns 1 if the row was created, 0 if it already existed."""
-        existing = db.execute(
-            select(Tender).where(
-                Tender.source_id == src.id, Tender.external_ref == rec.external_ref
-            )
-        ).scalar_one_or_none()
         values = rec.model_dump()
         values.pop("external_ref")
+        # Most of a crawl is listings we already hold, unchanged. Loading each
+        # whole row to find that out was the bulk of Neon's transfer (the free
+        # plan has 5 GB a month); a fingerprint of what the listing said last
+        # time answers it in a few bytes, and only a changed listing is loaded.
+        fp = hashlib.sha1(
+            json.dumps(values, sort_keys=True, default=str).encode()).hexdigest()
+        where = (Tender.source_id == src.id, Tender.external_ref == rec.external_ref)
+        hit = db.execute(
+            select(Tender.id, Tender.raw_payload[FP_KEY].as_string()).where(*where)
+        ).first()
+        if hit is not None and hit[1] == fp:
+            return 0
+        values["raw_payload"] = {**(values.get("raw_payload") or {}), FP_KEY: fp}
+        existing = db.get(Tender, hit[0]) if hit is not None else None
         if existing is None:
             row = Tender(source_id=src.id, external_ref=rec.external_ref, **values)
             db.add(row)

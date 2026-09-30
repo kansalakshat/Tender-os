@@ -123,3 +123,32 @@ def test_an_unchanged_recrawl_does_not_look_like_an_update(enriched_row):
     _recrawl(db, src, raw_payload={"serial": "3", "end": "12-10-2026"})
     db.expire_all()
     assert db.get(Tender, t.id).last_updated_at > stamp, "a real change still counts"
+
+
+def test_an_unchanged_listing_is_not_downloaded_again(enriched_row):
+    """Loading every re-crawled row whole to learn it had not changed was most
+    of Neon's monthly transfer. An identical listing is settled by a fingerprint;
+    only a changed one loads the row."""
+    from sqlalchemy import event
+    db, src = enriched_row
+    _recrawl(db, src)                            # first sight: loads and fingerprints
+
+    seen = []
+    engine = db.get_bind()
+    listen = lambda *a: seen.append(a[2])
+    event.listen(engine, "before_cursor_execute", listen)
+    try:
+        assert _recrawl(db, src) == 0            # identical listing
+        full_loads = [s for s in seen if "tenders.title" in s and s.lstrip().upper().startswith("SELECT")]
+        assert full_loads == [], full_loads
+        assert not any(s.lstrip().upper().startswith("UPDATE") for s in seen)
+
+        seen.clear()
+        _recrawl(db, src, raw_payload={"serial": "9", "end": "15-10-2026"})
+        assert any(s.lstrip().upper().startswith("UPDATE") for s in seen), "a change is still written"
+    finally:
+        event.remove(engine, "before_cursor_execute", listen)
+    db.expire_all()
+    t = db.execute(db.query(Tender).statement).scalars().one()
+    assert t.raw_payload["end"] == "15-10-2026"
+    assert t.raw_payload[DONE_KEY] is True, "enrichment still survives a changed listing"
