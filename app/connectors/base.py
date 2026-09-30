@@ -417,7 +417,11 @@ class BaseConnector(ABC):
 
         for key, val in values.items():
             setattr(existing, key, val)
-        existing.last_updated_at = utcnow()
+        # Only a real change counts. Every re-crawled row used to get a new
+        # timestamp, and each site instance then re-downloaded all of them
+        # (matching._candidates) -- Neon free-plan transfer spent on nothing.
+        if db.is_modified(existing):
+            existing.last_updated_at = utcnow()
         return 0
 
     def close(self) -> None:

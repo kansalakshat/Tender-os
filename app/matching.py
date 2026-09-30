@@ -504,9 +504,10 @@ _CANDIDATES_LOCK = threading.Lock()
 # How far a delta reaches back past the newest timestamp seen: several workers on
 # different machines write last_updated_at, and their clocks are not in step.
 _CLOCK_SLACK = timedelta(minutes=2)
-# A full reload now and then catches what no timestamp records (dedup linking a
-# row to another does not bump last_updated_at).
-_FULL_EVERY_SECONDS = 6 * 3600
+# A full reload now and then, as a backstop for anything no timestamp records.
+# Dedup links and purges both bump last_updated_at now, so the delta sees them;
+# each full reload is the whole open corpus from Neon, so it is rare.
+_FULL_EVERY_SECONDS = 24 * 3600
 
 
 def _biddable(row, today: date) -> bool:

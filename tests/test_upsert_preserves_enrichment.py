@@ -107,3 +107,19 @@ def test_an_unenriched_row_is_still_updated_normally(session_factory):
     t = db.execute(db.query(Tender).statement).scalars().one()
     assert t.title == "Supply, Installation and com..."
     assert t.organization == "Pmo"
+
+
+def test_an_unchanged_recrawl_does_not_look_like_an_update(enriched_row):
+    """Every site instance re-downloads rows whose last_updated_at moved. A
+    re-crawl that changed nothing used to move it anyway, for every row."""
+    db, src = enriched_row
+    _recrawl(db, src)                                   # first crawl changes things
+    t = db.execute(db.query(Tender).statement).scalars().one()
+    stamp = t.last_updated_at
+    _recrawl(db, src)                                   # identical second crawl
+    db.expire_all()
+    assert db.get(Tender, t.id).last_updated_at == stamp
+
+    _recrawl(db, src, raw_payload={"serial": "3", "end": "12-10-2026"})
+    db.expire_all()
+    assert db.get(Tender, t.id).last_updated_at > stamp, "a real change still counts"
