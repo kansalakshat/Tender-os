@@ -26,9 +26,11 @@ from __future__ import annotations
 
 import logging
 import os
+import time
 from datetime import date, timedelta
 
 from sqlalchemy import and_, delete, func, select, update
+from sqlalchemy.exc import OperationalError
 
 from .db import SessionLocal
 from .models import Tender, utcnow
@@ -47,6 +49,12 @@ def cutoff_date(days: int, today: date | None = None) -> date:
     return (today or date.today()) - timedelta(days=days)
 
 
+# Seconds to wait before each retry. Neon waking from scale-to-zero, a dropped
+# SSL connection and a deadlock against an enrichment UPDATE are all transient,
+# and each has killed a purge before. ~3.5 minutes in all, then give up loudly.
+RETRY_DELAYS = (5, 15, 45, 120)
+
+
 def purge_expired(
     days: int | None = None,
     dry_run: bool = False,
@@ -62,6 +70,17 @@ def purge_expired(
     if days is None:
         log.info("purge: RETENTION_DAYS is unset, keeping every tender")
         return 0
+    for delay in RETRY_DELAYS:
+        try:
+            return _purge_once(days, dry_run, session_factory, today)
+        except OperationalError as exc:
+            log.warning("purge failed (%s), retrying in %ds",
+                        str(exc).splitlines()[0][:160], delay)
+            time.sleep(delay)
+    return _purge_once(days, dry_run, session_factory, today)
+
+
+def _purge_once(days: int, dry_run: bool, session_factory, today: date | None) -> int:
     cutoff = cutoff_date(days, today)
     condition = and_(Tender.deadline.is_not(None), Tender.deadline < cutoff)
 

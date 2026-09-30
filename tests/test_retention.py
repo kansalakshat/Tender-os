@@ -122,3 +122,22 @@ def test_purge_cli_refuses_to_guess_a_blast_radius(capsys, monkeypatch):
     monkeypatch.setattr(cli, "DEFAULT_RETENTION_DAYS", None)
     assert cli.main(["purge", "--dry-run"]) == 2
     assert "RETENTION_DAYS is unset" in capsys.readouterr().err
+
+
+def test_a_transient_database_error_is_retried_not_fatal(seeded, monkeypatch):
+    """Neon waking up, a dropped connection or a deadlock used to end the purge
+    for the day. It must retry and still delete."""
+    from sqlalchemy.exc import OperationalError
+    monkeypatch.setattr(retention.time, "sleep", lambda _s: None)
+    real = retention._purge_once
+    calls = []
+
+    def flaky(*args):
+        calls.append(1)
+        if len(calls) < 3:
+            raise OperationalError("DELETE", {}, Exception("SSL connection has been closed"))
+        return real(*args)
+
+    monkeypatch.setattr(retention, "_purge_once", flaky)
+    assert purge_expired(days=0, session_factory=seeded, today=TODAY) == 3
+    assert refs(seeded) == {"today", "future", "undated"}

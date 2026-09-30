@@ -1,0 +1,44 @@
+# Delete expired tenders, on its own schedule, independent of the ingest.
+#
+# The purge used to run only as the last step of daily-ingest, and for a week
+# every ingest timed out or crashed before reaching it, so closed tenders piled
+# up. The ingest still purges first thing; this is the backstop that does not
+# depend on a crawl, enrichment or a browser finishing.
+#
+# 00:15 UTC is 05:45 IST, just after the date changes, so yesterday's closings go
+# within minutes. 12:15 UTC catches a morning run GitHub delayed or dropped.
+# purge_expired retries transient database errors itself; a run that still
+# fails is emailed to the repository owner by GitHub.
+name: purge
+
+on:
+  schedule:
+    - cron: "15 0 * * *"
+    - cron: "15 12 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: purge
+  cancel-in-progress: false
+
+jobs:
+  purge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Purge
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: python -m app.cli purge --days 0 --yes
