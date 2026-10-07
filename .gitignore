@@ -63,3 +63,5 @@ probe_results*.json
 
 # dedup's column cache (app/dedup.py)
 .cache/
+
+CLAUDE.md
