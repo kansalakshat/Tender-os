@@ -38,13 +38,15 @@ function card(t, gutter, rank, tagsHtml){
   const f = Object.fromEntries(t.facts || []);
   const days = left(t.deadline)[0];
   const value = f['Estimated value'], emd = f['EMD (bid security)'];
-  const chips = (f.Where ? '<li class=loc>'+ico('map-pin')+esc(f.Where)+'</li>' : '')
+  const where = [t.city, t.state].filter(Boolean).join(', ');
+  const chips = (where ? '<li class=loc>'+ico('map-pin')+esc(where)+'</li>' : '')
     + extra(t)
     + ['Quantity','Bid type','Contract period'].filter(k=>f[k])
         .map(k=>'<li>'+k+': '+esc(f[k])+'</li>').join('');
   const url = '/t/'+esc(t.id);
   return '<li class="row '+rank+'"><div class=rmain>'
-    + '<p class=rhead>'+(gutter && gutter!==days ? '<span class=n>'+esc(gutter)+'</span>' : '')
+    + '<p class=rhead>'+(t.state ? '<span class=st>'+esc(t.state)+'</span>' : '')
+    + (gutter && gutter!==days ? '<span class=n>'+esc(gutter)+'</span>' : '')
     + '<b class=rorg>'+esc(t.organization||'unnamed buyer')+'</b>'
     + (f.Source ? '<span class=src>'+esc(f.Source)+'</span>' : '')+'</p>'
     + '<a class=t href="'+url+'">'+esc(t.title)+'</a>'
@@ -69,7 +71,9 @@ const _path = location.pathname;
 const _section =
   _path.startsWith('/c/') ? '/matches' :
   _path.startsWith('/t/') ? '/browse' :
-  _path === '/profile'    ? '/matches' : _path;
+  _path === '/profile'    ? '/matches' :
+  _path === '/wishlist'   ? '/dashboard' :
+  _path.startsWith('/buyer') ? '/' : _path;
 for(const a of document.querySelectorAll('.top nav a')){
   if(a.getAttribute('href') === _section) a.setAttribute('aria-current','page');
 }
@@ -131,6 +135,7 @@ fetch('/me').then(r=>r.json()).then(d=>{
     + '<div class=menu hidden>'
     +   '<p class=menuhead><b>'+esc(label)+'</b>'
     +     '<span class=menumail>'+esc(d.user.email)+'</span>'+warn+'</p>'
+    +   '<a href="/dashboard">'+ico('stack-simple')+'My dashboard</a>'
     +   '<a href="/matches">'+ico('target')+'My matches</a>'
     +   '<a href="/profile">'+ico('sliders-horizontal')+'Edit answers</a>'
     +   '<button type=button data-action=signout>'+ico('sign-out')+'Sign out</button>'
@@ -296,12 +301,3 @@ document.addEventListener('change', e => {
   s.form.requestSubmit(s.form.querySelector('button[aria-pressed="true"]'));
 });
 
-// The floating nav tucks away while you scroll down and returns on the way up.
-// Never while the account menu is open, or its panel would leave with it.
-let _lastY = scrollY;
-addEventListener('scroll', () => {
-  const y = scrollY, top = document.querySelector('.top');
-  const open = document.querySelector('.usermenu .menu:not([hidden])');
-  top.classList.toggle('away', y > 160 && y > _lastY && !open);
-  _lastY = y;
-}, {passive:true});

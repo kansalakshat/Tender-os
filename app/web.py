@@ -14,13 +14,15 @@ icon set are all served from our own origin under /static.
 from __future__ import annotations
 
 import hashlib
+import json
 import logging
+import os
 import platform
 import re
 from datetime import date, timedelta
 from functools import lru_cache
 from pathlib import Path
-from urllib.parse import parse_qs, quote
+from urllib.parse import parse_qs, quote, urlencode
 
 import httpx
 from fastapi import APIRouter, Body, Depends, HTTPException, Request
@@ -39,6 +41,7 @@ from .db import get_db, shared
 from .districts import DISTRICTS
 from .eligibility import REGISTRATIONS, checklist, needs_check
 from .facts import links as tender_links, money, preview_facts, sources, tender_facts
+from .geo import place_of
 from .matching import (
     SECTOR_LABELS,
     STATES,
@@ -52,7 +55,7 @@ from .matching import (
     strict_set,
     STRICT_LABELS,
 )
-from .models import Company, ConnectorRun, Source, Tender, User, WishlistItem
+from .models import Company, ConnectorRun, SavedSearch, Source, Tender, User, WishlistItem
 
 log = logging.getLogger(__name__)
 
@@ -118,16 +121,37 @@ _TILE_SKIP = {"of", "the", "and", "for", "in", "&", "-", "ltd", "limited", "pvt"
 
 
 def initials(name: str) -> str:
-    """Two letters for a buyer's monogram tile. Mirrors initials() in
-    static/js/strip.js. There are no logo files to show: the CSP allows images
-    only from this origin, and the portals publish none."""
+    """Two letters for a buyer's monogram tile, for buyers with no logo file."""
     words = [w for w in re.split(r"[^A-Za-z0-9]+", name or "") if w and w.lower() not in _TILE_SKIP]
     return "".join(w[0] for w in words[:2]).upper() or "?"
 
 
+# Company logos live in static/logos, with logos.json mapping each file to the
+# phrases that name that buyer: the corpus spells one buyer many ways ("NTPC
+# Limited", "Ntpc Limited", "Bharat Heavy Electricals Limited bhel"), so a file
+# per exact name would miss most of them. Read once at import, like the icons.
+_LOGO_DIR = _STATIC / "logos"
+try:
+    _LOGO_INDEX = json.loads((_LOGO_DIR / "logos.json").read_text(encoding="utf-8"))
+except (OSError, ValueError):
+    _LOGO_INDEX = {}
+# Longest phrase first, so "south eastern coalfields" wins over "eastern coalfields".
+_LOGO_FILE = dict(sorted(((p.lower(), f) for f, ps in _LOGO_INDEX.items()
+                          if (_LOGO_DIR / f).is_file() for p in ps), key=lambda pf: -len(pf[0])))
+_LOGO_RE = (re.compile(r"(?<![a-z0-9])(" + "|".join(map(re.escape, _LOGO_FILE)) + r")(?![a-z0-9])")
+            if _LOGO_FILE else None)
+
+
+@lru_cache(maxsize=8192)
+def logo_url(name: str) -> str:
+    """The buyer's logo file, or '' for the monogram tile."""
+    m = _LOGO_RE.search((name or "").lower()) if _LOGO_RE else None
+    return asset("logos/" + _LOGO_FILE[m.group(1)]) if m else ""
+
+
 def tile_tone(name: str) -> int:
     """Which of six tile colours a buyer gets: stable per name, so the same
-    buyer is the same colour everywhere. Mirrors tone() in strip.js."""
+    buyer is the same colour everywhere."""
     return sum(ord(c) for c in name or "") % 6
 
 
@@ -205,42 +229,6 @@ def summary_for(t: Tender) -> str:
     return _summary(t, sectors, places, days_left(t.deadline)[0])
 
 
-# ---- hero model -------------------------------------------------------------
-
-# The 3D models behind the home hero, per sector: files under static/models,
-# made with frontend/compress-model.mjs. Several sectors may share one. Sectors
-# not listed (maintenance_amc) and signed-out visitors get HERO_DEFAULT.
-HERO_MODELS = {
-    "agriculture": "farm_tools.glb",
-    "civil_construction": "road.glb",
-    "electrical_power": "circuit_board.glb",
-    "industrial_supply": "tools.glb",
-    "it_services": "chip.glb",
-    "manpower_security": "workers.glb",
-    "medical_pharma": "medical_kit.glb",
-    "office_supplies": "furniture.glb",
-    "scrap_auction": "crane.glb",
-    "vehicle_hire": "truck.glb",
-}
-HERO_DEFAULT = "workers.glb"
-# Models that are a whole scene with a flat ground rather than an object. Shown
-# alone, the canvas clears to the colour that ground renders at (measured), so
-# it fills the hero edge to edge.
-HERO_GROUND = {"workers.glb": "#ae6f1c"}
-# Every model is its own download, after the page has loaded. Three keeps the
-# worst case (crane + medical kit + furniture) near 450 KB over the wire.
-HERO_MAX = 3
-
-
-def hero_models(sectors=()) -> tuple[list[str], str]:
-    """The model files for these sectors, in profile order, without repeats and
-    at most HERO_MAX; and the ground colour when a single scene is shown."""
-    files = list(dict.fromkeys(HERO_MODELS[s] for s in sectors or () if s in HERO_MODELS))
-    files = files[:HERO_MAX] or [HERO_DEFAULT]
-    ground = HERO_GROUND.get(files[0], "") if len(files) == 1 else ""
-    return files, ground
-
-
 # ---- templates --------------------------------------------------------------
 
 _env = Environment(
@@ -251,8 +239,8 @@ _env = Environment(
 _env.globals.update(
     icon=icon, asset=asset, favicon=FAVICON, days_left=days_left,
     rank_class=rank_class, summary_for=summary_for, preview_facts=preview_facts,
-    initials=initials, tile_tone=tile_tone,
-    tender_links=tender_links, hero_models=hero_models,
+    initials=initials, tile_tone=tile_tone, logo_url=logo_url, place_of=place_of,
+    tender_links=tender_links,
 )
 _env.filters["num"] = lambda n: f"{n:,}"
 # For rendering a list of strict field keys as the words a bidder used.
@@ -298,6 +286,10 @@ Disallow: /companies/
 Disallow: /matches
 Disallow: /profile
 Disallow: /wishlist
+Disallow: /dashboard
+Disallow: /searches
+Disallow: /participate/
+Disallow: /buyers?
 Disallow: /questionnaire
 Disallow: /me
 Disallow: /auth/
@@ -420,30 +412,28 @@ def _welcome(db: Session) -> str:
 
 
 def _render_welcome(db: Session, today: date) -> str:
-    is_open = or_(Tender.deadline.is_(None), Tender.deadline >= today)
     f = _figures(db, today)
-    # Real notices beat any amount of describing them, and they are the same rows
-    # /browse would show at the top of its default sort.
-    soonest = db.execute(
-        select(Tender)
-        .where(Tender.duplicate_of.is_(None), Tender.deadline >= today)
-        .order_by(Tender.deadline.asc(), Tender.id.asc())
-        .limit(6)
-    ).scalars().all()
-    buyers = db.execute(
-        select(Tender.organization, func.count())
-        .where(Tender.organization.is_not(None), Tender.duplicate_of.is_(None),
-               is_open)
-        .group_by(Tender.organization)
-        .order_by(func.count().desc())
-        .limit(8)
-    ).all()
     return render(
-        "home.html", title="Find tenders", n_open=f["n_open"], n_soon=f["n_soon"],
+        "home.html", title="Tenderleo | AI-powered tender intelligence",
+        n_open=f["n_open"], n_soon=f["n_soon"],
         n_sources=f["n_sources"], n_buyers=f["n_buyers"], last=f["last"],
-        soonest=soonest,
-        buyers=buyers, today=today,
+        buyers=_open_buyers(db, today)[:HOME_BUYERS], states=STATES,
+        demo=DEMO_URL, today=today,
     )
+
+
+# Company logos on the home page; the rest are on /buyers.
+HOME_BUYERS = 24
+# "Book a Demo": an email to the monitored contact address until there is a
+# booking page. Empty hides the button.
+DEMO_URL = os.environ.get("DEMO_URL") or (
+    f"mailto:{os.environ['CONTACT_EMAIL']}?subject=Tenderleo%20demo"
+    if os.environ.get("CONTACT_EMAIL") else "")
+
+
+@router.get("/about", response_class=HTMLResponse)
+def about() -> str:
+    return render("about.html", title="About Tenderleo")
 
 
 # ---- the questionnaire, asked once ----------------------------------------
@@ -738,7 +728,7 @@ def _document_for(db: Session, t: Tender) -> tuple[str, str] | None:
 
 @router.get("/t/{tender_id}", response_class=HTMLResponse)
 def tender_detail(
-    tender_id: int, db: Session = Depends(get_db),
+    tender_id: int, request: Request, db: Session = Depends(get_db),
     user: User | None = Depends(current_user),
 ) -> str:
     """Everything the aggregator holds for one notice, on our own page."""
@@ -756,11 +746,20 @@ def tender_detail(
     label, _rank = days_left(t.deadline, today)
     facts = tender_facts(t, today)
     found = _document_for(db, t)
+    state, city = place_of(t)
+    mine = _saved_item(db, user, t.id)
+    # Absolute, for the WhatsApp share text: PUBLIC_BASE_URL in production,
+    # where the request's own host is Vercel's internal one.
+    page_url = (os.environ.get("PUBLIC_BASE_URL") or str(request.base_url)).rstrip("/") \
+        + f"/t/{t.id}"
     return render(
-        "tender.html", title=t.title[:60], t=t, company=company,
+        "tender.html", title=t.title[:60], t=t, company=company, raw=raw,
+        state=state, city=city, today=today, page_url=page_url,
+        share_url="https://wa.me/?" + urlencode({"text": f"{t.title}\n{page_url}"}),
         # Signed out the heart still draws, and says what it needs: hiding it
         # would make saving a feature nobody discovers.
-        saved=t.id in saved_ids(db, user), signed_in=user is not None,
+        saved=mine is not None, participating=bool(mine and mine.participating),
+        signed_in=user is not None,
         company_answered=company is not None and not (
             company.years_in_business is None and company.annual_turnover is None
             and company.largest_similar_work is None and company.bid_capacity is None
@@ -892,7 +891,9 @@ def browse(db: Session = Depends(get_db)) -> str:
     this page is the form around it, not a second query path."""
     return shared(db, ("browse",), 300, lambda db: render(
         "browse.html", title="Browse tenders",
-        sources=db.execute(select(Source).order_by(Source.name)).scalars().all()))
+        sources=db.execute(select(Source.id, Source.name).order_by(Source.name)).all(),
+        states=STATES, sectors=sorted(SECTOR_LABELS.items(), key=lambda kv: kv[1]),
+        districts={st: sorted(ds) for st, ds in DISTRICTS.items()}))
 
 
 # ---- buyers ----------------------------------------------------------------
@@ -907,7 +908,9 @@ def _open_buyers(db: Session, today: date) -> list[tuple[str, int]]:
         is_open = or_(Tender.deadline.is_(None), Tender.deadline >= today)
         return [tuple(r) for r in db.execute(
             select(Tender.organization, func.count())
-            .where(Tender.organization.is_not(None), Tender.duplicate_of.is_(None), is_open)
+            .where(Tender.organization.is_not(None), Tender.duplicate_of.is_(None), is_open,
+                   # placeholders some portals print in the buyer column
+                   func.lower(Tender.organization).not_in(("n/a", "na", "-", "--", "")))
             .group_by(Tender.organization)
             .order_by(func.count().desc(), Tender.organization)
         )]
@@ -918,7 +921,27 @@ def _open_buyers(db: Session, today: date) -> list[tuple[str, int]]:
 def buyers_strip(db: Session = Depends(get_db)) -> JSONResponse:
     """All buyers for the home-page strip. Fetched after the page shows, so the
     thousand-odd names do not weigh down every home page load."""
-    return JSONResponse([[n, c] for n, c in _open_buyers(db, date.today())])
+    # A third element only for the few buyers with a logo file: the list runs to
+    # thousands, and most would carry an empty string.
+    return JSONResponse([[n, c, *filter(None, [logo_url(n)])]
+                         for n, c in _open_buyers(db, date.today())])
+
+
+BUYERS_PAGE = 60
+
+
+@router.get("/buyers", response_class=HTMLResponse)
+def buyers_page(q: str = "", page: int = 1, db: Session = Depends(get_db)) -> str:
+    """Every company with an open tender, as logo tiles, searchable by name.
+    Filtered in memory: the list is the one already cached for the strip."""
+    q = q.strip()[:100]
+    every = _open_buyers(db, date.today())
+    hits = [b for b in every if q.lower() in b[0].lower()] if q else every
+    pages = max(1, -(-len(hits) // BUYERS_PAGE))
+    page = min(max(page, 1), pages)
+    return render("buyers.html", title="Find tenders by company", q=q, page=page,
+                  pages=pages, total=len(hits),
+                  buyers=hits[(page - 1) * BUYERS_PAGE: page * BUYERS_PAGE])
 
 
 BUYER_PAGE = 30
@@ -979,8 +1002,7 @@ def buyer_page(name: str = "", sort: str = "", page: int = 1,
     return render("buyer.html", title=name, buyer=name, sort=sort, page=page,
                   pages=max(1, -(-total // BUYER_PAGE)), total=total,
                   matched=len(score_of) if profile is not None else None,
-                  has_profile=profile is not None, shown=shown,
-                  tile=initials(name), tone=tile_tone(name))
+                  has_profile=profile is not None, shown=shown)
 
 
 # ---- wishlist --------------------------------------------------------------
@@ -989,13 +1011,14 @@ def buyer_page(name: str = "", sort: str = "", page: int = 1,
 # could not be shown back to them on their next visit.
 
 
-def saved_ids(db: Session, user: User | None) -> set[int]:
-    """Which tenders this user has saved. Empty for a signed-out visitor."""
+def _saved_item(db: Session, user: User | None, tender_id: int) -> WishlistItem | None:
+    """This user's save of this tender, or None (always None signed out)."""
     if user is None:
-        return set()
-    return set(db.execute(
-        select(WishlistItem.tender_id).where(WishlistItem.user_id == user.id)
-    ).scalars())
+        return None
+    return db.execute(
+        select(WishlistItem).where(WishlistItem.user_id == user.id,
+                                   WishlistItem.tender_id == tender_id)
+    ).scalar_one_or_none()
 
 
 @router.get("/wishlist", response_class=HTMLResponse)
@@ -1019,18 +1042,21 @@ def wishlist_add(tender_id: int, db: Session = Depends(get_db),
                  user: User | None = Depends(current_user)):
     if user is None:
         raise HTTPException(status_code=401, detail="sign in to save tenders")
+    _save(db, user, tender_id)
+    db.commit()
+    return JSONResponse({"saved": True})
+
+
+def _save(db: Session, user: User, tender_id: int) -> WishlistItem:
     if db.get(Tender, tender_id) is None:
         raise HTTPException(status_code=404, detail="tender not found")
-    existing = db.execute(
-        select(WishlistItem).where(WishlistItem.user_id == user.id,
-                                   WishlistItem.tender_id == tender_id)
-    ).scalar_one_or_none()
+    item = _saved_item(db, user, tender_id)
     # Saving something already saved is not an error; it is what a second tab
     # or an impatient second click looks like.
-    if existing is None:
-        db.add(WishlistItem(user_id=user.id, tender_id=tender_id))
-        db.commit()
-    return JSONResponse({"saved": True})
+    if item is None:
+        item = WishlistItem(user_id=user.id, tender_id=tender_id)
+        db.add(item)
+    return item
 
 
 @router.delete("/wishlist/{tender_id}")
@@ -1038,14 +1064,109 @@ def wishlist_remove(tender_id: int, db: Session = Depends(get_db),
                     user: User | None = Depends(current_user)):
     if user is None:
         raise HTTPException(status_code=401, detail="sign in to save tenders")
-    item = db.execute(
-        select(WishlistItem).where(WishlistItem.user_id == user.id,
-                                   WishlistItem.tender_id == tender_id)
-    ).scalar_one_or_none()
+    item = _saved_item(db, user, tender_id)
     if item is not None:
         db.delete(item)
         db.commit()
     return JSONResponse({"saved": False})
+
+
+@router.post("/participate/{tender_id}")
+def participate(tender_id: int, db: Session = Depends(get_db),
+                user: User | None = Depends(current_user)):
+    """Ready to fill this tender: saved, and listed on the dashboard as a bid
+    in progress."""
+    if user is None:
+        raise HTTPException(status_code=401, detail="sign in to track your bids")
+    _save(db, user, tender_id).participating = True
+    db.commit()
+    return JSONResponse({"participating": True})
+
+
+@router.delete("/participate/{tender_id}")
+def participate_stop(tender_id: int, db: Session = Depends(get_db),
+                     user: User | None = Depends(current_user)):
+    """Back to a plain save; the tender stays saved."""
+    if user is None:
+        raise HTTPException(status_code=401, detail="sign in to track your bids")
+    item = _saved_item(db, user, tender_id)
+    if item is not None:
+        item.participating = False
+        db.commit()
+    return JSONResponse({"participating": False})
+
+
+# ---- dashboard ---------------------------------------------------------------
+#
+# One page per person: the bids they are working on, what they saved, and the
+# browse searches they run again and again.
+
+# The /browse parameters a saved search may carry. Anything else is dropped, so
+# a stored query can only ever reproduce a browse page.
+SEARCH_KEYS = ("q", "organization", "source_id", "state", "city", "sector", "sort",
+               "include_closed")
+MAX_SEARCHES = 50
+
+
+def clean_query(query: str) -> str:
+    """The browse query string, keeping only SEARCH_KEYS, each value capped."""
+    got = parse_qs(query.lstrip("?")[:1000])
+    return urlencode([(k, got[k][0][:100]) for k in SEARCH_KEYS if got.get(k)])
+
+
+@router.get("/dashboard", response_class=HTMLResponse)
+def dashboard(db: Session = Depends(get_db), user: User | None = Depends(current_user)):
+    if user is None:
+        return RedirectResponse("/login?next=/dashboard", status_code=303)
+    rows = db.execute(
+        select(Tender, WishlistItem.participating)
+        .join(WishlistItem, WishlistItem.tender_id == Tender.id)
+        .where(WishlistItem.user_id == user.id)
+        .order_by(Tender.deadline.asc().nulls_last(), WishlistItem.created_at.desc())
+    ).all()
+    searches = db.execute(
+        select(SavedSearch.id, SavedSearch.name, SavedSearch.query)
+        .where(SavedSearch.user_id == user.id)
+        .order_by(SavedSearch.created_at.desc())
+    ).all()
+    return render("dashboard.html", title="Your dashboard", email=user.email,
+                  company=_profile_of(db, user),
+                  bidding=[t for t, p in rows if p], saved=[t for t, p in rows if not p],
+                  searches=searches, today=date.today())
+
+
+@router.post("/searches")
+def search_save(db: Session = Depends(get_db), user: User | None = Depends(current_user),
+                name: str = Body("", embed=True), query: str = Body("", embed=True)):
+    if user is None:
+        raise HTTPException(status_code=401, detail="sign in to save searches")
+    query = clean_query(query)
+    if not query:
+        raise HTTPException(status_code=422, detail="nothing to save: pick a filter first")
+    n = db.scalar(select(func.count()).select_from(SavedSearch)
+                  .where(SavedSearch.user_id == user.id))
+    if n >= MAX_SEARCHES:
+        raise HTTPException(status_code=422,
+                            detail=f"you have {MAX_SEARCHES} saved searches; delete one first")
+    item = SavedSearch(user_id=user.id, name=name.strip()[:80] or "My search", query=query)
+    db.add(item)
+    db.commit()
+    return JSONResponse({"id": item.id, "name": item.name, "query": item.query}, 201)
+
+
+@router.delete("/searches/{search_id}")
+def search_delete(search_id: int, db: Session = Depends(get_db),
+                  user: User | None = Depends(current_user)):
+    if user is None:
+        raise HTTPException(status_code=401, detail="sign in first")
+    # Scoped to the owner: someone else's id is simply not found.
+    item = db.execute(select(SavedSearch).where(
+        SavedSearch.id == search_id, SavedSearch.user_id == user.id)).scalar_one_or_none()
+    if item is None:
+        raise HTTPException(status_code=404, detail="no such saved search")
+    db.delete(item)
+    db.commit()
+    return JSONResponse({"deleted": True})
 
 
 # ---- operator dashboard -----------------------------------------------------

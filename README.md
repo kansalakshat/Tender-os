@@ -568,7 +568,7 @@ app/
 templates/         Jinja2 page templates (autoescaped)
 static/
   css/site.css     all site styling
-  js/              site.js (every page), one file per page, motion.js
+  js/              site.js (every page), one file per page
 config/
   approved_sources.yaml        allowlist -- unlisted domains cannot run
                                (currently: CPPP, data.gov.in, MP)

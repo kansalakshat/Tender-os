@@ -1,33 +1,124 @@
 {% extends "base.html" %}
-{% from "_macros.html" import skeleton_row %}
-{#- Everything the aggregator holds for one notice. The match score and the
-    related lists load after the page shows (GET /t/<id>/extras), so the details
-    never wait on them; static/js/tender.js fills the slots. #}
+{% from "_macros.html" import skeleton_row, vendor_docs %}
+{#- Everything the aggregator holds for one notice, laid out in tabs the way a
+    bidder reads it: what and who, eligibility, dates, documents. The match
+    score and the related lists load after the page shows (GET /t/<id>/extras),
+    so the details never wait on them; static/js/tender.js fills the slots. #}
+{%- set fx = {} %}{% for label, value, _m in facts %}{% set _ = fx.update({label: value}) %}{% endfor -%}
+{%- set closed = days_label == 'closed' -%}
+{%- set value = fx.get('Estimated value', '') -%}
+{%- set has_value = value and not value.startswith('not ') -%}
+{%- set emd = fx.get('EMD (bid security)') -%}
+{%- set opening = fx.get('Bids opened') or fx.get('Bids opened at') -%}
+{%- set org_labels = ['Buyer', 'Department', 'Organisation chain', 'Buying office', 'Ministry'] -%}
+{%- set date_labels = ['Published', 'Bids close', 'Bids opened', 'Bids opened at', 'Bidding window',
+                       'Offer validity', 'First collected', 'Last updated'] -%}
 {% block content %}<div class=backlink><a href="/browse">{{ icon('caret-left') }}Back to all tenders</a></div>
-<p class=kicker>{{ t.organization or "unnamed buyer" }}</p>
-<h1 class=detailHead>{{ t.title }}</h1>
-<p class="lede summary">{{ summary }}</p>
-{% if sectors %}<ul class='tags sectortags'>{% for x in sectors %}<li class=tag>{{ x }}</li>{% endfor %}</ul>{% endif %}
+<nav class=ttabs aria-label="On this page"><a href="#overview">Overview</a><a href="#eligibility">Eligibility</a>
+ <a href="#dates">Dates</a><a href="#documents">Documents</a></nav>
+
+<section class=tcard id=overview>
+ <ul class=tchips>
+  {%- if fx.Source %}<li class=dark>{{ fx.Source }}</li>{% endif %}
+  <li class="{{ 'shut' if closed else 'isopen' }}">{{ 'Closed' if closed else 'Active' }}</li>
+  {%- for x in sectors %}<li>{{ x }}</li>{% endfor %}
+ </ul>
+ <p class=crumbs><a href="/">Home</a>{% if state %} <span aria-hidden=true>&rsaquo;</span> <a href="/browse?state={{ state|urlquote }}">{{ state }}</a>{% endif %}
+  {%- if t.organization %} <span aria-hidden=true>&rsaquo;</span> <a href="/buyer?name={{ t.organization|urlquote }}">{{ t.organization }}</a>{% endif %}</p>
+ <h1 class=detailHead>{{ t.title }}</h1>
+ <p class=tline>{{ icon('buildings') }}<b>{{ t.organization or "Unnamed buyer" }}</b></p>
+ {%- if t.department and t.department != t.organization %}<p class="tline sub">{{ t.department }}</p>{% endif %}
+ {%- if city or state %}<p class=tline>{{ icon('map-pin') }}{{ [city, state]|select|join(', ') }}</p>{% endif %}
+ <p class="tline money">{{ icon('currency-inr') }}{% if has_value %}Amount: <b>{{ value }}</b>{% elif emd %}EMD: <b>{{ emd }}</b>{% else %}Amount: <b class=none>not published</b>{% endif %}
+  <span class=sep aria-hidden=true>&middot;</span>{{ icon('calendar') }}Closes: <b>{{ fx.get('Bids close') }}</b>{% if days_label %} <span class=chipish>{{ days_label }}</span>{% endif %}</p>
+ <div class=tactions>
+  {%- if document %}<a class=btn href="{{ document.url }}" target=_blank rel="noopener noreferrer" download>{{ icon('download') }}Download</a>{% endif %}
+  <a class="btn ghost" href="#documents">{{ icon('arrow-up-right') }}View on portal</a>
+  <a class="btn ghost wa" href="{{ share_url }}" target=_blank rel="noopener noreferrer">{{ icon('share') }}Share on WhatsApp</a>
+  <button class=ghost type=button data-action=copy data-copy="{{ page_url }}">Copy link</button>
+  <button id=savebtn class="heart{{ ' on' if saved else '' }}" type=button
+    data-tender="{{ t.id }}" data-saved="{{ 'true' if saved else 'false' }}"
+    data-signed-in="{{ 'true' if signed_in else 'false' }}"
+    aria-pressed="{{ 'true' if saved else 'false' }}">
+   <span class=hearticon aria-hidden=true>&#9829;</span>
+   <span class=hearttext>{{ 'Saved' if saved else 'Save this tender' }}</span>
+  </button>
+ </div>
+ {%- if not closed %}
+ <p class=readyrow><button class="ready{{ ' on' if participating else '' }}" type=button id=readybtn
+   data-tender="{{ t.id }}" data-on="{{ 'true' if participating else 'false' }}"
+   data-signed-in="{{ 'true' if signed_in else 'false' }}" aria-pressed="{{ 'true' if participating else 'false' }}">
+   {{ icon('check-circle') }}<span>{{ "You're bidding on this" if participating else 'Ready to fill this tender' }}</span></button>
+  <span class=hint id=readymsg role=status>{% if participating %}Listed on your <a href="/dashboard#bidding">dashboard</a>.{% else %}Tracks it on your dashboard and walks you through the documents.{% endif %}</span></p>
+ {%- endif %}
+</section>
+
+<section class=tcard id=dates>
+ <h2>{{ icon('calendar') }}Timeline</h2>
+ <ol class=timeline>
+  <li class=done><b>Published</b><span>{{ fx.get('Published') or 'not stated' }}</span></li>
+  <li class="{{ 'done' if closed else 'next' }}"><b>Closes</b><span>{{ fx.get('Bids close') }}</span></li>
+  <li><b>Bid opening</b><span>{{ opening or 'not stated' }}</span></li>
+ </ol>
+ <div class=twobox>
+  <div class=vbox>{{ icon('currency-inr') }}<div><span>{{ 'Tender value' if has_value or not emd else 'EMD' }}</span><b>{{ value if has_value else emd or 'Not published' }}</b></div></div>
+  <div class="vbox due">{{ icon('calendar') }}<div><span>Closing date</span><b>{{ fx.get('Bids close') }}</b></div></div>
+ </div>
+ <dl class="facts compact">
+ {%- for label, v, mono in facts if v and label in date_labels -%}
+ <div><dt>{{ label }}</dt><dd{% if mono %} class=mono{% endif %}>{{ v }}</dd></div>
+ {%- endfor -%}
+ </dl>
+</section>
+
+<section class="tcard aibox">
+ <div class=aihead>{{ icon('sparkle') }}<div><h2>Bid faster using AI</h2>
+ <p class=hint>Check eligibility, get the document checklist, and review the scope of work.</p></div>
+ <a class=btn href="#eligibility">Start analysis{{ icon('caret-right') }}</a></div>
+ <ul class=aipoints>
+  <li><a href="#eligibility">{{ icon('shield-check') }}Check eligibility requirements</a></li>
+  <li><a href="#documents">{{ icon('file-text') }}Get document checklist</a></li>
+  <li><a href="#work">{{ icon('target') }}Understand scope of work</a></li>
+ </ul>
+</section>
 <div id=fitSlot>
 {%- if company %}<div class="fit sk" aria-busy=true>
  <p class=hint role=status>Checking this tender against your profile&hellip;</p>
  <div class=b></div><div class="b s"></div></div>{% endif -%}
 </div>
-<section class=elig><h2>Eligibility</h2><p class=hint>Typical criteria for government tenders, plus clues from the title. The real rules are in the tender document: confirm there before bidding.
+
+<section class=tcard id=org>
+ <h2>{{ icon('buildings') }}Tender inviting organisation</h2>
+ <dl class="facts compact">
+ {%- for label, v, mono in facts if v and label in org_labels -%}
+ <div><dt>{{ 'Name' if label == 'Buyer' else label }}</dt><dd>{{ v }}</dd></div>
+ {%- endfor -%}
+ </dl>
+</section>
+
+<section class=tcard id=work>
+ <h2>{{ icon('file-text') }}Work description</h2>
+ <p class=workdesc>{{ t.title }}</p>
+ <p class="lede summary">{{ summary }}</p>
+ <h3>Tender information</h3>
+ <dl class="facts compact">
+ {%- if sectors %}<div><dt>Product category</dt><dd>{{ sectors|join(', ') }}</dd></div>{% endif -%}
+ {%- for label, v, mono in facts if v and label not in org_labels and label not in date_labels -%}
+ <div><dt>{{ label }}</dt><dd{% if mono %} class=mono{% endif %}>{{ v }}</dd></div>
+ {%- endfor -%}
+ </dl>
+</section>
+
+<section class="elig tcard" id=eligibility><h2>{{ icon('shield-check') }}Eligibility</h2><p class=hint>Typical criteria for government tenders, plus clues from the title. The real rules are in the tender document: confirm there before bidding.
 {% if company is none %}<a href="/signup">Create an account</a> and answer the eligibility questions to check these against your company.
 {%- elif not company_answered %}<a href="/profile">Answer the eligibility questions</a> to check these against your company.
 {%- else %}Checked against your answers.{% endif %}</p><ul>
 {%- for i in checklist %}<li class={{ 'ok' if i.ok else 'check' }}><b>{{ 'ok' if i.ok else 'check' }}</b><div><strong>{{ i.label }}</strong><p>{{ i.detail }}</p></div></li>{% endfor -%}
 </ul></section>
-<dl class=facts>
-{%- for label, value, mono in facts if value -%}
-<div><dt>{{ label }}</dt><dd{% if mono %} class=mono{% endif %}>
-{%- if label == "Bids close" and t.deadline -%}
-<time datetime='{{ t.deadline }}'>{{ value }}</time>{% if days_label %} <span class=chipish>{{ days_label }}</span>{% endif %}
-{%- else %}{{ value }}{% endif -%}
-</dd></div>
-{%- endfor -%}
-</dl>
+
+<section class=tcard id=documents>
+<h2>{{ icon('file-text') }}Documents required</h2>
+{{ vendor_docs() }}
 {#- Shown only when a document URL was recorded. Most portals hand out
     session-bound links that expire, so there is usually no dead "Download"
     button on a page that has nothing to download. #}
@@ -35,7 +126,7 @@
  <h2>Bid document</h2>
  <p>The buyer's own tender document, exactly as the portal publishes it.</p>
  <p><a class="btn primary" href="{{ document.url }}" target=_blank rel="noopener noreferrer"
-    download>{{ icon('caret-down') }}Download document (PDF)</a></p>
+    download>{{ icon('download') }}Download document (PDF)</a></p>
  <p class=hint>Served by {{ document.source }}, not stored or altered by us.</p>
 {#- The attachments the bid document itself points at -- specification sheets,
     the general terms, annexures. They are link annotations inside the PDF, so
@@ -47,21 +138,6 @@
  <p class=hint>Hosted by the portal. We only read the addresses out of the PDF.</p>
 {% endif %}
 </div>{% endif %}
-{#- Saving. Rendered signed out too, saying what it needs rather than hiding:
-    a feature that only appears once you already have an account is one nobody
-    finds. The state lives on the button so script has one place to read it. -#}
-<p class=saverow>
- <button id=savebtn class="heart{{ ' on' if saved else '' }}" type=button
-   data-tender="{{ t.id }}" data-saved="{{ 'true' if saved else 'false' }}"
-   data-signed-in="{{ 'true' if signed_in else 'false' }}"
-   aria-pressed="{{ 'true' if saved else 'false' }}">
-  <span class=hearticon aria-hidden=true>&#9829;</span>
-  <span class=hearttext>{{ 'Saved' if saved else 'Save this tender' }}</span>
- </button>
- <a class=savelink href="/wishlist">See saved tenders</a>
-</p>
-
-{% from "_macros.html" import vendor_docs %}{{ vendor_docs() }}
 {% if cppp_box %}
 {#- CPPP rows with a stored tender link: the CAPTCHA sits right here, so opening
     the full notice is one click. The image is fetched by script after the page
@@ -100,6 +176,14 @@
  documents.</p>
 </div>
 {%- endif %}
+{%- if not closed %}
+<div class=participate>
+ <div><h2>Ready to participate?</h2>
+ <p class=hint>Download the tender documents, gather the paperwork above, and submit your bid on the portal before {{ fx.get('Bids close') }}.</p></div>
+ <a class=btn href="#overview" data-ready-jump>Ready to fill this tender{{ icon('arrow-right') }}</a>
+</div>
+{%- endif %}
+</section>
 <div id=moreSlot data-src="/t/{{ t.id }}/extras"><section class="more sk" aria-busy=true>
  <p class=hint>Finding other tenders from this buyer and similar work&hellip;</p>
  <ol class=rows>

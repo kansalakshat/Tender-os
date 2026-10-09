@@ -135,6 +135,9 @@ class TenderOut(BaseModel):
     # JSON rows and the HTML rows cannot drift apart.
     summary: str = ""
     links: list[dict] = Field(default_factory=list)
+    # Where it is, from app/geo.py: the state leads every card.
+    state: str = ""
+    city: str = ""
 
     @model_validator(mode="before")
     @classmethod
@@ -147,6 +150,9 @@ class TenderOut(BaseModel):
         data = {name: getattr(obj, name) for name in cls.model_fields if hasattr(obj, name)}
         data["facts"] = preview_facts(obj)
         data["links"] = links(obj)
+        from .geo import place_of
+
+        data["state"], data["city"] = place_of(obj)
         # Imported here, not at module scope: web imports schemas, so doing this
         # at the top is a cycle.
         from .web import summary_for

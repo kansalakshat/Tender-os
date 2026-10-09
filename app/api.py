@@ -36,6 +36,8 @@ from .auth import (
 from .connectors import REGISTRY
 from .db import SessionLocal, get_db
 from .districts import DISTRICTS
+from .facts import sources
+from .geo import PORTAL_STATE, city_clause, sector_clause, state_clause
 from .matching import ALL_DISTRICTS, SECTOR_LABELS, STATES, find_matches, warm_candidates
 from .models import Company, ConnectorRun, Source, Tender, User
 from .models import utcnow
@@ -75,7 +77,7 @@ async def lifespan(_app):
 app = FastAPI(
     lifespan=lifespan,
     docs_url=None,
-    title="Tender OS",
+    title="Tenderleo",
     version="0.1.0",
     description=(
         "Aggregated public procurement notices from official Indian government "
@@ -195,7 +197,7 @@ DOCS_BAR = """<div class=tos-bar><div class=wrap>
    <rect x="7" y="14.5" width="12" height="3"/></g>
    <rect x="7" y="20" width="6" height="3" fill="#FFFFFF" fill-opacity=".55"/>
   </svg>
-  <b>Tender</b><span>OS</span></a>
+  <b>Tender</b><span>leo</span></a>
  <nav class=tos-nav><a href="/">Home</a><a href="/matches">Matches</a>
  <a href="/browse">Browse</a><a class=on href="/docs">API</a></nav>
 </div></div>"""
@@ -246,6 +248,9 @@ def list_tenders(
     department: str | None = None,
     organization: str | None = None,
     source_id: int | None = None,
+    state: str | None = Query(None, description="A state or UT, as in GET /questionnaire"),
+    city: str | None = Query(None, description="A district, as in GET /questionnaire"),
+    sector: str | None = Query(None, description="A sector key, as in GET /questionnaire"),
     published_from: date | None = None,
     published_to: date | None = None,
     deadline_from: date | None = None,
@@ -275,6 +280,22 @@ def list_tenders(
         filters.append(Tender.organization.ilike(f"%{organization}%"))
     if source_id is not None:
         filters.append(Tender.source_id == source_id)
+    # Exact names only: each one picks a regex out of a fixed table, and an
+    # unknown one would otherwise silently filter on nothing.
+    dialect = db.get_bind().dialect.name
+    if state:
+        if state not in STATES:
+            raise HTTPException(status_code=422, detail="unknown state")
+        portals = [s.id for s in sources(db).values() if PORTAL_STATE.get(s.name) == state]
+        filters.append(state_clause(state, portals, dialect))
+    if city:
+        if city not in ALL_DISTRICTS:
+            raise HTTPException(status_code=422, detail="unknown city")
+        filters.append(city_clause(city, dialect))
+    if sector:
+        if sector not in SECTOR_LABELS:
+            raise HTTPException(status_code=422, detail="unknown sector")
+        filters.append(sector_clause(sector, dialect))
     if published_from:
         filters.append(Tender.published_date >= published_from)
     if published_to:

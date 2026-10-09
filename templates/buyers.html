@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% from "_macros.html" import company_tile %}
+{#- Every company with an open tender. Each tile opens that buyer's page. #}
+{% block content %}<p class=kicker>Find tenders by company</p>
+<h1>Companies</h1>
+<p class=lede>{{ total|num }} compan{{ 'y' if total == 1 else 'ies' }} with open tenders{% if q %} matching &ldquo;{{ q }}&rdquo;{% endif %}.</p>
+<form class="search slim" method=get>
+ <label class=sr for=bq>Search companies</label>
+ <input id=bq name=q value="{{ q }}" autocomplete=off spellcheck=false placeholder="Search a company, e.g. Railways&hellip;">
+ <button>{{ icon('magnifying-glass') }}Search</button>
+</form>
+{%- if buyers %}
+<ul class=ctiles>{% for name, n in buyers %}{{ company_tile(name, n) }}{% endfor %}</ul>
+{%- if pages > 1 %}<p class=pager>
+{%- if page > 1 %}<a class="btn ghost" href="?q={{ q|urlquote }}&amp;page={{ page - 1 }}">{{ icon('caret-left') }}Previous</a>{% endif %}
+<span class=count>Page {{ page }} of {{ pages }}</span>
+{%- if page < pages %}<a class="btn ghost" href="?q={{ q|urlquote }}&amp;page={{ page + 1 }}">Next{{ icon('caret-right') }}</a>{% endif -%}
+</p>{% endif %}
+{%- else %}
+<div class=empty><p>No company matches that. Try a shorter word.</p></div>
+{%- endif %}{% endblock %}

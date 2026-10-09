@@ -200,6 +200,25 @@ class WishlistItem(Base):
     tender_id: Mapped[int] = mapped_column(
         ForeignKey("tenders.id", ondelete="CASCADE"), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+    # "Ready to fill this tender" was pressed: the dashboard lists it as a bid
+    # in progress, not just a bookmark.
+    participating: Mapped[bool] = mapped_column(Boolean, default=False,
+                                                server_default="false")
+
+
+class SavedSearch(Base):
+    """A browse search someone named so they can run it again: the query string
+    exactly as /browse puts it in the address bar."""
+
+    __tablename__ = "saved_searches"
+    __table_args__ = (Index("ix_saved_search_user", "user_id", "created_at"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    name: Mapped[str] = mapped_column(Text, nullable=False)
+    query: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
 
 
 class ConnectorRun(Base):

@@ -1,10 +1,10 @@
 {% extends "base.html" %}
-{% from "_macros.html" import row %}
+{% from "_macros.html" import row, logo %}
 {#- One buyer's open tenders. Relevance ranks them against the signed-in
     company's answers; without an account there is nothing to rank against, so
     the page says so and lists by deadline. #}
 {% block content %}<div class=backlink><a href="/">{{ icon('caret-left') }}Home</a></div>
-<div class=bhead><span class="logo big t{{ tone }}" aria-hidden=true>{{ tile }}</span>
+<div class=bhead>{{ logo(buyer, "big") }}
  <div><p class=kicker>Buyer</p><h1 class=detailHead>{{ buyer }}</h1></div></div>
 <p class=lede>{{ total|num }} open tender{{ '' if total == 1 else 's' }}
 {%- if matched is not none %}, {{ matched|num }} of them scored against your answers{% endif %}.</p>

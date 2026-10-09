@@ -39,3 +39,46 @@ if(btn){
     }
   });
 }
+
+// "Ready to fill this tender": marks it as a bid in progress on the dashboard
+// (and saves it), then takes the bidder to the documents they need.
+const ready = document.getElementById('readybtn');
+
+function paintReady(on){
+  ready.classList.toggle('on', on);
+  ready.dataset.on = on ? 'true' : 'false';
+  ready.setAttribute('aria-pressed', on ? 'true' : 'false');
+  ready.querySelector('span').textContent = on ? "You're bidding on this" : 'Ready to fill this tender';
+  if(on && btn) paint(true);            // participating implies saved
+}
+
+if(ready){
+  ready.addEventListener('click', async () => {
+    if(ready.dataset.signedIn !== 'true'){
+      location.href = '/login?next=' + encodeURIComponent(location.pathname);
+      return;
+    }
+    const on = ready.dataset.on === 'true';
+    ready.disabled = true;
+    try{
+      const r = await fetch('/participate/' + ready.dataset.tender, {method: on ? 'DELETE' : 'POST'});
+      if(!r.ok) throw r;
+      paintReady(!on);
+      document.getElementById('readymsg').innerHTML = on
+        ? 'Still saved, no longer listed as a bid.'
+        : 'Added to your <a href="/dashboard#bidding">dashboard</a>. Here is what to prepare.';
+      if(!on) document.getElementById('documents').scrollIntoView();
+    }catch(e){
+      flash('Could not update that just now. Try again.', 'warn');
+    }finally{
+      ready.disabled = false;
+    }
+  });
+}
+// The button at the foot of the documents does the same thing.
+document.querySelectorAll('[data-ready-jump]').forEach(a => a.addEventListener('click', e => {
+  if(!ready) return;
+  e.preventDefault();
+  if(ready.dataset.on !== 'true') ready.click();
+  else location.href = '/dashboard#bidding';
+}));

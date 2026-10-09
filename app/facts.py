@@ -12,9 +12,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import object_session
 
 from .db import shared
-from .matching import derive_districts, derive_states
 from .models import Source, Tender
-
 
 def money(value) -> str:
     """Rupees, in the units an Indian bidder actually reads them in."""
@@ -60,7 +58,9 @@ def tender_facts(t: Tender, today: date | None = None) -> list[tuple[str, str, b
     # the bid-opening date, the corrigendum flag and the buyer's own reference
     # number are already here -- they just never had a column of their own.
     raw = t.raw_payload if isinstance(t.raw_payload, dict) else {}
-    places = sorted(derive_states(t.title) | derive_districts(t.title))
+    # Imported here, not at module scope: geo reads source names from this module.
+    from .geo import place_of
+    state, city = place_of(t)
     window = (t.deadline - t.published_date).days if t.published_date and t.deadline else None
     # The stored status is set at ingest and goes stale once the deadline passes.
     status = "closed" if t.deadline and t.deadline < today else (t.status or "")
@@ -84,7 +84,10 @@ def tender_facts(t: Tender, today: date | None = None) -> list[tuple[str, str, b
          f"{window} day{'s' if window != 1 else ''}" if window is not None else "", True),
         ("Status", status, False),
         ("Corrigendum", clean(raw.get("corrigendum")), False),
-        ("Where", ", ".join(places), False),
+        # app/geo.py: the same place every card, the tender page and the state
+        # filter use. Reading only the title, as this once did, is why the state
+        # showed on some cards and not others.
+        ("Location", ", ".join(x for x in (city, state) if x), False),
         ("Estimated value", money(t.estimated_value) if t.estimated_value is not None
          else "not published on the listing", True),
         # EMD, contract period and office are read off the bid document by
@@ -179,6 +182,12 @@ if __name__ == "__main__":
     everything = {label: value for label, value, _ in tender_facts(t, date(2026, 9, 16))}
     assert everything["MSE turnover relaxation"] == "Yes"
     assert "MSE turnover relaxation" not in got
+    # The buyer names a state outright ("Odisha"), which outranks a district
+    # in the title ("...for Bhopal").
+    assert got["Location"] == "Odisha", got
+    # The buyer's own office places it too, not just the title.
+    t.organization, t.raw_payload["office"] = "Department of Health", "Collectorate Bhopal"
+    assert dict(preview_facts(t))["Location"] == "Bhopal, Madhya Pradesh"
     # javascript: and data: URLs must never reach an href.
     assert [l["label"] for l in links(t)] == ["Technical specification"]
     assert money(1.5e7) == "Rs 1.50 crore" and money(2e5) == "Rs 2 lakh"

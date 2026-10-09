@@ -58,11 +58,14 @@ def test_signed_in_home_has_no_unfilled_placeholder(client):
     html = client.get("/", follow_redirects=True).text
     assert not re.findall(r"__[A-Z_]+__", html)
     assert "Placeholder Test Co" in html        # really the signed-in template
-    assert 'class=hero3d' in html               # the hero model, same as public
 
 
-def test_public_home_has_hero_model(client):
-    assert 'class=hero3d' in client.get("/").text
+def test_home_pages_have_nothing_that_moves(client):
+    """Most readers are 50 to 60: no 3D model, no animation library, no
+    running strip on the landing page."""
+    html = client.get("/").text
+    for gone in ("hero3d", "gsap", "motion.js", "strip.js", "bstrip"):
+        assert gone not in html, gone
 
 
 @pytest.mark.parametrize("path", PAGES)
@@ -397,51 +400,6 @@ def test_buyer_strip_and_page_show_only_that_buyers_open_tenders(client, session
     assert rel.index("Pump sets later") < rel.index("Boots sooner")
     soon = client.get("/buyer", params={"name": "Indian Army", "sort": "deadline"}).text
     assert soon.index("Boots sooner") < soon.index("Pump sets later")
-
-
-# A hero model is fetched on every home page view. 350 KB keeps it well under a
-# second on a slow 4G link even before gzip; the largest, crane.glb, is 232 KB.
-MODEL_BUDGET = 350 * 1024
-
-
-def test_hero_models_exist_and_fit_the_budget():
-    from app.web import HERO_DEFAULT, HERO_GROUND, HERO_MODELS
-    for file in {*HERO_MODELS.values(), HERO_DEFAULT}:
-        f = STATIC / "models" / file
-        assert f.stat().st_size <= MODEL_BUDGET, f"{file} is over budget"
-    css = (STATIC / "css" / "site.css").read_text(encoding="utf-8")
-    for file, colour in HERO_GROUND.items():
-        assert re.fullmatch(r"#[0-9a-f]{6}", colour), file
-        # site.css paints the ground before the model loads; same colour
-        assert f'.hero3d[data-bg="{colour}"]{{opacity:1;background:{colour}}}' in css, file
-
-
-def test_hero_models_follow_the_profile_sectors():
-    from app.web import HERO_MAX, hero_models
-    # no sector with a model of its own, or signed out: the workers, full-bleed
-    assert hero_models(["maintenance_amc"]) == (["workers.glb"], "#ae6f1c")
-    assert hero_models(None) == (["workers.glb"], "#ae6f1c")
-    # one object: no ground colour, it stands on the page background
-    assert hero_models(["medical_pharma"]) == (["medical_kit.glb"], "")
-    # several: profile order, a shared model once, sectors without one skipped,
-    # and the workers lose their ground once they share the hero
-    assert hero_models(["manpower_security", "maintenance_amc", "medical_pharma"])         == (["workers.glb", "medical_kit.glb"], "")
-    assert hero_models(["agriculture", "vehicle_hire", "it_services",
-                        "office_supplies"])[0] ==         ["farm_tools.glb", "truck.glb", "chip.glb"][:HERO_MAX]
-
-
-def test_every_hero_model_is_credited(client):
-    """The models are CC BY: each must be credited. Each .glb carries its own
-    Sketchfab source URL in its asset metadata, so a new model without a footer
-    credit fails here."""
-    import json
-    import struct
-    html = client.get("/").text
-    for f in (STATIC / "models").glob("*.glb"):
-        b = f.read_bytes()
-        (n,) = struct.unpack("<I", b[12:16])
-        source = json.loads(b[20:20 + n])["asset"]["extras"]["source"]
-        assert source in html, f"{f.name} is not credited"
 
 
 def test_healthz_answers_without_the_database():

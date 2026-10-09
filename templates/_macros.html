@@ -38,13 +38,15 @@
 {%- set days = days_left(t.deadline)[0] -%}
 {%- set value = f.get('Estimated value') -%}
 {%- set emd = f.get('EMD (bid security)') -%}
+{%- set state, city = place_of(t) -%}
 <li class="row {{ rank }}"><div class=rmain>
-<p class=rhead>{% if gutter and gutter != days %}<span class=n>{{ gutter }}</span>{% endif -%}
+<p class=rhead>{% if state %}<span class=st>{{ state }}</span>{% endif -%}
+{% if gutter and gutter != days %}<span class=n>{{ gutter }}</span>{% endif -%}
 <b class=rorg>{{ t.organization or 'unnamed buyer' }}</b>
 {%- if f.Source %}<span class=src>{{ f.Source }}</span>{% endif %}</p>
 <a class=t href="/t/{{ t.id }}">{{ t.title }}</a>
 {%- if summary %}<p class=rowsum>{{ summary_for(t) }}</p>{% endif -%}
-<ul class=chips>{% if f.Where %}<li class=loc>{{ icon('map-pin') }}{{ f.Where }}</li>{% endif -%}
+<ul class=chips>{% if city or state %}<li class=loc>{{ icon('map-pin') }}{{ [city, state]|select|join(', ') }}</li>{% endif -%}
 {{- extra_line(t) -}}
 {%- for k in ('Quantity', 'Bid type', 'Contract period') if f[k] %}<li>{{ k }}: {{ f[k] }}</li>{% endfor -%}
 </ul>
@@ -70,17 +72,16 @@
 {%- endmacro %}
 
 
-{#- A buyer's monogram tile. Mirrors chip() in static/js/strip.js. -#}
-{% macro buyer_chip(name, n) -%}
-<li><a class=bchip href="/buyer?name={{ name|urlquote }}"><span class="logo t{{ tile_tone(name) }}" aria-hidden=true>{{ initials(name) }}</span><span class=bname>{{ name }}</span><b>{{ n|num }}</b></a></li>
+{#- A buyer's logo: its file in static/logos when there is one, else a
+    monogram tile. -#}
+{% macro logo(name, cls="") -%}
+{%- set src = logo_url(name) -%}
+{%- if src %}<img class="logo img {{ cls }}" src="{{ src }}" alt="" loading=lazy>
+{%- else %}<span class="logo t{{ tile_tone(name) }} {{ cls }}" aria-hidden=true>{{ initials(name) }}</span>{% endif -%}
 {%- endmacro %}
 
-{#- Every buyer with an open notice, running across the page. The busiest few
-    are rendered here so the strip is never empty; static/js/strip.js swaps in
-    the full list from GET /buyers/strip and sets it moving. -#}
-{% macro buyer_strip(buyers) -%}
-<section class=bstrip aria-label="Buyers with open tenders" data-src="/buyers/strip">
-<ul class=btrack>{% for name, n in buyers %}{{ buyer_chip(name, n) }}{% endfor %}</ul>
-</section>
-<script defer src="{{ asset('js/strip.js') }}"></script>
+{#- One company as a tile with its logo, for the company grids. -#}
+{% macro company_tile(name, n) -%}
+<li><a class=ctile href="/buyer?name={{ name|urlquote }}">{{ logo(name, "big") }}<span class=cname>{{ name }}</span><span class=ccount>{{ n|num }} open</span></a></li>
 {%- endmacro %}
+

@@ -1,10 +1,9 @@
 {% extends "base.html" %}
-{% from "_macros.html" import row, buyer_grid, buyer_strip %}
-{% from "_hero3d.html" import hero3d %}
+{% from "_macros.html" import row, buyer_grid %}
 {#- The home page for someone who has answered the questions. Everything on it is
     their own result set: the notices closing soonest are their matches re-sorted
     by deadline, and the buyer index counts only buyers in those matches. #}
-{% block hero %}<section class=hero>{{ hero3d(company.sectors) }}<div class=wrap><div class=heroTop>
+{% block hero %}<section class=hero><div class=wrap><div class=heroTop>
 <div>
  <p class=eyebrow><span class=badge>AI Smart Bidding</span>
  Signed in as {{ company.name }}{% if last %} &middot; collected {{ last.strftime('%d %b') }}{% endif %}</p>
@@ -35,7 +34,7 @@
 </dl>
 </div></section>{% endblock %}
 
-{% block body %}{{ buyer_strip(buyers) }}<section class=sec><div class=wrap>
+{% block body %}<section class=sec><div class=wrap>
 <div class="secHead reveal">
  <h2>Closing soonest for you</h2>
  <p class=kicker>{{ n_soon|num }} of your matches close within seven days</p>

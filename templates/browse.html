@@ -1,31 +1,47 @@
 {% extends "base.html" %}
 {% from "_macros.html" import skeleton_row %}
 {#- Read-only view of the whole corpus. Filtering happens in GET /tenders; this
-    page is the form around it, not a second query path. #}
-{% block content %}<h1>All collected tenders</h1>
-<p class=lede>Every notice in the corpus, closing soonest first. No account needed.</p>
-<form id=f>
-<div class=filters>
-   <label class=f><span>Search titles</span>
-     <input name=q autocomplete=off spellcheck=false placeholder="e.g. transformer&hellip;"></label>
-   <label class=f><span>Buyer</span>
-     <input name=organization autocomplete=off spellcheck=false
-        placeholder="e.g. Railways&hellip;"></label>
-   <label class=f><span>Source</span>
-     <select name=source_id><option value="">Every source</option>
-     {%- for s in sources %}<option value="{{ s.id }}">{{ s.name }}</option>{% endfor -%}
-     </select></label>
-   <label class=f><span>Sort by</span>
-     <select name=sort>
-       <option value=deadline>Closing soonest</option>
-       <option value=first_seen_at>Most recently collected</option>
-       <option value=published_date>Most recently published</option>
-     </select></label>
-   <button>{{ icon('magnifying-glass') }}Search</button>
-</div>
-<p class=chk><label><input type=checkbox name=open_only checked>
-   Only tenders still open</label></p>
+    page is the form around it, not a second query path. The filters sit down the
+    left, the results on the right. #}
+{% block content %}<h1>All tenders</h1>
+<p class=lede>Every open notice, filtered your way. No account needed.</p>
+<div class=bwrap>
+<form id=f class=fside data-districts='{{ districts|tojson }}'>
+ <p class=fsidehead>{{ icon('sliders-horizontal') }}Filters <a href="/browse" class=fclear>Clear all</a></p>
+ <label class=f><span>Work / keyword</span>
+   <input name=q autocomplete=off spellcheck=false placeholder="e.g. civil work&hellip;"></label>
+ <label class=f><span>Company</span>
+   <input name=organization autocomplete=off spellcheck=false placeholder="e.g. Railways&hellip;"></label>
+ <label class=f><span>State</span>
+   <select name=state><option value="">All states</option>
+   {%- for s in states %}<option>{{ s }}</option>{% endfor -%}
+   </select></label>
+ <label class=f><span>City / district</span>
+   <select name=city disabled><option value="">Pick a state first</option></select></label>
+ <label class=f><span>Category</span>
+   <select name=sector><option value="">All categories</option>
+   {%- for key, label in sectors %}<option value="{{ key }}">{{ label }}</option>{% endfor -%}
+   </select></label>
+ <label class=f><span>Portal</span>
+   <select name=source_id><option value="">All portals</option>
+   {%- for s in sources %}<option value="{{ s.id }}">{{ s.name }}</option>{% endfor -%}
+   </select></label>
+ <label class=f><span>Sort by</span>
+   <select name=sort>
+     <option value=deadline>Closing soonest</option>
+     <option value=first_seen_at>Most recently collected</option>
+     <option value=published_date>Most recently published</option>
+   </select></label>
+ <p class=chk><label><input type=checkbox name=open_only checked> Only tenders still open</label></p>
+ <button>{{ icon('magnifying-glass') }}Search</button>
+ <div class=savesearch>
+  <label class=f><span>Save this search</span>
+   <input id=sname maxlength=80 autocomplete=off placeholder="Name it, e.g. Civil works Rajasthan"></label>
+  <button type=button class=ghost id=savesearch>Save current search</button>
+  <p class=hint id=savemsg role=status></p>
+ </div>
 </form>
+<div class=bresults>
 <p class=count id=count aria-live=polite>Loading tenders&hellip;</p>
 <ol class=rows id=rows>
  {{ skeleton_row("row sk") }}
@@ -35,4 +51,6 @@
 <p class=pager><button class=ghost id=prev>{{ icon('caret-left') }}Previous</button>
    <button class=ghost id=next>Next{{ icon('caret-right') }}</button></p>
 <pre id=err role=alert></pre>
+</div>
+</div>
 <script defer src="{{ asset('js/browse.js') }}"></script>{% endblock %}

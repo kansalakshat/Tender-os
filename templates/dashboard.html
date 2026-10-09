@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% from "_macros.html" import row %}
+{#- One person's own page: bids in progress, saved tenders, saved searches. #}
+{% block content %}<p class=kicker>{{ company.name if company else email }}</p>
+<h1>Your dashboard</h1>
+<p class=lede>Tenders you are bidding on, tenders you saved, and the searches you run again.</p>
+<dl class="stats dash">
+ <div><dt>Bidding on</dt><dd>{{ bidding|length|num }}</dd></div>
+ <div><dt>Saved</dt><dd>{{ saved|length|num }}</dd></div>
+ <div><dt>Saved searches</dt><dd>{{ searches|length|num }}</dd></div>
+</dl>
+
+<section class=dashsec id=searches><h2>Saved searches</h2>
+{%- if searches %}
+<ul class=searchlist>{% for s in searches %}
+ <li><a href="/browse?{{ s.query }}">{{ icon('magnifying-glass') }}<span>{{ s.name }}</span></a>
+  <button class="ghost sm" type=button data-delete-search="{{ s.id }}">Delete</button></li>
+{%- endfor %}</ul>
+{%- else %}
+<div class=empty><p>No saved searches yet. On <a href="/browse">Browse</a>, set the filters
+you use most and press <b>Save current search</b>.</p></div>
+{%- endif %}
+</section>
+
+<section class=dashsec id=bidding><h2>Tenders you are bidding on</h2>
+{%- if bidding %}<ol class=rows>
+{%- for t in bidding %}{% set gutter, rank = days_left(t.deadline, today) %}{{ row(gutter, rank, t) }}{% endfor %}
+</ol>
+{%- else %}
+<div class=empty><p>None yet. Open a tender and press <b>Ready to fill this tender</b> to
+track it here.</p></div>
+{%- endif %}
+</section>
+
+<section class=dashsec id=saved><h2>Saved tenders</h2>
+{%- if saved %}<ol class=rows>
+{%- for t in saved %}{% set gutter, rank = days_left(t.deadline, today) %}{{ row(gutter, rank, t) }}{% endfor %}
+</ol>
+{%- else %}
+<div class=empty><p>Nothing saved yet. Open any tender and press <b>Save this tender</b>.</p></div>
+{%- endif %}
+</section>
+<p class=hint>Soonest closing first. <a href="/matches">See tenders matched to your profile</a>.</p>
+<script defer src="{{ asset('js/dashboard.js') }}"></script>{% endblock %}

@@ -1,9 +1,0 @@
-{#- The hero's 3D background. Signed in, the models follow the company's
-    sectors; signed out, it is the default. See HERO_MODELS in app/web.py.
-    tojson escapes quotes, so the JSON is safe inside the single-quoted attribute. #}
-{% macro hero3d(sectors=()) -%}
-{%- set files, ground = hero_models(sectors) -%}
-{%- set urls = [] -%}{%- for f in files %}{% set _ = urls.append(asset('models/' ~ f)) %}{% endfor -%}
-<canvas class=hero3d aria-hidden=true data-src="{{ asset('js/hero3d.js') }}"
- data-models='{{ urls|tojson }}'{% if ground %} data-bg="{{ ground }}"{% endif %}></canvas>
-{%- endmacro %}
