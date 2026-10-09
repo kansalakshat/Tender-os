@@ -21,6 +21,9 @@ git pull --ff-only --quiet
 if (-not $?) { "git pull skipped -- running the code as it is" }
 .venv\Scripts\python.exe -m pip install --quiet -r requirements.txt apscheduler "playwright>=1.47.0"
 if (-not $?) { "package update skipped" }
+# The browser GeM is read with, matched to the Playwright just installed.
+.venv\Scripts\python.exe -m playwright install chromium | Out-Null
+if (-not $?) { "browser update skipped" }
 
 # Yesterday's server and deep crawl go (with their crawlers and browsers).
 foreach ($f in "server", "gem_deep") {

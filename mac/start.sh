@@ -17,10 +17,17 @@ PORT=8000
 URL="http://127.0.0.1:$PORT"
 mkdir -p .cache
 
-# Today's code, and any package it now needs. Neither failing stops the run.
-git pull --ff-only --quiet || echo "git pull skipped -- running the code as it is"
+# Today's code, then start over on it: bash reads a script as it runs, so
+# carrying on after a pull that changed this file would run half of each.
+if [ -z "${START_PULLED:-}" ]; then
+  git pull --ff-only --quiet || echo "git pull skipped -- running the code as it is"
+  START_PULLED=1 exec bash "$0" "$@"
+fi
+# Any package, and the browser GeM is read with, that the code now needs.
+# Neither failing stops the run.
 uv pip install --quiet --python .venv/bin/python -r requirements.txt apscheduler "playwright>=1.47.0" \
   || echo "package update skipped"
+.venv/bin/python -m playwright install chromium >/dev/null || echo "browser update skipped"
 
 # Yesterday's server and deep crawl go: fresh ones start today's run.
 for f in server gem_deep; do

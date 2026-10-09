@@ -5,12 +5,31 @@ description: Start the day's tender fetching and enrichment on this laptop (Mac 
 
 # Start today's fetching
 
-1. From the project folder run the start script for this machine:
+Do these yourself, in order, from the project folder. Keep messages short.
+
+0. **Bring the code up to date before anything runs**, so the start script and
+   everything it starts is the new code:
+   - `git fetch origin main`, then `git status`.
+   - If `main` is behind: `git pull --no-rebase --autostash origin main`. Local
+     edits (another session's work in progress) are stashed and put back; local
+     commits are merged, not pushed.
+   - On a conflict, resolve it keeping both sides' intent, run the tests
+     (`python -m pytest -q tests`), and do not commit the merge until they pass.
+     If it cannot be resolved safely, stop and tell the user which files clash.
+   - Never `reset --hard`, never discard local edits, never push from here.
+
+0b. **Database the new code expects.** With `DATABASE_URL` from
+   `.env.production`, compare `alembic current` with `alembic heads`. If
+   production is behind, a new migration came with the code: tell the user its
+   name in one line and run `alembic upgrade head` only after they say yes. The
+   production database is shared with the live site.
+
+1. Run the start script for this machine:
    - **macOS:** `bash mac/start.sh`
    - **Windows:** `powershell -ExecutionPolicy Bypass -File windows\start.ps1`
 
    It:
-   - pulls the latest code and packages,
+   - installs any packages and the GeM browser the code now needs,
    - stops yesterday's server and deep crawl, and starts a new server on
      http://127.0.0.1:8000 with the **Daily run** already going: purge, CPPP,
      GeM's newest 500 pages (bid documents read with 6 workers), the state
