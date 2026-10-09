@@ -34,11 +34,21 @@ def run_connector(name: str, since: datetime | None = None, enrich_new: bool = F
         summary = connector.run(since=since)
         log.info("%s", summary)
         if enrich_new and connector.created_ids:
+            from concurrent.futures import ThreadPoolExecutor
+
             from .enrich import enrich_pending
 
             fresh = list(connector.created_ids)
-            log.info("%s: read %d of %d new bid document(s)", name,
-                     enrich_pending(limit=len(fresh), only=fresh), len(fresh))
+            # Several workers, sharded on id so none reads another's rows. One
+            # worker manages ~25 documents a minute, and a day's GeM bids run to
+            # thousands: read serially, they took longer than the crawl itself.
+            workers = max(1, int(os.getenv("ENRICH_WORKERS", "6")))
+            with ThreadPoolExecutor(max_workers=workers) as pool:
+                read = sum(pool.map(
+                    lambda i: enrich_pending(limit=len(fresh), only=fresh, shard=(i, workers)),
+                    range(workers),
+                ))
+            log.info("%s: read %d of %d new bid document(s)", name, read, len(fresh))
         return summary
     finally:
         connector.close()

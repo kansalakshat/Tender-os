@@ -110,6 +110,19 @@ def test_the_scheduled_run_reads_what_it_fetched(ready, monkeypatch):
     assert seen.get("only"), "the scheduled path must hand over its new ids"
 
 
+def test_the_scheduled_run_reads_with_every_shard(ready, monkeypatch):
+    calls = []
+    monkeypatch.setenv("ENRICH_WORKERS", "3")
+    monkeypatch.setattr(scheduler, "REGISTRY", {"GeM": lambda: _make(ready, monkeypatch)})
+    monkeypatch.setattr(
+        "app.enrich.enrich_pending",
+        lambda **kw: calls.append((kw["shard"], kw["only"])) or 1)
+    _Dummy.rows = [{"ref": "s"}]
+    scheduler.run_connector("GeM", enrich_new=True)
+    assert sorted(s for s, _ in calls) == [(0, 3), (1, 3), (2, 3)]
+    assert all(only for _, only in calls), "every shard gets the new ids"
+
+
 def _make(factory, monkeypatch):
     c = _Dummy(session_factory=factory)
     monkeypatch.setattr(c, "robots_allowed_cached", lambda *a, **k: True)
