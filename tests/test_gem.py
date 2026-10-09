@@ -62,3 +62,18 @@ def test_gem_only_reads_the_two_permitted_paths():
     for path in GeMConnector.paths:
         assert not path.startswith("/resources")
         assert "bg_emd" not in path
+
+
+def test_parse_card_reads_the_script_rendered_label():
+    """Pages after the first are drawn by the listing's script, which writes
+    "Bid No.:". Matching only "BID NO:" dropped every card past page 1."""
+    row = parse_card({
+        "doc_href": "showbidDocument/9697383",
+        "text": "Bid No.:  GEM/2026/B/7866446\n\nRA NO: GEM/2026/R/749933\n\n"
+                "Items: Dual Desk Bench\nQuantity: 106\nDepartment Name And Address: \n"
+                "Ministry of Defence\nDepartment of Military Affairs\n"
+                "Start Date: 10-10-2026 11:00 PM\nEnd Date:   13-10-2026 9:00 AM",
+    })
+    assert row["bid_no"] == "GEM/2026/B/7866446"
+    assert row["bid_id"] == "9697383"
+    assert row["start"] == "10-10-2026 11:00 PM"

@@ -34,7 +34,8 @@ DOCUMENT_PATH = "/showbidDocument/"
 # shared parser %d-%m-%Y would make "03-04-2026" ambiguous for every other source.
 _DATE_FORMATS = ("%d-%m-%Y %I:%M %p", "%d-%m-%Y %H:%M", "%d-%m-%Y")
 
-_BID_NO = re.compile(r"BID NO:\s*(\S+)")
+# "BID NO:" on the server-rendered first page, "Bid No.:" on pages its script draws.
+_BID_NO = re.compile(r"BID NO\.?:\s*(\S+)", re.IGNORECASE)
 _ITEMS = re.compile(r"Items:\s*(.+)")
 _QTY = re.compile(r"Quantity:\s*([\d,]+)")
 _START = re.compile(r"Start Date:\s*(.+)")
@@ -48,6 +49,14 @@ _SHOWN_SELECTOR = ".totalRecord"
 _SHOWN_CHANGED = (
     "old => { const e = document.querySelector('.totalRecord');"
     " return e && e.innerText.trim() !== old; }"
+)
+# Newest first, so a run's first pages are the bids published since the last one.
+SORT = "Bid-Start-Date-Latest"
+# The sort label changes before the cards are drawn, so wait for both.
+_SORTED = (
+    "() => { const e = document.querySelector('#currentSort');"
+    " return e && e.innerText.includes('Start Date: Latest')"
+    " && document.querySelector(\".card a[href*='showbidDocument']\") !== null; }"
 )
 
 _EXTRACT = """() => Array.from(document.querySelectorAll('.card')).map(c => {
@@ -184,10 +193,13 @@ class GeMConnector(BaseConnector):
                 page.goto(self.base_url + LISTING_PATH,
                           wait_until="domcontentloaded", timeout=60_000)
                 page.wait_for_selector(_SHOWN_SELECTOR, state="attached", timeout=30_000)
-                if at_page > 1:
-                    before = self._shown(page)
-                    page.evaluate(f"loadBids({at_page})")
-                    page.wait_for_function(_SHOWN_CHANGED, arg=before, timeout=30_000)
+                # The listing defaults to "Bid End Date: Oldest First", which
+                # scatters new bids over all ~4,400 pages; the `since` window
+                # then dropped nearly every card. This is the page's own sort
+                # menu choice, which loadBids sends with every page it fetches.
+                page.evaluate(f"window.filter.sort = '{SORT}'")
+                page.evaluate(f"loadBids({at_page})")
+                page.wait_for_function(_SORTED, timeout=30_000)
                 return browser, page
             except Exception as exc:
                 last = exc
