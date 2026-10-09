@@ -3,8 +3,10 @@
 #
 # Starts the site locally with today's "Daily run" already going (purge, every
 # source including GeM, bid documents, dedup -- the same cycle as
-# run_prod_worker.py --once), writing to the production database. Then opens
-# sign-in; an admin account lands on /admin, whose job panel follows the run.
+# run_prod_worker.py --once), writing to the production database. Alongside it,
+# gem_deep.py walks GeM past the Daily run's 500 pages with three crawlers and
+# then reads the new bids' documents. Then opens sign-in; an admin account lands
+# on /admin, whose job panel follows the run.
 #
 # Bound to 127.0.0.1: the dashboard can start crawls and read the whole
 # corpus, and has no business listening on the network.
@@ -20,12 +22,14 @@ git pull --ff-only --quiet || echo "git pull skipped -- running the code as it i
 uv pip install --quiet --python .venv/bin/python -r requirements.txt apscheduler "playwright>=1.47.0" \
   || echo "package update skipped"
 
-# Yesterday's server goes: a fresh one starts today's run.
-if [ -f .cache/server.pid ] && kill -0 "$(cat .cache/server.pid)" 2>/dev/null; then
-  echo "Stopping the previous server"
-  kill "$(cat .cache/server.pid)" 2>/dev/null || true
-  sleep 3
-fi
+# Yesterday's server and deep crawl go: fresh ones start today's run.
+for f in server gem_deep; do
+  if [ -f ".cache/$f.pid" ] && kill -0 "$(cat ".cache/$f.pid")" 2>/dev/null; then
+    echo "Stopping the previous $f"
+    kill "$(cat ".cache/$f.pid")" 2>/dev/null || true
+  fi
+done
+sleep 3
 lsof -ti "tcp:$PORT" | xargs kill 2>/dev/null || true
 
 DATABASE_URL="$(grep '^DATABASE_URL=' .env.production | head -1 | cut -d= -f2- | tr -d '"' | tr -d "'" | tr -d $'\r')"
@@ -37,7 +41,9 @@ export DATABASE_URL
 export AUTOSTART_JOB="Daily run"
 
 echo "==== $(date) server starting" >> server.log
-nohup .venv/bin/python -u -m uvicorn app.api:app --host 127.0.0.1 --port "$PORT" >> server.log 2>&1 &
+# Logging configured first, so the run's own progress lines reach server.log
+# and not just the job panel.
+nohup .venv/bin/python -u -c "import logging; logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(name)s: %(message)s'); import uvicorn; uvicorn.run('app.api:app', host='127.0.0.1', port=$PORT)" >> server.log 2>&1 &
 SERVER=$!
 echo "$SERVER" > .cache/server.pid
 # Stay awake while the server runs (it exits with it). A closed lid on battery
@@ -54,6 +60,12 @@ if ! curl -sf "$URL/healthz" >/dev/null; then
   exit 1
 fi
 
+nohup .venv/bin/python -u gem_deep.py >> gem_deep.log 2>&1 &
+DEEP=$!
+echo "$DEEP" > .cache/gem_deep.pid
+caffeinate -ims -w "$DEEP" &
+
 open "$URL/login?next=/admin"
 echo "Fetching has started. Sign in with the admin account; /admin shows it live."
-echo "Server log: tail -f server.log    Stop: kill \$(cat .cache/server.pid)"
+echo "Logs: server.log (Daily run), gem_deep.log and gem_deep_1..3.log (deep GeM)"
+echo "Stop: kill \$(cat .cache/server.pid) \$(cat .cache/gem_deep.pid)"
