@@ -60,12 +60,17 @@ def test_signed_in_home_has_no_unfilled_placeholder(client):
     assert "Placeholder Test Co" in html        # really the signed-in template
 
 
-def test_home_pages_have_nothing_that_moves(client):
-    """Most readers are 50 to 60: no 3D model, no animation library, no
-    running strip on the landing page."""
+def test_home_moves_only_the_logo_strip_and_gently(client):
+    """Most readers are 50 to 60: no 3D model and no animation library. The one
+    thing that moves, the logo strip, stops under the pointer or keyboard and
+    stands still for anyone who asked for reduced motion."""
     html = client.get("/").text
-    for gone in ("hero3d", "gsap", "motion.js", "strip.js", "bstrip"):
+    for gone in ("hero3d", "gsap", "motion.js", "strip.js"):
         assert gone not in html, gone
+    css = (STATIC / "css" / "site.css").read_text(encoding="utf-8")
+    assert ".lstrip:hover .ltrack,.lstrip:focus-within .ltrack{animation-play-state:paused}" in css
+    reduced = css[css.rindex("@media (prefers-reduced-motion:reduce)"):]
+    assert ".ltrack{animation:none}" in reduced
 
 
 @pytest.mark.parametrize("path", PAGES)

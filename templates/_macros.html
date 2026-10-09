@@ -80,6 +80,13 @@
 {%- else %}<span class="logo t{{ tile_tone(name) }} {{ cls }}" aria-hidden=true>{{ initials(name) }}</span>{% endif -%}
 {%- endmacro %}
 
+{#- One company in the home page's moving logo strip. The strip shows the list
+    twice so it can loop; the copy is hidden from screen readers and the
+    keyboard, which reach every company once. -#}
+{% macro logo_chip(name, n, dup=false) -%}
+<li{% if dup %} aria-hidden=true{% endif %}><a class=lchip href="/buyer?name={{ name|urlquote }}"{% if dup %} tabindex=-1{% endif %}>{{ logo(name, "big") }}<span class=cname>{{ name }}</span><span class=ccount>{{ n|num }} open</span></a></li>
+{%- endmacro %}
+
 {#- One company as a tile with its logo, for the company grids. -#}
 {% macro company_tile(name, n) -%}
 <li><a class=ctile href="/buyer?name={{ name|urlquote }}">{{ logo(name, "big") }}<span class=cname>{{ name }}</span><span class=ccount>{{ n|num }} open</span></a></li>

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "_macros.html" import company_tile %}
+{% from "_macros.html" import logo_chip %}
 {#- The landing page. The hero is full-bleed, so it sits outside <main>. Every
     figure on it is counted from the live corpus, not typed in. #}
 {% block hero %}<section class=hero><div class=wrap>
@@ -91,7 +91,12 @@ endless PDFs, and figuring out whether you qualify. Tenderleo simplifies the ent
  <input id=bq name=q autocomplete=off spellcheck=false placeholder="Search a company, e.g. Railways&hellip;">
  <button>{{ icon('magnifying-glass') }}Search</button>
 </form>
-<ul class=ctiles>{% for name, n in buyers %}{{ company_tile(name, n) }}{% endfor %}</ul>
+{#- Moves slowly on its own and stops under the pointer or keyboard focus, so
+    any logo can be read and clicked; with reduced motion it is a row you
+    scroll yourself. -#}
+<div class=lstrip aria-label="Companies with open tenders" role=region>
+<ul class=ltrack>{% for dup in (false, true) %}{% for name, n in buyers %}{{ logo_chip(name, n, dup) }}{% endfor %}{% endfor %}</ul>
+</div>
 <p class=morelink><a class="btn ghost" href="/buyers">View all {{ n_buyers|num }} companies{{ icon('arrow-right') }}</a></p>
 </div></section>
 

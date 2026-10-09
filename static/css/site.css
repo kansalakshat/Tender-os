@@ -570,3 +570,26 @@ pre#err:empty{display:none}
 .progress > span{display:block;height:100%;background:var(--accent);border-radius:999px}
 
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none !important}}
+
+/* --- the home page's moving logo strip --------------------------------------
+   Slow (about 6 seconds per logo at 40 logos), stops under the pointer or keyboard focus,
+   and is a plain scrollable row for anyone who asked for reduced motion. The
+   list is printed twice and slides by exactly one copy plus one gap, so the
+   loop has no jump. */
+.lstrip{overflow:hidden;padding:.5rem 0;
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 4%,#000 96%,transparent);
+  mask-image:linear-gradient(90deg,transparent,#000 4%,#000 96%,transparent)}
+.ltrack{display:flex;gap:1rem;width:max-content;margin:0;padding:0;list-style:none;
+  animation:lscroll 240s linear infinite}
+.lstrip:hover .ltrack,.lstrip:focus-within .ltrack{animation-play-state:paused}
+@keyframes lscroll{to{transform:translateX(calc(-50% - .5rem))}}
+.lchip{display:flex;flex-direction:column;align-items:center;gap:.5rem;width:10rem;height:100%;padding:1rem .75rem;
+  border:1px solid var(--stone);border-radius:var(--r-lg);background:var(--panel);box-shadow:var(--shadow);
+  color:var(--ink);text-decoration:none;text-align:center}
+.lchip:hover{color:var(--ink);border-color:var(--accent)}
+.lchip .cname{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:.95rem}
+@media (prefers-reduced-motion:reduce){
+ .lstrip{overflow-x:auto;-webkit-mask-image:none;mask-image:none}
+ .ltrack{animation:none}
+ .ltrack [aria-hidden=true]{display:none}
+}

@@ -130,9 +130,12 @@ def test_logos_match_every_spelling_of_a_buyer():
     assert "ecl.png" not in logo_url("South Eastern Coalfields Limited")
     assert "ecl.jpg" in logo_url("Eastern Coalfields Limited")
     assert "railways.jpg" in logo_url("Western Railway")
-    # whole words only, and the emblem-bearing buyers keep their tile
+    # whole words only
     assert logo_url("Gailpur Panchayat") == ""
-    assert logo_url("Indian Army") == "" and logo_url("Ministry of Defence") == ""
+    # the Army's units and every ministry are covered too, by the longest phrase
+    assert "indianarmy.png" in logo_url("E-IN-C BRANCH - MILITARY ENGINEER SERVICES")
+    assert "emblem.png" in logo_url("Ministry of Defence")
+    assert "indianrailways.jpg" in logo_url("Ministry of Railways")
     # every file the index names exists
     import json
     from tests.conftest import STATIC

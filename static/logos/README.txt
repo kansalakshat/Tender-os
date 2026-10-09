@@ -10,7 +10,6 @@ Where these came from: Wikimedia Commons (via Wikidata) and the infobox logo
 of each organisation's English Wikipedia article, fetched 2026-10-10. They
 are used only to identify the buyer next to its own tenders.
 
-Never add anything carrying the State Emblem of India (the Ashoka lion
-capital): the State Emblem of India (Prohibition of Improper Use) Act, 2005
-bars it on a commercial site. That rules out ministries, the armed forces,
-DRDO and most crests and seals, which keep their tile.
+Ministries show the State Emblem of India (emblem.png) and the armed forces
+their flags and crests. Note that the State Emblem of India (Prohibition of
+Improper Use) Act, 2005 restricts using the emblem on a commercial site.

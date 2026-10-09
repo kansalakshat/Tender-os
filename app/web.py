@@ -417,13 +417,26 @@ def _render_welcome(db: Session, today: date) -> str:
         "home.html", title="Tenderleo | AI-powered tender intelligence",
         n_open=f["n_open"], n_soon=f["n_soon"],
         n_sources=f["n_sources"], n_buyers=f["n_buyers"], last=f["last"],
-        buyers=_open_buyers(db, today)[:HOME_BUYERS], states=STATES,
+        buyers=_logo_buyers(db, today), states=STATES,
         demo=DEMO_URL, today=today,
     )
 
 
-# Company logos on the home page; the rest are on /buyers.
-HOME_BUYERS = 24
+# Company logos running across the home page; every company is on /buyers.
+HOME_BUYERS = 40
+
+
+def _logo_buyers(db: Session, today: date) -> list[tuple[str, int]]:
+    """The busiest buyers that have a logo, one buyer per logo: every ministry
+    shares the national emblem and every railway zone the Railways mark, and a
+    strip of forty identical emblems says nothing."""
+    seen, out = set(), []
+    for name, n in _open_buyers(db, today):
+        src = logo_url(name)
+        if src and src not in seen:
+            seen.add(src)
+            out.append((name, n))
+    return out[:HOME_BUYERS]
 # "Book a Demo": an email to the monitored contact address until there is a
 # booking page. Empty hides the button.
 DEMO_URL = os.environ.get("DEMO_URL") or (
@@ -921,10 +934,7 @@ def _open_buyers(db: Session, today: date) -> list[tuple[str, int]]:
 def buyers_strip(db: Session = Depends(get_db)) -> JSONResponse:
     """All buyers for the home-page strip. Fetched after the page shows, so the
     thousand-odd names do not weigh down every home page load."""
-    # A third element only for the few buyers with a logo file: the list runs to
-    # thousands, and most would carry an empty string.
-    return JSONResponse([[n, c, *filter(None, [logo_url(n)])]
-                         for n, c in _open_buyers(db, date.today())])
+    return JSONResponse([[n, c] for n, c in _open_buyers(db, date.today())])
 
 
 BUYERS_PAGE = 60
