@@ -25,6 +25,7 @@ from sqlalchemy.exc import OperationalError
 from sqlalchemy import Text, func, or_, select
 from sqlalchemy.orm import Session
 
+from . import activity
 from .bidpdf import parse_bid_pdf
 from .compliance import assert_not_blocked, scrub_personal, user_agent
 from .db import SessionLocal
@@ -203,6 +204,7 @@ def enrich_pending(limit: int = 200, session_factory=SessionLocal,
     )
     try:
         for n, tid in enumerate(ids, 1):
+            activity.beat("reading", f"bid documents: a pass of {len(ids):,}")
             try:
                 tender = db.get(Tender, tid)
                 if tender is None:

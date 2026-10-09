@@ -3,6 +3,17 @@
     is not on the admin list, so this page is only ever reached deliberately. -#}
 {% block content %}
 <h1>Operations</h1>
+{#- What this machine is doing now, from app/activity.py heartbeats: covers
+    crawls started outside this process (gem_deep.py, the CLI) too. -#}
+{%- if activity is defined %}
+<div class=nowdoing id=nowdoing role=status aria-live=polite>
+ {%- for a in activity %}
+ <p><b>{{ {"fetching": "Fetching", "reading": "Reading documents"}.get(a.kind, "Finding duplicates") }}</b> &mdash; {{ a.detail }}</p>
+ {%- else %}
+ <p><b>Idle</b> &mdash; nothing is fetching or reading right now.</p>
+ {%- endfor %}
+</div>
+{%- endif %}
 <p class=summary>Serving from <span class=mono>{{ host }}</span>. A fetch started
 here runs in this process, so it uses this machine's connection.</p>
 

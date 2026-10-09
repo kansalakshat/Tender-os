@@ -560,6 +560,8 @@ pre#err:empty{display:none}
 .admintable td{padding:.5rem;border-bottom:1px solid var(--hair);vertical-align:top}
 .admintable .bad{color:var(--danger);font-weight:700}
 @media (max-width:40rem){.bars li{grid-template-columns:6.5rem 1fr 3rem}.admintable{font-size:.85rem}}
+.nowdoing{margin:.75rem 0 0}
+.nowdoing p{margin:.25rem 0}
 .live{display:grid;grid-template-columns:repeat(auto-fit,minmax(9rem,1fr));gap:.75rem;margin:1.5rem 0 .75rem}
 .live > div{padding:1rem}
 .livenum{display:block;font-size:1.9rem;font-weight:700;font-variant-numeric:tabular-nums}

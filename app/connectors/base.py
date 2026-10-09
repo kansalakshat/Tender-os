@@ -16,6 +16,7 @@ import yaml
 from sqlalchemy import insert, select
 from sqlalchemy.orm import Session
 
+from .. import activity
 from ..enrich import DONE_KEY
 from ..compliance import (
     BlockedSourceError,
@@ -296,6 +297,7 @@ class BaseConnector(ABC):
                 return summary
 
             src.active = True
+            activity.beat("fetching", f"{self.source_name}: starting")
             # A row the purge would delete the moment it lands is not worth
             # writing. CPPP's "latest active tenders" listing is not actually
             # filtered to active ones past roughly page 1000 -- one ten-minute
@@ -336,6 +338,8 @@ class BaseConnector(ABC):
                 if len(batch) >= UPSERT_BATCH or summary.fetched % COMMIT_EVERY == 0:
                     summary.new += self._upsert_many(db, src, batch)
                     batch = []
+                    activity.beat("fetching", f"{self.source_name}: {summary.fetched:,} read,"
+                                              f" {summary.new:,} new")
                 # Commit as we go. A full CPPP backfill is ~3,200 pages over a
                 # couple of hours; holding that in one transaction means a failure
                 # on the last page throws away every row before it.

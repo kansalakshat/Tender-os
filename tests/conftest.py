@@ -96,3 +96,9 @@ def page_scripts(html: str) -> list[str]:
         assert f.is_file(), f"page links {path}, which does not exist"
         out.append(f.read_text(encoding="utf-8"))
     return out
+
+
+@pytest.fixture(autouse=True)
+def private_activity_dir(monkeypatch, tmp_path):
+    """Crawls in tests beat too; they must not show on a real admin page."""
+    monkeypatch.setattr("app.activity.DIR", tmp_path / "activity")

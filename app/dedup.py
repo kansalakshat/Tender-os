@@ -20,6 +20,7 @@ from types import SimpleNamespace
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
+from . import activity
 from .db import SessionLocal
 from .models import Tender, utcnow
 
@@ -275,7 +276,9 @@ def link_duplicates(db: Session | None = None, window_days: int = 120,
 
         # A row with no deadline can pair with any bucket, so it is always a candidate.
         undated = buckets.get(None, [])
-        for row in rows:
+        for n, row in enumerate(rows):
+            if n % 500 == 0:
+                activity.beat("dedup", f"{n:,} of {len(rows):,} tenders compared")
             candidates = _candidates(row, buckets, undated)
             if row.duplicate_of is not None:
                 continue  # already hidden by an earlier pairing

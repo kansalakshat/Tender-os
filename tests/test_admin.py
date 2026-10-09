@@ -341,3 +341,33 @@ def test_the_daily_run_streams_its_log_to_the_panel(monkeypatch):
     # The capture is removed afterwards: later log lines do not reach the panel.
     logging.getLogger("app.x").info("after the run")
     assert "after the run" not in "\n".join(adminjobs.current().lines)
+
+
+def test_the_page_says_what_this_machine_is_doing(client, monkeypatch, tmp_path):
+    """A crawl in another process (gem_deep.py) leaves a heartbeat file; the
+    admin page lists it, and says Idle once it goes stale."""
+    from app import activity
+
+    monkeypatch.setattr(activity, "DIR", tmp_path)
+    c, ids = client
+    _as(c, ids["boss@example.com"])
+    assert "Idle" in c.get("/admin").text
+
+    activity.beat("fetching", "GeM: 200 read, 200 new")
+    d = c.get("/admin/live").json()
+    assert d["activity"] == [{"kind": "fetching", "detail": "GeM: 200 read, 200 new",
+                              "at": d["activity"][0]["at"]}]
+    assert "Fetching" in c.get("/admin").text
+
+    monkeypatch.setattr(activity, "FRESH_SECONDS", -1)
+    assert c.get("/admin/live").json()["activity"] == []
+
+
+def test_dedup_says_so_rather_than_idle(client, monkeypatch, tmp_path):
+    from app import activity
+
+    monkeypatch.setattr(activity, "DIR", tmp_path)
+    c, ids = client
+    _as(c, ids["boss@example.com"])
+    activity.beat("dedup", "500 of 60,000 tenders compared")
+    assert "Finding duplicates" in c.get("/admin").text

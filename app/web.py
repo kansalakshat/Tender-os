@@ -35,7 +35,7 @@ from sqlalchemy.orm import Session
 
 from .connectors import REGISTRY
 from . import admin as admin_data
-from . import adminjobs, cppp_relay, oauth, security
+from . import activity, adminjobs, cppp_relay, oauth, security
 from .auth import current_user
 from .db import get_db, shared
 from .districts import DISTRICTS
@@ -1197,6 +1197,7 @@ def admin_home(request: Request, db: Session = Depends(get_db), user=Depends(cur
     return render(
         "admin.html",
         title="Operations",
+        activity=activity.current(),
         totals=admin_data.totals(db),
         daily=admin_data.daily_intake(db, days=7),
         sources=admin_data.by_source(db),
@@ -1243,6 +1244,7 @@ def admin_live(db: Session = Depends(get_db), user=Depends(current_user)):
     return JSONResponse({
         **admin_data.live_counts(db),
         "job": job.as_dict() if job else None,
+        "activity": activity.current(),
     })
 
 

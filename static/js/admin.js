@@ -35,12 +35,27 @@ function tick(d){
     '<li><b>' + esc(s.name) + '</b> ' + fmt.format(s.total) + '</li>').join('');
 }
 
+// "Fetching" / "Reading documents" lines at the top of the page. textContent,
+// not innerHTML: the detail text is built from source names.
+function nowDoing(items){
+  const box = document.getElementById('nowdoing');
+  if(!box || !items) return;
+  box.replaceChildren(...(items.length ? items : [null]).map(a => {
+    const p = document.createElement('p'), b = document.createElement('b');
+    b.textContent = !a ? 'Idle'
+      : ({fetching: 'Fetching', reading: 'Reading documents'})[a.kind] || 'Finding duplicates';
+    p.append(b, ' — ' + (a ? a.detail : 'nothing is fetching or reading right now.'));
+    return p;
+  }));
+}
+
 async function poll(){
   try{
     const r = await fetch('/admin/live', {headers:{'Accept':'application/json'}});
     if(!r.ok) return;
     const d = await r.json();
     tick(d);
+    nowDoing(d.activity);
     if(d.job) show(d.job);
   }catch(e){ /* a blip must not stop the ticker */ }
 }
