@@ -348,8 +348,8 @@ class BaseConnector(ABC):
                         src.listing_total = self.listing_total
                         src.listing_total_at = utcnow()
                     db.commit()
-                    log.info("%s: committed %d records so far", self.source_name,
-                             summary.fetched)
+                    log.info("%s: committed %d records so far, %d new", self.source_name,
+                             summary.fetched, summary.new)
             if batch:
                 summary.new += self._upsert_many(db, src, batch)
             summary.updated = (
@@ -413,9 +413,17 @@ class BaseConnector(ABC):
                        Tender.external_ref.in_({r.external_ref for r in recs}))
             )
         }
+        prepared = [(rec, *self._fingerprint(rec)) for rec in recs]
+        # Every changed listing in one query, rather than a load per row: the
+        # loop's db.get then finds each one already in the session. Kept in a
+        # variable because the session holds its rows only weakly.
+        changed = [hits[r.external_ref][0] for r, _, fp in prepared
+                   if r.external_ref in hits and hits[r.external_ref][1] != fp]
+        loaded = db.execute(select(Tender).where(Tender.id.in_(changed))).scalars().all()             if changed else []
         created: dict[str, dict] = {}
-        for rec in recs:
-            self._apply(db, src, rec, hits.get(rec.external_ref), created)
+        for rec, values, fp in prepared:
+            self._apply(db, src, rec, values, fp, hits.get(rec.external_ref), created)
+        del loaded
         if created:
             # One multi-row INSERT for the batch, returning the ids now. Whoever
             # runs next wants to read the documents behind exactly these rows,
@@ -429,8 +437,8 @@ class BaseConnector(ABC):
             self.created_ids.extend(ids)
         return len(created)
 
-    def _apply(self, db: Session, src: Source, rec: TenderRecord,
-               hit: tuple | None, created: dict[str, dict]) -> None:
+    @staticmethod
+    def _fingerprint(rec: TenderRecord) -> tuple[dict, str]:
         values = rec.model_dump()
         values.pop("external_ref")
         stable = {
@@ -438,8 +446,11 @@ class BaseConnector(ABC):
             "raw_payload": {k: v for k, v in (values.get("raw_payload") or {}).items()
                             if k not in FP_VOLATILE},
         }
-        fp = hashlib.sha1(
+        return values, hashlib.sha1(
             json.dumps(stable, sort_keys=True, default=str).encode()).hexdigest()
+
+    def _apply(self, db: Session, src: Source, rec: TenderRecord, values: dict, fp: str,
+               hit: tuple | None, created: dict[str, dict]) -> None:
         if hit is not None and hit[1] == fp:
             return
         values["raw_payload"] = {**(values.get("raw_payload") or {}), FP_KEY: fp}

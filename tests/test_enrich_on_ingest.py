@@ -221,3 +221,31 @@ def test_a_failure_in_the_reader_does_not_stop_the_crawl(monkeypatch, capsys):
     finish = cli._document_reader(Conn())
     finish()                    # must not raise
     assert "document reader" in capsys.readouterr().out
+
+
+def test_changed_listings_load_in_one_query(ready, monkeypatch):
+    """A re-crawl where every listing changed used to load each row on its own."""
+    from sqlalchemy import event
+
+    _Dummy.rows = [{"ref": f"c{i}"} for i in range(50)]
+    _make(ready, monkeypatch).run()
+    monkeypatch.setattr(_Dummy, "normalize", lambda self, raw: TenderRecord(
+        external_ref=raw["ref"], title="Supply of switchgear, revised", source_url="u",
+        deadline=SOON, raw_payload={}))
+    engine = ready.kw["bind"]
+    selects = []
+
+    def count(conn, cursor, sql, *a):
+        if sql.lstrip().upper().startswith("SELECT") and "tenders" in sql.lower():
+            selects.append(sql)
+
+    event.listen(engine, "before_cursor_execute", count)
+    try:
+        summary = _make(ready, monkeypatch).run()
+    finally:
+        event.remove(engine, "before_cursor_execute", count)
+    assert summary.new == 0
+    assert len(selects) <= 3, f"{len(selects)} SELECTs for 50 changed listings"
+    db = ready()
+    assert {t.title for t in db.query(Tender)} == {"Supply of switchgear, revised"}
+    db.close()
