@@ -13,7 +13,7 @@ from urllib.robotparser import RobotFileParser
 
 import httpx
 import yaml
-from sqlalchemy import select
+from sqlalchemy import insert, select
 from sqlalchemy.orm import Session
 
 from ..enrich import DONE_KEY
@@ -36,6 +36,10 @@ APPROVED_SOURCES_FILE = (
 ROBOTS_RECHECK = timedelta(days=7)
 # Flush a long backfill to disk periodically rather than in one giant transaction.
 COMMIT_EVERY = 200
+# Rows checked and inserted per database round trip. Neon is ~300 ms away from
+# the fetching laptop, and one SELECT (plus one INSERT) per row held a crawl to
+# a few rows a second whatever the portal's own pace.
+UPSERT_BATCH = 50
 
 
 def load_approved_sources() -> dict[str, dict]:
@@ -57,6 +61,11 @@ def _block_gem(request: httpx.Request) -> None:
 
 # Kept in raw_payload: a fingerprint of the listing as last applied. See _upsert.
 FP_KEY = "_listing_fp"
+# Listing fields that change on every crawl without the tender changing: CPPP's
+# detail link carries a fresh token each fetch, and a row's serial shifts as new
+# tenders are published above it. Fingerprinted, they made every known CPPP row
+# look changed, so each one was loaded whole from Neon and rewritten.
+FP_VOLATILE = {"url", "serial"}
 
 
 class BaseConnector(ABC):
@@ -299,6 +308,7 @@ class BaseConnector(ABC):
                 None if DEFAULT_RETENTION_DAYS is None
                 else cutoff_date(DEFAULT_RETENTION_DAYS)
             )
+            batch: list[TenderRecord] = []
             for raw in self.fetch_batch(since):
                 if deadline is not None and time.monotonic() >= deadline:
                     summary.message = (
@@ -320,7 +330,12 @@ class BaseConnector(ABC):
                 ):
                     summary.skipped += 1
                     continue
-                summary.new += self._upsert(db, src, record)
+                batch.append(record)
+                # Written before every commit, so a commit always covers all
+                # rows fetched up to it.
+                if len(batch) >= UPSERT_BATCH or summary.fetched % COMMIT_EVERY == 0:
+                    summary.new += self._upsert_many(db, src, batch)
+                    batch = []
                 # Commit as we go. A full CPPP backfill is ~3,200 pages over a
                 # couple of hours; holding that in one transaction means a failure
                 # on the last page throws away every row before it.
@@ -335,6 +350,8 @@ class BaseConnector(ABC):
                     db.commit()
                     log.info("%s: committed %d records so far", self.source_name,
                              summary.fetched)
+            if batch:
+                summary.new += self._upsert_many(db, src, batch)
             summary.updated = (
                 summary.fetched - summary.new - summary.skipped - summary.errors
             )
@@ -377,33 +394,61 @@ class BaseConnector(ABC):
 
     def _upsert(self, db: Session, src: Source, rec: TenderRecord) -> int:
         """Returns 1 if the row was created, 0 if it already existed."""
+        return self._upsert_many(db, src, [rec])
+
+    def _upsert_many(self, db: Session, src: Source, recs: list[TenderRecord]) -> int:
+        """Returns how many rows were created.
+
+        Most of a crawl is listings we already hold, unchanged. Loading each
+        whole row to find that out was the bulk of Neon's transfer (the free
+        plan has 5 GB a month); a fingerprint of what the listing said last time
+        answers it in a few bytes, and only a changed listing is loaded. The
+        whole batch's fingerprints come back in one query.
+        """
+        hits = {
+            ref: (tid, fp)
+            for ref, tid, fp in db.execute(
+                select(Tender.external_ref, Tender.id, Tender.raw_payload[FP_KEY].as_string())
+                .where(Tender.source_id == src.id,
+                       Tender.external_ref.in_({r.external_ref for r in recs}))
+            )
+        }
+        created: dict[str, dict] = {}
+        for rec in recs:
+            self._apply(db, src, rec, hits.get(rec.external_ref), created)
+        if created:
+            # One multi-row INSERT for the batch, returning the ids now. Whoever
+            # runs next wants to read the documents behind exactly these rows,
+            # and the general queue is ordered by soonest deadline -- a bid
+            # closing in a fortnight sits behind every one closing tomorrow, so
+            # "enrich after crawling" would not reach today's new bids for hours.
+            ids = db.execute(
+                insert(Tender).returning(Tender.id),
+                [{"source_id": src.id, "external_ref": ref, **v} for ref, v in created.items()],
+            ).scalars()
+            self.created_ids.extend(ids)
+        return len(created)
+
+    def _apply(self, db: Session, src: Source, rec: TenderRecord,
+               hit: tuple | None, created: dict[str, dict]) -> None:
         values = rec.model_dump()
         values.pop("external_ref")
-        # Most of a crawl is listings we already hold, unchanged. Loading each
-        # whole row to find that out was the bulk of Neon's transfer (the free
-        # plan has 5 GB a month); a fingerprint of what the listing said last
-        # time answers it in a few bytes, and only a changed listing is loaded.
+        stable = {
+            **values, "source_url": None,
+            "raw_payload": {k: v for k, v in (values.get("raw_payload") or {}).items()
+                            if k not in FP_VOLATILE},
+        }
         fp = hashlib.sha1(
-            json.dumps(values, sort_keys=True, default=str).encode()).hexdigest()
-        where = (Tender.source_id == src.id, Tender.external_ref == rec.external_ref)
-        hit = db.execute(
-            select(Tender.id, Tender.raw_payload[FP_KEY].as_string()).where(*where)
-        ).first()
+            json.dumps(stable, sort_keys=True, default=str).encode()).hexdigest()
         if hit is not None and hit[1] == fp:
-            return 0
+            return
         values["raw_payload"] = {**(values.get("raw_payload") or {}), FP_KEY: fp}
-        existing = db.get(Tender, hit[0]) if hit is not None else None
-        if existing is None:
-            row = Tender(source_id=src.id, external_ref=rec.external_ref, **values)
-            db.add(row)
-            # Flushed so the id exists now. Whoever runs next wants to read the
-            # documents behind exactly these rows, and the general queue is
-            # ordered by soonest deadline -- a bid closing in a fortnight sits
-            # behind every one closing tomorrow, so "enrich after crawling"
-            # would not reach today's new bids for hours.
-            db.flush()
-            self.created_ids.append(row.id)
-            return 1
+        if hit is None:
+            # A listing can repeat inside one batch: the later copy is the
+            # fresher one, and replacing it here keeps the INSERT to one row.
+            created[rec.external_ref] = values
+            return
+        existing = db.get(Tender, hit[0])
 
         old_payload = existing.raw_payload if isinstance(existing.raw_payload, dict) else {}
         # MERGE raw_payload, never replace it. app/enrich.py writes what it reads
@@ -437,7 +482,6 @@ class BaseConnector(ABC):
         # (matching._candidates) -- Neon free-plan transfer spent on nothing.
         if db.is_modified(existing):
             existing.last_updated_at = utcnow()
-        return 0
 
     def close(self) -> None:
         self._client.close()

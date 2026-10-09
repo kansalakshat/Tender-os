@@ -68,6 +68,33 @@ def test_created_ids_do_not_leak_between_runs(ready, monkeypatch):
     assert c.created_ids and set(c.created_ids).isdisjoint(first)
 
 
+def test_a_crawl_writes_in_batches_not_row_by_row(ready, monkeypatch):
+    """Neon is ~300 ms away: a query per row capped the crawl at a few rows a
+    second. A listing repeated inside one batch must still land once."""
+    from sqlalchemy import event
+
+    refs = [f"r{i}" for i in range(120)]
+    _Dummy.rows = [{"ref": r} for r in refs[:10] + ["r3"] + refs[10:]]
+    c = _make(ready, monkeypatch)
+    engine = ready.kw["bind"]
+    stmts = []
+
+    def count(conn, cursor, sql, *a):
+        if "tenders" in sql.lower():
+            stmts.append(sql)
+
+    event.listen(engine, "before_cursor_execute", count)
+    try:
+        summary = c.run()
+    finally:
+        event.remove(engine, "before_cursor_execute", count)
+    assert summary.new == 120 and len(set(c.created_ids)) == 120
+    assert len(stmts) <= 12, f"{len(stmts)} statements for 121 listings"
+    db = ready()
+    assert db.query(Tender).count() == 120
+    db.close()
+
+
 def test_only_targets_exactly_those_rows(ready):
     """Ordered by soonest deadline, an older tender would come first. `only`
     is what makes the new rows jump that queue."""

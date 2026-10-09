@@ -120,7 +120,7 @@ def test_an_unchanged_recrawl_does_not_look_like_an_update(enriched_row):
     db.expire_all()
     assert db.get(Tender, t.id).last_updated_at == stamp
 
-    _recrawl(db, src, raw_payload={"serial": "3", "end": "12-10-2026"})
+    _recrawl(db, src, raw_payload={"serial": "2", "end": "13-10-2026"})
     db.expire_all()
     assert db.get(Tender, t.id).last_updated_at > stamp, "a real change still counts"
 
@@ -152,3 +152,30 @@ def test_an_unchanged_listing_is_not_downloaded_again(enriched_row):
     t = db.execute(db.query(Tender).statement).scalars().one()
     assert t.raw_payload["end"] == "15-10-2026"
     assert t.raw_payload[DONE_KEY] is True, "enrichment still survives a changed listing"
+
+
+def test_a_fresh_link_token_is_not_a_change(db):
+    """CPPP's detail link carries a new token on every fetch. Counted as a
+    change, every known row was loaded whole from Neon and rewritten."""
+    from sqlalchemy import event
+
+    src = Source(name="GeM", base_url="https://bidplus.gem.gov.in")
+    db.add(src)
+    db.commit()
+
+    def rec(token, serial):
+        return TenderRecord(external_ref="CPPP/1", title="Road works", source_url=token,
+                            raw_payload={"url": token, "serial": serial})
+
+    c = _Dummy.__new__(_Dummy)
+    c.created_ids = []
+    assert c._upsert(db, src, rec("tok-a", "1")) == 1
+    db.commit()
+    stmts = []
+    count = lambda conn, cur, sql, *a: stmts.append(sql)
+    event.listen(db.get_bind(), "before_cursor_execute", count)
+    try:
+        assert c._upsert(db, src, rec("tok-b", "7")) == 0
+    finally:
+        event.remove(db.get_bind(), "before_cursor_execute", count)
+    assert len(stmts) == 1, "only the fingerprint check, no row load"
