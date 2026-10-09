@@ -7,7 +7,7 @@ psycopg[binary]>=3.2
 httpx>=0.28
 pydantic>=2.9
 python-dotenv>=1.0
-selectolax>=0.3.21
+selectolax>=0.3.21,<1.0
 pyyaml>=6.0
 # Page templates (templates/). Autoescaped, so scraped titles cannot inject markup.
 jinja2>=3.1
