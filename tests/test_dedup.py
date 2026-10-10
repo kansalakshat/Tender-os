@@ -275,3 +275,27 @@ def test_an_unreadable_cache_means_a_full_load_not_a_failed_run(session_factory,
         db.commit()
     with session_factory() as db:
         assert link_duplicates(db, cache_path=str(cache)) == 1
+
+
+def test_no_transaction_is_held_open_while_comparing(db, monkeypatch):
+    """Comparing ran for half an hour inside the transaction its read opened,
+    and Neon closed the idle connection: IdleInTransactionSessionTimeout, and
+    the whole pass was lost at the final write."""
+    import app.dedup as dedup
+
+    sid_a, sid_b = two_sources(db)
+    make(db, sid_a, "2026_CPWD_1", "Construction of RCC drain at Sector 12",
+         deadline=date.today() + timedelta(days=5))
+    make(db, sid_b, "res:99", "CONSTRUCTION OF R.C.C. DRAIN AT SECTOR 12",
+         deadline=date.today() + timedelta(days=5))
+    db.commit()
+    seen = []
+    real = dedup._candidates
+
+    def watch(*a):
+        seen.append(db.in_transaction())
+        return real(*a)
+
+    monkeypatch.setattr(dedup, "_candidates", watch)
+    assert link_duplicates(db) == 1
+    assert seen and not any(seen), "a transaction was open during the comparison"

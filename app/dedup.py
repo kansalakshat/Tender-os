@@ -269,6 +269,10 @@ def link_duplicates(db: Session | None = None, window_days: int = 120,
         _INDEX_CACHE.clear()
         cutoff = date.today() - timedelta(days=window_days)
         rows, stamp = _load(db, cutoff, cache_path)
+        # The rows are plain copies, so the read's transaction can end here.
+        # Comparing takes minutes to half an hour; held open that long, Neon
+        # closed it (IdleInTransactionSessionTimeout) and the final write failed.
+        db.rollback()
 
         buckets: dict[object, list] = {}
         for row in rows:
