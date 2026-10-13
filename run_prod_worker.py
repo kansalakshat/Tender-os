@@ -24,11 +24,17 @@ import json
 import logging
 import os
 import sys
+import time
 from datetime import date, timedelta
 
 from dotenv import dotenv_values, load_dotenv
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+# Crawls run at once per source. GeM's 500 pages took ~37 minutes in one
+# browser; three each take a third, at the same per-page pace.
+SLICES = {"GeM": 3}
+# Seconds before a failed source is tried again.
+RETRY_PAUSE = 60
 
 
 def run_once(since_hours: float, progress_dir: str | None = None) -> None:
@@ -76,23 +82,38 @@ def run_once(since_hours: float, progress_dir: str | None = None) -> None:
         os.makedirs(progress_dir, exist_ok=True)
     done_file = os.path.join(progress_dir, "daily_done.json") if progress_dir else None
     done = finished_today(done_file)
+
+    def fetch(name: str) -> bool:
+        """Run one source. False if it failed and is worth another try."""
+        try:
+            summary = run_connector(
+                name, since=since, enrich_new=True, slices=SLICES.get(name, 1),
+                resume_file=os.path.join(progress_dir, f"daily_{name}.json") if progress_dir else None)
+        except Exception:                     # one source must not sink the run
+            log.exception("%s failed", name)
+            return False
+        if done_file and summary.status == "ok":
+            done.add(name)
+            with open(done_file, "w", encoding="utf-8") as f:
+                json.dump({"day": date.today().isoformat(), "done": sorted(done)}, f)
+        return summary.status != "error"
+
+    failed = []
     for name in REGISTRY:
         if name in skip:
             log.info("%s: skipped (SKIP_CONNECTORS)", name)
-            continue
-        if name in done:
+        elif name in done:
             log.info("%s: skipped, already finished today", name)
-            continue
-        try:
-            summary = run_connector(
-                name, since=since, enrich_new=True,
-                resume_file=os.path.join(progress_dir, f"daily_{name}.json") if progress_dir else None)
-            if done_file and summary.status == "ok":
-                done.add(name)
-                with open(done_file, "w", encoding="utf-8") as f:
-                    json.dump({"day": date.today().isoformat(), "done": sorted(done)}, f)
-        except Exception:                     # one source must not sink the run
-            log.exception("%s failed", name)
+        elif not fetch(name):
+            failed.append(name)
+    # Once more after a pause. A dropped connection (the laptop's internet went
+    # at 03:20 on 14 Oct 2026) used to cost a source for the rest of the day;
+    # GeM's retry carries on from the page it had reached.
+    if failed:
+        log.warning("%s failed; trying again in %ds", ", ".join(failed), RETRY_PAUSE)
+        time.sleep(RETRY_PAUSE)
+        for name in failed:
+            fetch(name)
     # Enrich before dedup: dedup matches on title, and a GeM listing title is a
     # stub until enrichment replaces it. Same order as app/scheduler.py.
     #

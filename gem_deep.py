@@ -17,6 +17,7 @@ import os
 import signal
 import subprocess
 import sys
+import threading
 from concurrent.futures import ThreadPoolExecutor
 
 FIRST_PAGE = 501            # the Daily run covers 1..500
@@ -24,6 +25,8 @@ LAST_PAGE = 5000            # past GeM's end (~4,720 pages); a crawler stops at 
 SHARDS = 3
 DOC_WORKERS = 6
 DOC_LIMIT = 30_000
+RELAUNCHES = 5              # per crawler, for one that exits with an error
+RELAUNCH_PAUSE = 60         # seconds
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 log = logging.getLogger("gem-deep")
@@ -38,27 +41,45 @@ def main() -> int:
                         format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
     span = -(-(LAST_PAGE - FIRST_PAGE + 1) // SHARDS)
-    children = []
-    for i in range(SHARDS):
+    children: dict[int, subprocess.Popen] = {}
+    stopping = threading.Event()
+
+    def crawl(i: int) -> None:
+        """One slice, relaunched if it dies. A dropped connection (the laptop's
+        internet went at 03:20 on 14 Oct 2026) ended all three crawlers for the
+        day; a relaunch carries on from the page its slice had reached."""
         start = FIRST_PAGE + i * span
-        out = open(os.path.join(HERE, f"gem_deep_{i + 1}.log"), "a", encoding="utf-8")
-        children.append(subprocess.Popen(
-            [sys.executable, "-u", "-m", "app.cli", "run", "GeM",
-             "--start-page", str(start), "--max-pages", str(span),
-             # A restart carries on from the page this slice reached today.
-             "--resume-file", os.path.join(HERE, ".cache", f"gem_deep_{i + 1}.json")],
-            cwd=HERE, stdout=out, stderr=subprocess.STDOUT))
         log.info("crawler %d: pages %d-%d, log gem_deep_%d.log",
                  i + 1, start, start + span - 1, i + 1)
+        for attempt in range(RELAUNCHES + 1):
+            if attempt:
+                log.info("crawler %d: relaunching in %ds (%d of %d)",
+                         i + 1, RELAUNCH_PAUSE, attempt, RELAUNCHES)
+                if stopping.wait(RELAUNCH_PAUSE):
+                    return
+            with open(os.path.join(HERE, f"gem_deep_{i + 1}.log"), "a", encoding="utf-8") as out:
+                children[i] = subprocess.Popen(
+                    [sys.executable, "-u", "-m", "app.cli", "run", "GeM",
+                     "--start-page", str(start), "--max-pages", str(span),
+                     "--resume-file", os.path.join(HERE, ".cache", f"gem_deep_{i + 1}.json")],
+                    cwd=HERE, stdout=out, stderr=subprocess.STDOUT)
+                code = children[i].wait()
+            log.info("crawler %d finished with exit code %d", i + 1, code)
+            if code == 0 or stopping.is_set():
+                return
 
     def stop(*_):
-        for c in children:
+        stopping.set()
+        for c in list(children.values()):
             c.terminate()
         sys.exit(1)
     signal.signal(signal.SIGTERM, stop)
 
-    for i, c in enumerate(children, 1):
-        log.info("crawler %d finished with exit code %d", i, c.wait())
+    threads = [threading.Thread(target=crawl, args=(i,)) for i in range(SHARDS)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
 
     from app.enrich import enrich_pending
 

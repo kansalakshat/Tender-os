@@ -15,6 +15,7 @@ from __future__ import annotations
 import logging
 import os
 import threading
+import time
 from datetime import date
 from concurrent.futures import ProcessPoolExecutor
 from concurrent.futures.process import BrokenProcessPool
@@ -37,6 +38,10 @@ log = logging.getLogger(__name__)
 # it. A tender whose PDF yielded nothing is still marked: re-downloading 150 KB
 # every six hours to re-learn that it is unparseable helps nobody.
 DONE_KEY = "_enriched"
+# Tenders loaded and committed per database round trip.
+BATCH = 25
+# Seconds to wait after the database connection drops before the next tender.
+OUTAGE_PAUSE = 10
 
 # Parsing, not downloading, is the cost of a document: pypdf's text extraction
 # is pure Python, ~2s of CPU for a 10-page bid against ~0.5s to fetch it. The
@@ -192,7 +197,15 @@ def enrich_pending(limit: int = 200, session_factory=SessionLocal,
                    skip_sources: set[str] | None = None,
                    only: list[int] | None = None) -> int:
     """Enrich up to `limit` tenders. Returns how many changed."""
-    ids = needs_enrichment(limit, shard, skip_sources, only)
+    try:
+        ids = needs_enrichment(limit, shard, skip_sources, only)
+    except OperationalError as exc:
+        # Database unreachable (the laptop's internet dropped at 03:20 on 14 Oct
+        # 2026 and this took the whole deep crawl's document pass down). Every
+        # unread document is still unread; the next pass finds them.
+        log.warning("enrich: could not list unread documents: %s",
+                    str(exc).splitlines()[0][:120])
+        return 0
     if not ids:
         return 0
     changed = 0
@@ -202,16 +215,24 @@ def enrich_pending(limit: int = 200, session_factory=SessionLocal,
         timeout=httpx.Timeout(60.0),
         follow_redirects=True,
     )
+    loaded: dict[int, Tender] = {}
     try:
         for n, tid in enumerate(ids, 1):
             activity.beat("reading", f"bid documents: a pass of {len(ids):,}")
             try:
-                tender = db.get(Tender, tid)
+                if tid not in loaded:
+                    # The next BATCH rows in one query: a db.get per tender was a
+                    # ~270 ms round trip to Neon each, on top of the download.
+                    chunk = ids[n - 1:n - 1 + BATCH]
+                    loaded = {t.id: t for t in db.scalars(
+                        select(Tender).where(Tender.id.in_(chunk)))}
+                    loaded.update((i, None) for i in chunk if i not in loaded)
+                tender = loaded[tid]
                 if tender is None:
                     continue
                 if enrich_one(db, tender, client):
                     changed += 1
-                if n % 25 == 0:
+                if n % BATCH == 0:
                     db.commit()
                     log.info("enrich: %d/%d processed, %d changed", n, len(ids), changed)
             except OperationalError as exc:
@@ -224,8 +245,14 @@ def enrich_pending(limit: int = 200, session_factory=SessionLocal,
                 # Roll back and move on rather than retry this one tender: it
                 # stays unmarked, so the next pass picks it up anyway.
                 db.rollback()
+                loaded = {}          # rolled-back rows are stale; reload from the next one
                 log.warning("enrich: %s on tender %s, skipping it: %s",
                             type(exc).__name__, tid, str(exc).splitlines()[0][:120])
+                if exc.connection_invalidated:
+                    # The connection is gone, not one row deadlocked: give the
+                    # network a moment rather than skipping through the whole
+                    # list in seconds, one failed query per tender.
+                    time.sleep(OUTAGE_PAUSE)
         db.commit()
     finally:
         client.close()

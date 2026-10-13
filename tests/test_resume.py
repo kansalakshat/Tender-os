@@ -44,7 +44,7 @@ def test_daily_run_skips_what_finished_today_and_retries_the_rest(tmp_path, monk
 
     ran = []
 
-    def fake_run_connector(name, since, enrich_new, resume_file=None):
+    def fake_run_connector(name, since, enrich_new, resume_file=None, slices=1):
         ran.append(name)
         return SimpleNamespace(status="ok" if name == "CPPP" else "error")
 
@@ -53,11 +53,13 @@ def test_daily_run_skips_what_finished_today_and_retries_the_rest(tmp_path, monk
     monkeypatch.setattr(app.retention, "purge_expired", lambda: 0)
     monkeypatch.setattr(app.enrich, "enrich_pending", lambda **kw: 0)
     monkeypatch.setattr(app.dedup, "link_duplicates", lambda: 0)
+    monkeypatch.setattr(run_prod_worker, "RETRY_PAUSE", 0)
 
+    # GeM fails, so each run tries it twice (see test_fetch_resilience).
     run_prod_worker.run_once(48.0, progress_dir=str(tmp_path))
-    assert ran == ["CPPP", "GeM"]
+    assert ran == ["CPPP", "GeM", "GeM"]
     run_prod_worker.run_once(48.0, progress_dir=str(tmp_path))
-    assert ran == ["CPPP", "GeM", "GeM"], "CPPP finished; GeM failed and is tried again"
+    assert ran[3:] == ["GeM", "GeM"], "CPPP finished today; GeM failed and is tried again"
     # Without a progress folder (CI), everything runs every time.
     run_prod_worker.run_once(48.0)
-    assert ran[-2:] == ["CPPP", "GeM"]
+    assert ran[5:] == ["CPPP", "GeM", "GeM"]

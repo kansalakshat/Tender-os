@@ -178,13 +178,14 @@ def _in_scope(cutoff: date) -> tuple:
 
 
 def _read_cache(path: str | None):
-    """(rows by id, stamp) from a previous run, or None to load everything."""
+    """(rows by id, stamp, built) from a previous run, or None to load everything."""
     if not path or not os.path.exists(path):
         return None
     try:
         with open(path, encoding="utf-8") as f:
             data = json.load(f)
-        if datetime.now() - datetime.fromisoformat(data["written"]) > _CACHE_MAX_AGE:
+        built = datetime.fromisoformat(data["written"])
+        if datetime.now() - built > _CACHE_MAX_AGE:
             return None
         rows = {}
         for i, src, title, org, value, deadline, has_doc in data["rows"]:
@@ -193,16 +194,19 @@ def _read_cache(path: str | None):
                 estimated_value=Decimal(value) if value is not None else None,
                 deadline=date.fromisoformat(deadline) if deadline else None,
                 document_url=has_doc, duplicate_of=None)
-        return rows, datetime.fromisoformat(data["stamp"])
+        return rows, datetime.fromisoformat(data["stamp"]), built
     except Exception:                        # a bad cache costs one full load, never a run
         log.warning("dedup: ignoring unreadable cache %s", path, exc_info=True)
         return None
 
 
-def _write_cache(path: str, rows: list, stamp: datetime | None) -> None:
+def _write_cache(path: str, rows: list, stamp: datetime | None,
+                 built: datetime | None) -> None:
+    """`built` is when the last full load happened, kept across delta runs: it is
+    what ages the cache out, and a daily run used to reset it every time."""
     if stamp is None:
         return
-    data = {"written": datetime.now().isoformat(), "stamp": stamp.isoformat(), "rows": [
+    data = {"written": (built or datetime.now()).isoformat(), "stamp": stamp.isoformat(), "rows": [
         [r.id, r.source_id, r.title, r.organization,
          str(r.estimated_value) if r.estimated_value is not None else None,
          r.deadline.isoformat() if r.deadline else None, bool(r.document_url)]
@@ -215,15 +219,17 @@ def _write_cache(path: str, rows: list, stamp: datetime | None) -> None:
 
 
 def _load(db: Session, cutoff: date, cache_path: str | None):
-    """(every row in scope, newest last_updated_at seen). With a cache, only rows
-    changed since the last run cross the network, plus the ids still in scope."""
+    """(every row in scope, newest last_updated_at seen, ids new or changed since
+    the cache -- None without one). With a cache, only rows changed since the
+    last run cross the network, plus the ids still in scope."""
     cache = _read_cache(cache_path)
+    fresh = built = None
     if cache is None:
         fetched = db.execute(select(*_COLUMNS).where(*_in_scope(cutoff))).all()
         rows = {r.id: _row(r) for r in fetched}
         stamp = None
     else:
-        cached, stamp = cache
+        cached, stamp, built = cache
         ids = set(db.scalars(select(Tender.id).where(*_in_scope(cutoff))))
         fetched = db.execute(select(*_COLUMNS).where(*_in_scope(cutoff)).where(
             Tender.last_updated_at > stamp - _CLOCK_SLACK)).all()
@@ -235,12 +241,13 @@ def _load(db: Session, cutoff: date, cache_path: str | None):
                 Tender.id.in_(missing[n:n + 5000]))).all()
             rows.update((r.id, _row(r)) for r in extra)
             fetched += extra
+        fresh = {r.id for r in fetched}
         log.info("dedup: %d rows in scope, %d fetched, the rest from %s",
                  len(rows), len(fetched), cache_path)
     stamps = [r.last_updated_at for r in fetched if r.last_updated_at]
     if stamps:
         stamp = max([*stamps, stamp] if stamp else stamps)
-    return sorted(rows.values(), key=lambda r: r.id), stamp
+    return sorted(rows.values(), key=lambda r: r.id), stamp, fresh, built
 
 
 def link_duplicates(db: Session | None = None, window_days: int = 120,
@@ -254,8 +261,9 @@ def link_duplicates(db: Session | None = None, window_days: int = 120,
 
     `cache_path` (default: $DEDUP_CACHE) keeps the compared columns on disk
     between runs, so a run downloads only what changed rather than every open
-    tender -- Neon's free plan has 5 GB of transfer a month. Every row is still
-    compared, exactly as without it.
+    tender -- Neon's free plan has 5 GB of transfer a month. Every new or changed
+    row is compared with every row; two rows unchanged since the last run are not
+    compared again, as they already were.
 
     ponytail: O(n^2) within a deadline bucket. Buckets keep that tolerable at the
     tens-of-thousands scale we are at; if it stops being tolerable, block on a
@@ -268,7 +276,7 @@ def link_duplicates(db: Session | None = None, window_days: int = 120,
     try:
         _INDEX_CACHE.clear()
         cutoff = date.today() - timedelta(days=window_days)
-        rows, stamp = _load(db, cutoff, cache_path)
+        rows, stamp, fresh, built = _load(db, cutoff, cache_path)
         # The rows are plain copies, so the read's transaction can end here.
         # Comparing takes minutes to half an hour; held open that long, Neon
         # closed it (IdleInTransactionSessionTimeout) and the final write failed.
@@ -283,9 +291,16 @@ def link_duplicates(db: Session | None = None, window_days: int = 120,
         for n, row in enumerate(rows):
             if n % 500 == 0:
                 activity.beat("dedup", f"{n:,} of {len(rows):,} tenders compared")
-            candidates = _candidates(row, buckets, undated)
+            # Two rows that both sat unchanged in the cache were compared last
+            # run, and the test is deterministic: only pairs with a new or
+            # changed row can have a new answer. Comparing every pair again took
+            # 65 minutes on 10 Oct 2026 to link nothing. The cache is rebuilt
+            # weekly, so a change to the rules is applied to every pair then.
+            if fresh is not None and row.id not in fresh:
+                continue
             if row.duplicate_of is not None:
                 continue  # already hidden by an earlier pairing
+            candidates = _candidates(row, buckets, undated)
             for other in candidates:
                 # same-source repeats are already handled by the
                 # (source_id, external_ref) unique key.
@@ -313,7 +328,7 @@ def link_duplicates(db: Session | None = None, window_days: int = 120,
             db.execute(update(Tender), changes)
         db.commit()
         if cache_path:
-            _write_cache(cache_path, rows, stamp)
+            _write_cache(cache_path, rows, stamp, built)
         log.info("dedup: linked %d duplicate tenders", linked)
     finally:
         if own_session:

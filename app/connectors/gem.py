@@ -367,8 +367,10 @@ class GeMConnector(BaseConnector):
                 continue
             page.wait_for_timeout(int(self.rate_limit_seconds * 1000))
             return True
-        log.warning("%s: page %d never loaded, stopping", self.source_name, current + 1)
-        return False
+        # Raised, not "return False": that is how the real end of the listing is
+        # reported, and a dropped connection at page 300 then looked like a
+        # finished crawl -- marked done for the day, never resumed.
+        raise RuntimeError(f"page {current + 1} never loaded")
 
     def normalize(self, raw: dict) -> TenderRecord:
         start = parse_gem_dt(raw.get("start", ""))

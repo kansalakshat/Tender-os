@@ -11,6 +11,7 @@ from .models import utcnow
 from .dedup import link_duplicates
 from .enrich import enrich_pending
 from .retention import DEFAULT_RETENTION_DAYS, purge_expired
+from .schemas import RunSummary
 
 log = logging.getLogger(__name__)
 
@@ -21,7 +22,7 @@ OVERLAP = timedelta(hours=2)
 
 
 def run_connector(name: str, since: datetime | None = None, enrich_new: bool = False,
-                  resume_file: str | None = None):
+                  resume_file: str | None = None, slices: int = 1):
     """Run one connector, optionally reading the documents it just collected.
 
     `enrich_new` covers this run's own rows only. The general enrichment queue
@@ -29,19 +30,34 @@ def run_connector(name: str, since: datetime | None = None, enrich_new: bool = F
     fortnight sits behind every one closing tomorrow -- without this it would
     not be read for hours, and a listing row with no document has no EMD, no
     value and no links.
-    """
-    connector = REGISTRY[name]()
-    if resume_file and hasattr(connector, "resume_file"):
-        connector.resume_file = resume_file
-    try:
-        summary = connector.run(since=since)
-        log.info("%s", summary)
-        if enrich_new and connector.created_ids:
-            from concurrent.futures import ThreadPoolExecutor
 
+    `slices` (page-based connectors only) splits the pages into that many crawls
+    run at once, each with its own browser: GeM's 500 pages took ~37 minutes in
+    one. `resume_file` then gets a _1, _2 ... suffix per slice.
+    """
+    from concurrent.futures import ThreadPoolExecutor
+
+    connectors = [REGISTRY[name]() for _ in range(slices)]
+    if slices > 1:
+        first, total = connectors[0].start_page, connectors[0].max_pages
+        per = -(-total // slices)
+        for i, c in enumerate(connectors):
+            c.start_page, c.max_pages = first + i * per, min(per, total - i * per)
+    for i, c in enumerate(connectors):
+        if resume_file and hasattr(c, "resume_file"):
+            stem, ext = os.path.splitext(resume_file)
+            c.resume_file = resume_file if slices == 1 else f"{stem}_{i + 1}{ext}"
+    try:
+        if slices == 1:
+            summary = connectors[0].run(since=since)
+        else:
+            with ThreadPoolExecutor(max_workers=slices) as pool:
+                summary = _combine(list(pool.map(lambda c: c.run(since=since), connectors)))
+        log.info("%s", summary)
+        fresh = [i for c in connectors for i in c.created_ids]
+        if enrich_new and fresh:
             from .enrich import enrich_pending
 
-            fresh = list(connector.created_ids)
             # Several workers, sharded on id so none reads another's rows. One
             # worker manages ~25 documents a minute, and a day's GeM bids run to
             # thousands: read serially, they took longer than the crawl itself.
@@ -54,7 +70,27 @@ def run_connector(name: str, since: datetime | None = None, enrich_new: bool = F
             log.info("%s: read %d of %d new bid document(s)", name, read, len(fresh))
         return summary
     finally:
-        connector.close()
+        for c in connectors:
+            c.close()
+
+
+def _combine(parts: list[RunSummary]) -> RunSummary:
+    """One summary for a sliced run: counts added, the worst status wins."""
+    statuses = {p.status for p in parts}
+    out = RunSummary(
+        source=parts[0].source,
+        status="error" if "error" in statuses else next(iter(statuses - {"ok"}), "ok"),
+        message="; ".join(p.message for p in parts if p.message) or None,
+        started_at=min(p.started_at for p in parts),
+        finished_at=max((p.finished_at for p in parts if p.finished_at), default=None),
+    )
+    for p in parts:
+        out.fetched += p.fetched
+        out.new += p.new
+        out.updated += p.updated
+        out.skipped += p.skipped
+        out.errors += p.errors
+    return out
 
 
 def run_incremental(name: str):

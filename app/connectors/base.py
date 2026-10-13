@@ -13,7 +13,7 @@ from urllib.robotparser import RobotFileParser
 
 import httpx
 import yaml
-from sqlalchemy import insert, select
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from .. import activity
@@ -41,6 +41,16 @@ COMMIT_EVERY = 200
 # the fetching laptop, and one SELECT (plus one INSERT) per row held a crawl to
 # a few rows a second whatever the portal's own pace.
 UPSERT_BATCH = 50
+
+
+def _insert_new(db: Session):
+    """INSERT INTO tenders that skips a (source, ref) another writer just added."""
+    if db.get_bind().dialect.name == "postgresql":
+        from sqlalchemy.dialects.postgresql import insert as dialect_insert
+    else:                                   # SQLite, under test
+        from sqlalchemy.dialects.sqlite import insert as dialect_insert
+    return dialect_insert(Tender).on_conflict_do_nothing(
+        index_elements=["source_id", "external_ref"])
 
 
 def load_approved_sources() -> dict[str, dict]:
@@ -439,12 +449,19 @@ class BaseConnector(ABC):
             # and the general queue is ordered by soonest deadline -- a bid
             # closing in a fortnight sits behind every one closing tomorrow, so
             # "enrich after crawling" would not reach today's new bids for hours.
-            ids = db.execute(
-                insert(Tender).returning(Tender.id),
+            #
+            # ON CONFLICT DO NOTHING: two crawls of the same listing (the Daily
+            # run's pages 1-500 and a deep crawler from 501, as the listing shifts
+            # under them) can insert the same bid moments apart, and the loser's
+            # unique-key error used to end its whole crawl. The row is there
+            # either way; only the inserts that happened count as new.
+            ids = list(db.execute(
+                _insert_new(db).returning(Tender.id),
                 [{"source_id": src.id, "external_ref": ref, **v} for ref, v in created.items()],
-            ).scalars()
+            ).scalars())
             self.created_ids.extend(ids)
-        return len(created)
+            return len(ids)
+        return 0
 
     @staticmethod
     def _fingerprint(rec: TenderRecord) -> tuple[dict, str]:
