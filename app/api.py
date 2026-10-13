@@ -192,7 +192,7 @@ if _STATIC.is_dir():
 DOCS_BAR = """<div class=tos-bar><div class=wrap>
  <a class=tos-brand href="/">
   <svg class=tos-mark viewBox="0 0 32 32" aria-hidden="true">
-   <rect width="32" height="32" fill="#E6002A"/>
+   <rect width="32" height="32" fill="#1D5BA8"/>
    <g fill="#FFFFFF"><rect x="7" y="9" width="18" height="3"/>
    <rect x="7" y="14.5" width="12" height="3"/></g>
    <rect x="7" y="20" width="6" height="3" fill="#FFFFFF" fill-opacity=".55"/>
