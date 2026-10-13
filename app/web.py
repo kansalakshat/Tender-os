@@ -437,11 +437,9 @@ def _logo_buyers(db: Session, today: date) -> list[tuple[str, int]]:
             seen.add(src)
             out.append((name, n))
     return out[:HOME_BUYERS]
-# "Book a Demo": an email to the monitored contact address until there is a
-# booking page. Empty hides the button.
-DEMO_URL = os.environ.get("DEMO_URL") or (
-    f"mailto:{os.environ['CONTACT_EMAIL']}?subject=Tenderleo%20demo"
-    if os.environ.get("CONTACT_EMAIL") else "")
+# "Book a Demo": a WhatsApp chat with the sales number, message pre-typed.
+DEMO_URL = os.environ.get("DEMO_URL") or "https://wa.me/918964909090?" + urlencode(
+    {"text": "Hi, I would like to book a demo of Tenderleo."})
 
 
 @router.get("/about", response_class=HTMLResponse)
