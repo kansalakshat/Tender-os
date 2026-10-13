@@ -418,7 +418,7 @@ def _render_welcome(db: Session, today: date) -> str:
         n_open=f["n_open"], n_soon=f["n_soon"],
         n_sources=f["n_sources"], n_buyers=f["n_buyers"], last=f["last"],
         buyers=_logo_buyers(db, today), states=STATES,
-        demo=DEMO_URL, today=today,
+        today=today,
     )
 
 
@@ -440,6 +440,7 @@ def _logo_buyers(db: Session, today: date) -> list[tuple[str, int]]:
 # "Book a Demo": a WhatsApp chat with the sales number, message pre-typed.
 DEMO_URL = os.environ.get("DEMO_URL") or "https://wa.me/918964909090?" + urlencode(
     {"text": "Hi, I would like to book a demo of Tenderleo."})
+_env.globals["demo"] = DEMO_URL
 
 
 @router.get("/about", response_class=HTMLResponse)

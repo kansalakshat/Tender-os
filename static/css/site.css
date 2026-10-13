@@ -90,7 +90,7 @@ code{font-family:ui-monospace,Consolas,monospace;font-size:.9em;background:var(-
  .top nav a{flex:none;padding:0 .7rem}
  .themebtn{margin-left:auto}
 }
-@media (max-width:30rem){.acct .btn{display:none}}
+@media (max-width:30rem){.acct .btn,.top .demo{display:none}}
 
 /* --- controls -------------------------------------------------------------- */
 button,.btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;
