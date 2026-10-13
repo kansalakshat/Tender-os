@@ -323,7 +323,7 @@ def test_the_daily_run_streams_its_log_to_the_panel(monkeypatch):
     import run_prod_worker
     from app import adminjobs
 
-    def fake_run_once(since_hours):
+    def fake_run_once(since_hours, progress_dir=None):
         logging.getLogger("app.connectors.gem").info("GeM: page 3 of 500")
         logging.getLogger("prod-worker").warning("purge failed")
 

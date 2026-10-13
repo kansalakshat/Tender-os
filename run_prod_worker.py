@@ -20,21 +20,28 @@ which a long-lived process does not. `daily_ingest.cmd` is that task's command.
 from __future__ import annotations
 
 import argparse
+import json
 import logging
 import os
 import sys
-from datetime import timedelta
+from datetime import date, timedelta
 
 from dotenv import dotenv_values, load_dotenv
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 
-def run_once(since_hours: float) -> None:
+def run_once(since_hours: float, progress_dir: str | None = None) -> None:
     """Purge, then every connector, enrich and dedup -- one pass, then return.
 
     The window is wider than a day on purpose: the same overlap the scheduler
     uses, so a run that fails or is missed leaves no permanent hole.
+
+    `progress_dir` is for the fetching laptop, which restarts the run whenever
+    the start script runs again. There, a source that already finished today is
+    skipped and GeM carries on from the page it had reached: a restart at 02:28
+    re-read all of CPPP and 800 GeM bids for 43 new ones. CI leaves it unset, so
+    a run dispatched by hand still fetches everything.
     """
     from app.connectors import REGISTRY
     from app.dedup import link_duplicates
@@ -65,13 +72,25 @@ def run_once(since_hours: float) -> None:
         log.exception("purge failed")
 
     since = utcnow() - timedelta(hours=since_hours)
+    if progress_dir:
+        os.makedirs(progress_dir, exist_ok=True)
+    done_file = os.path.join(progress_dir, "daily_done.json") if progress_dir else None
+    done = finished_today(done_file)
     for name in REGISTRY:
         if name in skip:
             log.info("%s: skipped (SKIP_CONNECTORS)", name)
             continue
+        if name in done:
+            log.info("%s: skipped, already finished today", name)
+            continue
         try:
-            summary = run_connector(name, since=since, enrich_new=True)
-            del summary
+            summary = run_connector(
+                name, since=since, enrich_new=True,
+                resume_file=os.path.join(progress_dir, f"daily_{name}.json") if progress_dir else None)
+            if done_file and summary.status == "ok":
+                done.add(name)
+                with open(done_file, "w", encoding="utf-8") as f:
+                    json.dump({"day": date.today().isoformat(), "done": sorted(done)}, f)
         except Exception:                     # one source must not sink the run
             log.exception("%s failed", name)
     # Enrich before dedup: dedup matches on title, and a GeM listing title is a
@@ -103,6 +122,16 @@ def run_once(since_hours: float) -> None:
         ))
     log.info("enriched %d tender(s) with %d worker(s)", sum(counts), workers)
     log.info("linked %d duplicate(s)", link_duplicates())
+
+
+def finished_today(done_file: str | None) -> set[str]:
+    """Sources the Daily run on this machine finished today (its local date)."""
+    try:
+        with open(done_file, encoding="utf-8") as f:
+            saved = json.load(f)
+        return set(saved["done"]) if saved["day"] == date.today().isoformat() else set()
+    except (TypeError, OSError, ValueError, KeyError):   # unset, missing or garbled
+        return set()
 
 
 def main() -> int:

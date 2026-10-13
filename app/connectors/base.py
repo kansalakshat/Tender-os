@@ -256,6 +256,9 @@ class BaseConnector(ABC):
     def normalize(self, raw: dict) -> TenderRecord:
         """Map one raw record onto TenderRecord."""
 
+    def committed(self) -> None:
+        """Called after each commit of fetched rows; GeM records its page here."""
+
     # ---- Orchestration ----
 
     def run(
@@ -352,6 +355,7 @@ class BaseConnector(ABC):
                         src.listing_total = self.listing_total
                         src.listing_total_at = utcnow()
                     db.commit()
+                    self.committed()
                     log.info("%s: committed %d records so far, %d new", self.source_name,
                              summary.fetched, summary.new)
             if batch:
@@ -366,6 +370,7 @@ class BaseConnector(ABC):
                 src.listing_total = self.listing_total
                 src.listing_total_at = utcnow()
             db.commit()
+            self.committed()
         except (BlockedSourceError, RobotsDisallowedError) as exc:
             db.rollback()
             summary.status = "refused"

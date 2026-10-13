@@ -16,9 +16,11 @@ nothing here solves or bypasses one. The parts of GeM that are gated stay unread
 """
 from __future__ import annotations
 
+import json
 import logging
 import re
-from datetime import datetime
+from datetime import date, datetime
+from pathlib import Path
 from typing import Iterator
 
 from ..compliance import user_agent
@@ -162,6 +164,12 @@ class GeMConnector(BaseConnector):
     # page with loadBids(), several processes can each take a slice of the listing
     # and run at the same time. The scheduled run always starts at 1.
     start_page = 1
+    # Set only by the fetching laptop's runs (the Daily run and gem_deep.py): a
+    # file holding the page this slice had committed up to today, so a restart
+    # carries on from there. Without it a restart re-read every page it had
+    # already saved -- 45 minutes of "0 new". Unset, a run starts at start_page.
+    resume_file: str | None = None
+    _page = 0
 
     # Chromium's memory climbs with every page turn on this listing -- a 4,400-page
     # run was killed by the OS at page ~340. The browser is thrown away and rebuilt
@@ -243,10 +251,14 @@ class GeMConnector(BaseConnector):
         self._throttled = 0
 
         with sync_playwright() as p:
-            first, last = self.start_page, self.start_page + self.max_pages - 1
+            first, last = self._resume_page(), self.start_page + self.max_pages - 1
+            if first > self.start_page:
+                log.info("%s: resuming at page %d, where today's run had reached",
+                         self.source_name, first)
             browser, page = self._open(p, first)
             try:
                 for n in range(first, last + 1):
+                    self._page = n
                     if n > first and (n - first) % self.recycle_every == 0:
                         log.info("%s: recycling the browser at page %d", self.source_name, n)
                         browser.close()
@@ -270,6 +282,30 @@ class GeMConnector(BaseConnector):
                         return
             finally:
                 browser.close()
+
+    def _resume_page(self) -> int:
+        """The page today's run of this same slice had committed up to, else start_page."""
+        try:
+            saved = json.loads(Path(self.resume_file).read_text(encoding="utf-8"))
+            if saved["day"] == date.today().isoformat() and saved["start"] == self.start_page:
+                return max(self.start_page, int(saved["page"]))
+        except (TypeError, OSError, ValueError, KeyError):   # unset, missing or garbled
+            pass
+        return self.start_page
+
+    def committed(self) -> None:
+        """Every row before the current page is in the database now; the current
+        one may be half-written, so that is the page a restart begins on."""
+        if not (self.resume_file and self._page):
+            return
+        try:
+            path = Path(self.resume_file)
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(json.dumps({"day": date.today().isoformat(),
+                                        "start": self.start_page, "page": self._page}),
+                            encoding="utf-8")
+        except OSError as exc:              # a lost bookmark must not end the crawl
+            log.warning("%s: could not save the page reached: %s", self.source_name, exc)
 
     # A single slow page used to end the whole crawl. The portal is simply slow
     # sometimes, so a stall is retried before it is believed.

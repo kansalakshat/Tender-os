@@ -29,7 +29,7 @@ def cmd_run(args) -> int:
             # being told to slow down.
             connector.rate_limit_seconds = max(args.rate_limit, 0.25)
         # Only meaningful for page-based connectors; ignored by the rest.
-        for attr in ("max_pages", "start_page"):
+        for attr in ("max_pages", "start_page", "resume_file"):
             value = getattr(args, attr)
             if value is not None and hasattr(connector, attr):
                 setattr(connector, attr, value)
@@ -254,6 +254,9 @@ def main(argv=None) -> int:
                        help="page-based connectors: how many listing pages to read")
     p_run.add_argument("--start-page", type=int, default=None,
                        help="page-based connectors: resume a backfill from this page")
+    p_run.add_argument("--resume-file", default=None,
+                       help="GeM: keep the page reached in this file, and on a rerun "
+                            "the same day carry on from it")
     p_run.add_argument("--enrich", action="store_true",
                        help="read the bid document of every row this run creates, "
                             "in the same pass, so a new tender is never half-collected")

@@ -20,7 +20,8 @@ INTERVAL_HOURS = float(os.getenv("SCHEDULE_INTERVAL_HOURS", "6"))
 OVERLAP = timedelta(hours=2)
 
 
-def run_connector(name: str, since: datetime | None = None, enrich_new: bool = False):
+def run_connector(name: str, since: datetime | None = None, enrich_new: bool = False,
+                  resume_file: str | None = None):
     """Run one connector, optionally reading the documents it just collected.
 
     `enrich_new` covers this run's own rows only. The general enrichment queue
@@ -30,6 +31,8 @@ def run_connector(name: str, since: datetime | None = None, enrich_new: bool = F
     value and no links.
     """
     connector = REGISTRY[name]()
+    if resume_file and hasattr(connector, "resume_file"):
+        connector.resume_file = resume_file
     try:
         summary = connector.run(since=since)
         log.info("%s", summary)

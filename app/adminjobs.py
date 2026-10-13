@@ -125,7 +125,8 @@ def _daily(job: Job) -> None:
         lg.addHandler(handler)
         lg.setLevel(logging.INFO)
     try:
-        run_prod_worker.run_once(since_hours=48.0)
+        run_prod_worker.run_once(since_hours=48.0,
+                                 progress_dir=os.path.join(run_prod_worker.HERE, ".cache"))
     finally:
         for lg, level in zip(loggers, levels):
             lg.removeHandler(handler)

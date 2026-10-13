@@ -44,7 +44,9 @@ def main() -> int:
         out = open(os.path.join(HERE, f"gem_deep_{i + 1}.log"), "a", encoding="utf-8")
         children.append(subprocess.Popen(
             [sys.executable, "-u", "-m", "app.cli", "run", "GeM",
-             "--start-page", str(start), "--max-pages", str(span)],
+             "--start-page", str(start), "--max-pages", str(span),
+             # A restart carries on from the page this slice reached today.
+             "--resume-file", os.path.join(HERE, ".cache", f"gem_deep_{i + 1}.json")],
             cwd=HERE, stdout=out, stderr=subprocess.STDOUT))
         log.info("crawler %d: pages %d-%d, log gem_deep_%d.log",
                  i + 1, start, start + span - 1, i + 1)
