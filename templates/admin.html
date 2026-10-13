@@ -117,7 +117,7 @@ crawls, so this fills in after the next GeM run.</p>
  {%- for s in sources %}
  <tr><td>{{ s.name }}</td><td class=mono>{{ s.total | num }}</td>
   <td class=mono>{{ s.open | num }}</td>
-  <td class=mono>{{ s.last_seen.strftime('%d %b %H:%M') if s.last_seen else 'never' }}</td></tr>
+  <td class=mono>{{ s.last_seen|ist if s.last_seen else 'never' }}</td></tr>
  {%- endfor %}
  </tbody>
 </table>
@@ -135,7 +135,7 @@ crawls, so this fills in after the next GeM run.</p>
  <tbody>
  {%- for f in failing %}
  <tr><td>{{ f.source }}</td><td class=bad>{{ f.status }}</td>
-  <td class=mono>{{ f.at.strftime('%d %b %H:%M') }}</td><td>{{ f.message }}</td></tr>
+  <td class=mono>{{ f.at|ist }}</td><td>{{ f.message }}</td></tr>
  {%- endfor %}
  </tbody>
 </table>
@@ -162,7 +162,7 @@ here is why the site can look thin.</p>
  <tbody>
  {%- for r in runs %}
  <tr><td>{{ r.source_name }}</td>
-  <td class=mono>{{ r.started_at.strftime('%d %b %H:%M') }}</td>
+  <td class=mono>{{ r.started_at|ist }}</td>
   <td class="{{ 'bad' if r.status != 'ok' else '' }}">{{ r.status }}</td>
   <td class=mono>{{ r.fetched | num }}</td><td class=mono>{{ r.new | num }}</td>
   <td class=mono>{{ r.updated | num }}</td></tr>

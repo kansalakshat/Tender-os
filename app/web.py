@@ -55,7 +55,7 @@ from .matching import (
     strict_set,
     STRICT_LABELS,
 )
-from .models import Company, ConnectorRun, SavedSearch, Source, Tender, User, WishlistItem
+from .models import Company, ConnectorRun, SavedSearch, Source, Tender, User, WishlistItem, ist
 
 log = logging.getLogger(__name__)
 
@@ -246,6 +246,7 @@ _env.filters["num"] = lambda n: f"{n:,}"
 # For rendering a list of strict field keys as the words a bidder used.
 _env.filters["extract"] = lambda key, mapping: mapping.get(key, key)
 _env.filters["urlquote"] = quote
+_env.filters["ist"] = lambda dt: ist(dt).strftime("%d %b %H:%M IST")
 
 
 def render(name: str, **context) -> str:

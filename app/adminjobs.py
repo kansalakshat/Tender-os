@@ -23,7 +23,7 @@ import threading
 from collections import deque
 from datetime import datetime
 
-from .models import utcnow
+from .models import ist, utcnow
 
 # The name that means "read bid documents" rather than "fetch a listing".
 ENRICH_JOB = "Bid documents"
@@ -52,7 +52,7 @@ class Job:
         self.summary: str | None = None
 
     def log(self, line: str) -> None:
-        self.lines.append(f"{utcnow().strftime('%H:%M:%S')}  {line}")
+        self.lines.append(f"{ist(utcnow()).strftime('%H:%M:%S')}  {line}")
 
     def as_dict(self) -> dict:
         return {

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 
 from sqlalchemy import (
@@ -13,6 +13,14 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 def utcnow() -> datetime:
     """Naive UTC, matching the naive DateTime columns below."""
     return datetime.now(timezone.utc).replace(tzinfo=None)
+
+
+IST = timezone(timedelta(hours=5, minutes=30))
+
+
+def ist(dt: datetime) -> datetime:
+    """A naive-UTC column value as India time, for showing to the operator."""
+    return dt.replace(tzinfo=timezone.utc).astimezone(IST)
 
 
 # JSONB on Postgres, plain JSON elsewhere (so tests can run on SQLite).
