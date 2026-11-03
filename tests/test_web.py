@@ -276,8 +276,8 @@ def test_cppp_lookup_sends_the_humans_captcha_and_returns_the_tender(
         posts.append(form)
         if form["captchaText"] != ["RIGHT1"]:
             return httpx.Response(200, html=_FORM.replace("__N__", "9").replace(
-                "<body>", '<body><td class="error"><b>Invalid Captcha! Please Enter '
-                          'Correct Captcha.</b></td>'))
+                "<body>", '<body><div class="error"><b>Invalid Captcha! Please Enter '
+                          'Correct Captcha.</b></div>'))
         return httpx.Response(200, html=_RESULTS)
 
     monkeypatch.setattr(cppp_relay, "TRANSPORT", httpx.MockTransport(cppp))
