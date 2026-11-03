@@ -51,8 +51,12 @@ await image.waitFor({timeout: 30000});
 await page.waitForTimeout(1000);
 return (await image.screenshot()).toString('base64');
 """
+# After a rejected answer something on CPPP's page can cover this icon, which timed
+# the click out and showed the visitor "CPPP is not answering". A new image is only
+# a nicety, so failing to get one must not end the lookup.
 _REFRESH = """
-await page.locator('.mdi-refresh, .mdi-reload').first().click();
+await page.keyboard.press('Escape').catch(() => {});
+await page.locator('.mdi-refresh, .mdi-reload').first().click({timeout: 5000}).catch(() => {});
 await page.waitForTimeout(1500);
 """
 # CPPP lays each block out as a ribbon title over label and value pairs.
@@ -219,7 +223,7 @@ def submit(state: str, tender_id: str, captcha_text: str) -> TenderDetails | Cap
         result = _run(c, session, _setup() + f"""
 await page.getByRole('textbox').first().fill({json.dumps(text)});
 await page.getByRole('button', {{name: 'Submit'}}).click();
-await page.waitForURL(/tendersfullview/, {{timeout: 15000}}).catch(() => {{}});
+await page.waitForURL(/tendersfullview/, {{timeout: 20000}}).catch(() => {{}});
 if (!page.url().includes('tendersfullview')) {{
   {_REFRESH}
   const again = await (async () => {{ {_IMAGE} }})();
