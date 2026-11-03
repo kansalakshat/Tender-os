@@ -15,7 +15,7 @@ fetch(document.getElementById('moreSlot').dataset.src, {credentials: 'same-origi
     document.getElementById('moreSlot').innerHTML = note;
   });
 
-// The CPPP CAPTCHA box, present only on CPPP tenders with a stored link.
+// The CPPP CAPTCHA box, present only on CPPP tenders whose id can be searched.
 (function () {
   var form = document.getElementById('cpppForm');
   if (!form) return;

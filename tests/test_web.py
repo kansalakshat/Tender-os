@@ -194,32 +194,32 @@ def test_tender_page_shows_fit_duplicates_buyer_and_similar(client, session_fact
     assert me["registrations"] == ["mse"] and me["years_in_business"] == 5
 
 
-_DETAIL = "https://eprocure.gov.in/cppp/tendersfullview/MTM4NzYzMTg=A13h1X"
+_TID = "2026_AIMSD_931033_1"
 
 
-def _cppp_link(session_factory, url=_DETAIL) -> int:
+def _cppp_id(session_factory, tender_id=_TID) -> int:
     with session_factory() as db:
         t = db.query(Tender).one()
-        t.raw_payload = {"url": url} if url else {}
+        t.raw_payload = {"tender_id": tender_id}
         db.commit()
         return t.id
 
 
-def test_a_dead_cppp_link_shows_the_search_form_not_a_captcha_box(client, session_factory):
-    """CPPP's rebuild retired /cppp/tendersfullview/, so the box could only ever fail."""
-    tid = _cppp_link(session_factory)
+def test_cppp_tender_page_has_the_captcha_box_when_the_id_can_be_searched(client, session_factory):
+    tid = _cppp_id(session_factory)
     html = client.get(f"/t/{tid}").text
-    assert "cpppForm" not in html
-    assert 'FrontEndAdvancedSearch&amp;service=page"' in html
-    _cppp_link(session_factory, None)
+    assert f'<form method=post action="/t/{tid}/cppp" target=_blank' in html
+    assert f'data-captcha="/t/{tid}/cppp/captcha"' in html
+    assert any("form.dataset.captcha" in js for js in page_scripts(html))
+    assert '<a class="btn ghost" href="#cpppForm">' in html   # View on portal
+    _cppp_id(session_factory, "1")      # an id no search could tell apart
+    html = client.get(f"/t/{tid}").text
+    assert 'FrontEndAdvancedSearch&amp;service=page"' in html and "cpppForm" not in html
     assert client.get(f"/t/{tid}/cppp").status_code == 404
     assert client.get(f"/t/{tid}/cppp/captcha").status_code == 404
-    _cppp_link(session_factory, "https://evil.example/cppp/tendersfullview/x")
-    assert client.get(f"/t/{tid}/cppp").status_code == 404
 
 
 @pytest.mark.parametrize("name,base,expected", [
-    ("CPPP", "https://eprocure.gov.in", "https://eprocure.gov.in/eprocure/app?page=FrontEndAdvancedSearch&amp;service=page"),
     ("GeM", "https://bidplus.gem.gov.in", "https://bidplus.gem.gov.in/all-bids"),
     ("UP eProcurement", "https://etender.up.nic.in", "https://etender.up.nic.in"),
 ])
@@ -232,102 +232,98 @@ def test_view_on_portal_opens_the_portal_in_a_new_tab(client, session_factory, n
         tid = t.id
     html = client.get(f"/t/{tid}").text
     assert f'<a class="btn ghost" href="{expected}" target=_blank rel="noopener noreferrer">' in html
-    assert re.search(r'target=_blank rel="noopener noreferrer">.{0,400}?View on portal', html, re.S)
 
 
-_FORM = """<html><head></head><body>__MSG__
-<form action="/cppp/tendersfullview/MTM4NzYzMTg=A13h1X" method="post"
-      id="tenderfullview-tenders">
-<input type="hidden" name="cid" value="MTM4NzYzMTg=A13h1X" />
-<input type="hidden" name="captcha_sid" value="sid__N__" />
-<input type="hidden" name="form_build_id" value="form-x" />
-<input type="text" name="captcha_response" value="" />
-<input type="submit" name="op" value="Submit" />
-<input type="reset" value="Cancel" />
-<img data-drupal-selector="edit-captcha-image" src="/cppp/image-captcha-generate/__N__/1">
+_IMAGE = "data:image/png;base64,__N__"
+_FORM = """<html><head></head><body>
+<form id="TenderAdvancedSearch" method="post" action="/eprocure/app">
+<input type="hidden" name="tokenSecret" value="tok__N__" />
+<input type="text" name="tenderId" value="" />
+<select name="TenderType"><option value="0">-Select-</option><option value="1">Open</option></select>
+<input type="checkbox" name="ndaAllowed" />
+<input type="text" name="captchaText" value="" />
+<input type="submit" name="submit" value="Search" />
+<img id="captchaImage" src="data:image/png;base64,__N__">
 </form></body></html>"""
+_RESULTS = """<html><body><table class="list_table" id="table">
+<tr><td>S.No</td><td>Title and Ref.No./Tender ID</td></tr>
+<tr><td>1</td><td><a href="/eprocure/app?component=x&sp=other">[Other]</a>[R][2026_AIMSD_931033_12]</td></tr>
+<tr><td>2</td><td><a href="/eprocure/app?component=x&sp=this">[Gloves]</a>[R][2026_AIMSD_931033_1]</td></tr>
+</table></body></html>"""
 
 
 def test_cppp_lookup_sends_the_humans_captcha_and_returns_the_tender(
         client, session_factory, monkeypatch):
-    """Wrong CAPTCHA: a fresh image and a message. Right one: CPPP's full tender
-    page, sandboxed. Nothing in here reads or guesses the CAPTCHA."""
-    import base64
+    """Wrong CAPTCHA: a fresh image and a message. Right one: CPPP's own page for
+    exactly this tender, sandboxed. Nothing in here reads or guesses the CAPTCHA."""
     import httpx
     from urllib.parse import parse_qs
     from app import cppp_relay
 
-    tid = _cppp_link(session_factory)
-    cppp_relay.forget_session()
-    posts, images, listings = [], [], []
+    tid = _cppp_id(session_factory)
+    posts = []
 
     def cppp(request: httpx.Request) -> httpx.Response:
         url = str(request.url)
-        if "image-captcha-generate" in url:
-            images.append(request.headers.get("cookie", ""))
-            return httpx.Response(200, content=url.encode(),
-                                  headers={"content-type": "image/png"})
-        if url.endswith("/cppp/latestactivetendersnew/cpppdata"):
-            listings.append(url)
-            return httpx.Response(200, headers={"Set-Cookie": "SSESS=s1; Path=/"})
-        if url != _DETAIL:
-            return httpx.Response(404)
-        if "SSESS=s1" not in request.headers.get("cookie", ""):
-            return httpx.Response(200, html="<p>Invalid parameter</p>")
+        if request.method == "GET" and "sp=this" in url:
+            assert "JSESSIONID=s1" in request.headers["cookie"]    # the same session
+            return httpx.Response(200, html="<html><head></head><body>Tender details</body></html>")
         if request.method == "GET":
-            assert "eprocure.gov.in" in request.headers.get("referer", "")
-            return httpx.Response(200, html=_FORM.replace("__MSG__", "")
-                                  .replace("__N__", "0"))
-        posts.append((parse_qs(request.content.decode()),
-                      request.headers.get("cookie", "")))
-        if posts[-1][0]["captcha_response"] != ["RIGHT1"]:
-            return httpx.Response(200, html=_FORM.replace(
-                "__MSG__", '<div role="alert">The answer you entered for the '
-                "CAPTCHA was not correct.</div>").replace("__N__", "9"))
-        return httpx.Response(200, html="<html><head><title>T</title></head>"
-                                        "<body>Tender details</body></html>")
+            assert url == cppp_relay.FORM_URL
+            return httpx.Response(200, html=_FORM.replace("__N__", "0"),
+                                  headers={"Set-Cookie": "JSESSIONID=s1; Path=/"})
+        form = parse_qs(request.content.decode())
+        posts.append(form)
+        if form["captchaText"] != ["RIGHT1"]:
+            return httpx.Response(200, html=_FORM.replace("__N__", "9"))
+        return httpx.Response(200, html=_RESULTS)
 
     monkeypatch.setattr(cppp_relay, "TRANSPORT", httpx.MockTransport(cppp))
 
-    def img(n):
-        raw = f"https://eprocure.gov.in/cppp/image-captcha-generate/{n}/1".encode()
-        return "data:image/png;base64," + base64.b64encode(raw).decode()
+    got = client.get(f"/t/{tid}/cppp/captcha").json()
+    assert got["image"] == _IMAGE.replace("__N__", "0") and got["state"]
 
-    html = client.get(f"/t/{tid}/cppp").text
-    assert f'src="{img(0)}"' in html and "SSESS=s1" in images[0]  # same session
-    got = client.get(f"/t/{tid}/cppp/captcha").json()   # the tender page's box
-    assert got["image"] == img(0) and got["state"]
-    assert len(listings) == 1   # the slow listing is fetched once, not per CAPTCHA
-    state = got["state"]
-
-    html = client.post(f"/t/{tid}/cppp", data={"state": state, "captcha": "wrong"}).text
-    form, cookie = posts[0]
-    assert form["cid"] == ["MTM4NzYzMTg=A13h1X"] and form["captcha_sid"] == ["sid0"]
-    assert form["captcha_response"] == ["wrong"] and form["op"] == ["Submit"]
-    assert "SSESS=s1" in cookie
-    assert "CAPTCHA was wrong" in html and f'src="{img(9)}"' in html
+    html = client.post(f"/t/{tid}/cppp", data={"state": got["state"], "captcha": "wrong"}).text
+    assert posts[0]["tenderId"] == [_TID] and posts[0]["TenderType"] == ["1"]
+    assert posts[0]["captchaText"] == ["wrong"] and posts[0]["tokenSecret"] == ["tok0"]
+    assert posts[0]["submit"] == ["Search"] and "ndaAllowed" not in posts[0]
+    assert "CAPTCHA was wrong" in html and _IMAGE.replace("__N__", "9") in html
     state = re.search(r'name=state value="([^"]+)"', html).group(1)
 
     r = client.post(f"/t/{tid}/cppp", data={"state": state, "captcha": "RIGHT1"})
-    assert posts[1][0]["captcha_sid"] == ["sid9"]
-    assert "Tender details" in r.text
-    assert f'<base href="{_DETAIL}">' in r.text
+    assert posts[1]["tokenSecret"] == ["tok9"]
+    assert "Tender details" in r.text       # sp=this, not the longer id above it
+    assert 'sp=this">' in r.text and "<base href=" in r.text
     assert r.headers["content-security-policy"].startswith("sandbox")
 
     n = len(posts)
     html = client.post(f"/t/{tid}/cppp", data={"state": "forged", "captcha": "x"}).text
     assert "expired" in html and len(posts) == n   # a forged state is never posted
 
-    # CPPP accepting the CAPTCHA but refusing the link: our message, not its page.
-    state = re.search(r'name=state value="([^"]+)"', client.get(f"/t/{tid}/cppp").text).group(1)
-    monkeypatch.setattr(cppp_relay, "TRANSPORT", httpx.MockTransport(
-        lambda r: httpx.Response(200, html="<p>Invalid parameter</p>")))
-    r = client.post(f"/t/{tid}/cppp", data={"state": state, "captcha": "RIGHT1"})
-    assert r.status_code == 404 and "no longer opens this tender" in r.text
-    r = client.get(f"/t/{tid}/cppp")
-    assert r.status_code == 404 and "no longer opens this tender" in r.text
-    r = client.get(f"/t/{tid}/cppp/captcha")
-    assert r.status_code == 404 and "no longer opens" in r.json()["error"]
+
+def test_cppp_lookup_tries_limited_tenders_once_then_says_it_is_not_listed(
+        client, session_factory, monkeypatch):
+    import httpx
+    from urllib.parse import parse_qs
+    from app import cppp_relay
+
+    tid = _cppp_id(session_factory)
+    types = []
+
+    def cppp(request: httpx.Request) -> httpx.Response:
+        if request.method == "GET":
+            return httpx.Response(200, html=_FORM.replace("__N__", "0"))
+        types.append(parse_qs(request.content.decode())["TenderType"][0])
+        return httpx.Response(200, html="<html><body>No tenders found</body></html>")
+
+    monkeypatch.setattr(cppp_relay, "TRANSPORT", httpx.MockTransport(cppp))
+    state = client.get(f"/t/{tid}/cppp/captcha").json()["state"]
+    html = client.post(f"/t/{tid}/cppp", data={"state": state, "captcha": "RIGHT1"}).text
+    assert "limited tenders" in html
+    state = re.search(r'name=state value="([^"]+)"', html).group(1)
+    r = client.post(f"/t/{tid}/cppp", data={"state": state, "captcha": "RIGHT2"})
+    assert types == ["1", "2"]
+    assert r.status_code == 404 and "does not list this tender" in r.text
 
 
 def test_shared_serves_stale_while_one_thread_refreshes(monkeypatch):

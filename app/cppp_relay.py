@@ -3,16 +3,13 @@
 This is NOT a connector and does NOT solve CAPTCHAs. Nothing here runs unless a
 person asks for a tender and then types the CAPTCHA image themselves. The flow:
 
-1. start()  -- GET the tender's own /cppp/tendersfullview/ page (the link the
-   CPPP connector stored), which is a CAPTCHA form in front of the full notice.
-   Keep the session's cookies and form fields, fetch the CAPTCHA image in that
-   session, hand it back as a data: URI.
-2. submit() -- POST that form with the visitor's CAPTCHA. CPPP answers with the
-   full tender page, or the same form again with an error.
+1. start()  -- GET CPPP's advanced search form, whose CAPTCHA arrives inside the
+   page as a data: URI. Keep the session's cookie and the form's fields.
+2. submit() -- POST that form with the tender's id and the visitor's CAPTCHA, then
+   follow the result's link to the tender's page.
 
-The page needs a Referer from eprocure.gov.in or it answers "Invalid Url", and
-the CAPTCHA submit needs the session cookie CPPP's listing page sets or it answers
-"Invalid parameter". So start() opens the listing first, as a visitor would.
+CPPP's newer site puts its CAPTCHA behind an encrypted data service, so this uses
+the older search form, which is plain HTML.
 
 The CPPP session lives on our server, not in the visitor's browser (a site
 cannot set cookies for eprocure.gov.in), so the visitor gets a copy of the
@@ -26,9 +23,9 @@ from __future__ import annotations
 
 import base64
 import json
+import logging
 import os
 import re
-import time
 from dataclasses import dataclass
 from pathlib import Path
 from urllib.parse import urljoin
@@ -39,26 +36,16 @@ from selectolax.parser import HTMLParser
 from .auth import sign, unsign
 from .compliance import user_agent
 
+log = logging.getLogger(__name__)
+
 BASE = "https://eprocure.gov.in"
-DETAIL_PREFIX = BASE + "/cppp/tendersfullview/"
-LISTING_URL = BASE + "/cppp/latestactivetendersnew/cpppdata"
+FORM_URL = BASE + "/eprocure/app?page=FrontEndAdvancedSearch&service=page"
 STATE_TTL = 600
+OPEN_TENDER, LIMITED_TENDER = "1", "2"     # the form's required Tender Type menu
 
 TRANSPORT: httpx.BaseTransport | None = None  # tests swap in a MockTransport
 # Set CPPP_DEBUG_DUMP=path to save CPPP's last reply to a CAPTCHA submission.
 DEBUG_DUMP = Path(os.environ["CPPP_DEBUG_DUMP"]) if os.getenv("CPPP_DEBUG_DUMP") else None
-
-# Drupal's wording is "The answer you entered for the CAPTCHA was not correct."
-_BAD_CAPTCHA = re.compile(r"captcha[^.]*not correct|(invalid|incorrect|wrong)\s+captcha", re.I)
-# CPPP's own pages for a link it will not open.
-_REFUSED = re.compile(r"invalid\s+(parameter|url)", re.I)
-
-
-def _page_text(html: str) -> str:
-    tree = HTMLParser(html)
-    for node in tree.css("script, style"):
-        node.decompose()
-    return tree.body.text(separator=" ") if tree.body else ""
 
 
 class RelayError(RuntimeError):
@@ -66,7 +53,7 @@ class RelayError(RuntimeError):
 
 
 class LinkRejected(RelayError):
-    """CPPP served no CAPTCHA form for this tender link (expired, closed, invalid)."""
+    """CPPP accepted the CAPTCHA but its search does not list this tender."""
 
 
 @dataclass
@@ -86,11 +73,12 @@ class TenderPage:
 class CaptchaForm:
     action: str
     fields: dict[str, str]
-    image_src: str
+    image: str
 
 
-def is_detail_url(url: str | None) -> bool:
-    return bool(url) and url.startswith(DETAIL_PREFIX)
+def is_searchable(tender_id: str | None) -> bool:
+    """Some buyers publish an id like "1", which no search could tell apart."""
+    return len((tender_id or "").strip()) >= 5
 
 
 def _client(cookies: dict | None = None) -> httpx.Client:
@@ -101,27 +89,31 @@ def _client(cookies: dict | None = None) -> httpx.Client:
 
 
 def parse_form(html: str) -> CaptchaForm | None:
-    """The CAPTCHA form in front of the notice: action, fields, image URL."""
-    tree = HTMLParser(html)
-    for form in tree.css("form"):
-        img = form.css_first("img[data-drupal-selector=edit-captcha-image]")
-        if img is None or form.css_first("input[name=captcha_response]") is None:
-            continue
-        fields = {}
-        for node in form.css("input"):
-            name = node.attributes.get("name")
-            kind = (node.attributes.get("type") or "text").lower()
-            if name and kind in ("hidden", "text"):
-                fields[name] = node.attributes.get("value") or ""
-        return CaptchaForm(form.attributes.get("action") or "", fields,
-                           img.attributes.get("src") or "")
-    return None
+    """The search form: action, every field at its default, CAPTCHA image."""
+    form = HTMLParser(html).css_first("form#TenderAdvancedSearch")
+    img = form.css_first("img#captchaImage") if form else None
+    if img is None or form.css_first("input[name=captchaText]") is None:
+        return None
+    fields = {}
+    for node in form.css("input"):
+        name = node.attributes.get("name")
+        kind = (node.attributes.get("type") or "text").lower()
+        if name and kind == "hidden":
+            fields[name] = node.attributes.get("value") or ""
+        elif name and kind == "text":
+            fields[name] = ""
+    for node in form.css("select"):
+        first = node.css_first("option[selected]") or node.css_first("option")
+        if node.attributes.get("name") and first is not None:
+            fields[node.attributes["name"]] = first.attributes.get("value") or ""
+    return CaptchaForm(form.attributes.get("action") or "", fields,
+                       img.attributes.get("src") or "")
 
 
-def _pack(cookies: httpx.Cookies, form: CaptchaForm, base: str) -> str:
+def _pack(cookies: httpx.Cookies, form: CaptchaForm, base: str, tender_type: str) -> str:
     # Not dict(cookies): that raises CookieConflict once a cookie is re-set.
     raw = json.dumps({"c": {k.name: k.value for k in cookies.jar}, "f": form.fields,
-                      "a": urljoin(base, form.action), "r": base},
+                      "a": urljoin(base, form.action), "r": base, "t": tender_type},
                      separators=(",", ":"))
     return sign("cppp", base64.urlsafe_b64encode(raw.encode()).decode(), STATE_TTL)
 
@@ -131,90 +123,63 @@ def _unpack(state: str) -> dict | None:
     return json.loads(base64.urlsafe_b64decode(body.encode())) if body else None
 
 
-def _captcha_from(resp: httpx.Response, client: httpx.Client, message: str) -> Captcha:
+def _captcha_from(resp: httpx.Response, client: httpx.Client, message: str,
+                  tender_type: str) -> Captcha:
     form = parse_form(resp.text)
-    if form is None or not form.image_src:
-        raise LinkRejected(f"no CAPTCHA form at {resp.url} (HTTP {resp.status_code})")
-    # The image is generated per captcha_sid and checked against this session,
-    # so it has to be fetched with the same cookies, before they are packed.
-    img = client.get(urljoin(str(resp.url), form.image_src),
-                     headers={"Referer": str(resp.url)})
-    kind = img.headers.get("content-type", "image/png").split(";")[0]
-    if img.status_code != 200 or not kind.startswith("image/"):
-        raise RelayError(f"CPPP CAPTCHA image returned HTTP {img.status_code} {kind}")
-    image = f"data:{kind};base64,{base64.b64encode(img.content).decode()}"
-    return Captcha(_pack(client.cookies, form, str(resp.url)), image, message)
+    if form is None or not form.image.startswith("data:image/"):
+        raise RelayError(f"no CAPTCHA form at {resp.url} (HTTP {resp.status_code})")
+    return Captcha(_pack(client.cookies, form, str(resp.url), tender_type), form.image, message)
 
 
-# The listing takes ~3s for CPPP to build and is only fetched for its session
-# cookie, so one session is reused for SESSION_TTL instead of per CAPTCHA.
-# ponytail: one shared CPPP session for all visitors; per-visitor sessions if CPPP
-# starts refusing concurrent lookups in one session.
-SESSION_TTL = 900
-_session: tuple[float, dict[str, str]] | None = None
-
-
-def _session_cookies(client: httpx.Client) -> dict[str, str]:
-    global _session
-    if _session is None or time.monotonic() - _session[0] > SESSION_TTL:
-        client.get(LISTING_URL)  # sets the SSESS session cookie
-        _session = (time.monotonic(), {k.name: k.value for k in client.cookies.jar})
-    return _session[1]
-
-
-def forget_session() -> None:
-    """Called when CPPP refuses a link, in case the shared session went stale."""
-    global _session
-    _session = None
-
-
-def start(detail_url: str) -> Captcha:
-    if not is_detail_url(detail_url):
-        raise LinkRejected(f"not a CPPP tender link: {detail_url!r}")
+def start(message: str = "", tender_type: str = OPEN_TENDER) -> Captcha:
     with _client() as c:
-        c.cookies.update(_session_cookies(c))
-        return _captcha_from(c.get(detail_url, headers={"Referer": LISTING_URL}), c, "")
+        return _captcha_from(c.get(FORM_URL), c, message, tender_type)
 
 
-def portal_error(html: str) -> str:
-    """CPPP's own error line, e.g. Drupal's "The answer you entered ...". """
-    node = HTMLParser(html).css_first("[role=alert], .messages--error, .alert-danger")
-    return re.sub(r"\s+", " ", node.text()).strip() if node else ""
+def tender_link(html: str, tender_id: str) -> str | None:
+    """The link in the result row for exactly this tender id."""
+    exact = re.compile(rf"(?<![\w-]){re.escape(tender_id)}(?![\w-])")
+    for row in HTMLParser(html).css("table.list_table tr"):
+        link = row.css_first("a[href]")
+        if link is not None and exact.search(row.text()):
+            return link.attributes["href"]
+    return None
 
 
-def submit(state: str, detail_url: str, captcha_text: str) -> TenderPage | Captcha:
+def submit(state: str, tender_id: str, captcha_text: str) -> TenderPage | Captcha:
     """The tender page, or a fresh CAPTCHA with a message saying what went wrong."""
     data = _unpack(state)
     # The action came from CPPP's own form. Signed, so a visitor cannot change
     # it, but a page CPPP serves could still point it anywhere -- and this
     # server would then POST wherever it said. Only ever to CPPP.
     if data is not None and not str(data.get("a", "")).startswith(BASE + "/"):
-        raise LinkRejected(f"CPPP form posts off-site: {data.get('a')!r}")
+        raise RelayError(f"CPPP form posts off-site: {data.get('a')!r}")
     if data is None:
-        captcha = start(detail_url)
-        captcha.message = "That CAPTCHA expired. Here is a new one."
-        return captcha
+        return start("That CAPTCHA expired. Here is a new one.")
     with _client(data["c"]) as c:
-        resp = c.post(data["a"], data={**data["f"], "captcha_response": captcha_text,
-                                       "op": "Submit"},
+        resp = c.post(data["a"], data={**data["f"], "tenderId": tender_id,
+                                       "TenderType": data["t"],
+                                       "captchaText": captcha_text, "submit": "Search"},
                       headers={"Referer": data["r"]})
         if DEBUG_DUMP:
-            trail = " -> ".join(f"{r.status_code} {r.headers.get('location')}"
-                                for r in resp.history)
-            DEBUG_DUMP.write_text(
-                f"<!-- sent cookies {sorted(data['c'])}; redirects {trail}; "
-                f"final {resp.url} -->\n{resp.text}", encoding="utf8")
-        if _REFUSED.search(_page_text(resp.text)):
-            forget_session()
-            raise LinkRejected(f"CPPP refused the tender link after the CAPTCHA: {resp.url}")
-        if parse_form(resp.text) is None:
-            return TenderPage(resp.text, str(resp.url))
-        error = portal_error(resp.text)
-        if not error or _BAD_CAPTCHA.search(error):
-            msg = "CPPP says the CAPTCHA was wrong. Try this one."
-        else:
-            msg = f"CPPP says: {error}"
-        return _captcha_from(resp, c, msg)
+            DEBUG_DUMP.write_text(f"<!-- final {resp.url} -->\n{resp.text}", encoding="utf8")
+        href = tender_link(resp.text, tender_id)
+        if href:
+            url = urljoin(str(resp.url), href)
+            if not url.startswith(BASE + "/"):
+                raise RelayError(f"CPPP result links off-site: {url!r}")
+            page = c.get(url, headers={"Referer": str(resp.url)})
+            return TenderPage(page.text, str(page.url))
+        if parse_form(resp.text) is not None:
+            return _captcha_from(resp, c, "CPPP says the CAPTCHA was wrong. Try this one.",
+                                 data["t"])
+    # The CAPTCHA passed and the search found nothing. The menu is required and
+    # our listing does not say which kind this is, so the other kind gets one try.
+    log.warning("CPPP search found no %s (type %s) at %s", tender_id, data["t"], resp.url)
+    if data["t"] == OPEN_TENDER:
+        return start("One more step: CPPP checks limited tenders separately. "
+                     "Please type this one too.", LIMITED_TENDER)
+    raise LinkRejected(f"CPPP's search does not list {tender_id}")
 
 
 def with_base(html: str, url: str) -> str:

@@ -791,6 +791,8 @@ def tender_detail(
         source_name=src.name if src else "the source portal",
         licence=src.license if src else "see /sources",
         search_url=_portal_url(src),
+        cppp_box=bool(src and src.name == "CPPP"
+                      and cppp_relay.is_searchable(_cppp_id(raw, t.external_ref))),
     )
 
 
@@ -811,18 +813,18 @@ def tender_extras(
 
 # ---- CPPP lookup: the visitor types CPPP's CAPTCHA here, we fetch the tender ---
 
+def _cppp_id(raw: dict, external_ref: str | None) -> str:
+    return (raw.get("tender_id") or external_ref or "").strip()
+
+
 def _cppp_tender(db: Session, tender_id: int) -> Tender:
     t = db.get(Tender, tender_id)
     src = db.get(Source, t.source_id) if t and t.source_id else None
     raw = t.raw_payload if t and isinstance(t.raw_payload, dict) else {}
     if (t is None or src is None or src.name != "CPPP"
-            or not cppp_relay.is_detail_url(raw.get("url"))):
-        raise HTTPException(status_code=404, detail="no CPPP link for this tender")
+            or not cppp_relay.is_searchable(_cppp_id(raw, t.external_ref))):
+        raise HTTPException(status_code=404, detail="no CPPP lookup for this tender")
     return t
-
-
-def _cppp_url(t: Tender) -> str:
-    return t.raw_payload["url"]
 
 
 def _cppp_captcha_page(t: Tender, cap: cppp_relay.Captcha) -> str:
@@ -856,10 +858,7 @@ def cppp_captcha(request: Request, tender_id: int, db: Session = Depends(get_db)
     t = _cppp_tender(db, tender_id)
     _cppp_limit(request, db)
     try:
-        return _cppp_captcha_page(t, cppp_relay.start(_cppp_url(t)))
-    except cppp_relay.LinkRejected:
-        log.exception("CPPP rejected the tender link")
-        return _cppp_failed(t, "CPPP no longer opens this tender's link")
+        return _cppp_captcha_page(t, cppp_relay.start())
     except (httpx.HTTPError, cppp_relay.RelayError, RuntimeError):
         log.exception("CPPP lookup failed to start")
         return _cppp_failed(t)
@@ -871,10 +870,7 @@ def cppp_captcha_json(request: Request, tender_id: int, db: Session = Depends(ge
     t = _cppp_tender(db, tender_id)
     _cppp_limit(request, db)
     try:
-        cap = cppp_relay.start(_cppp_url(t))
-    except cppp_relay.LinkRejected:
-        log.exception("CPPP rejected the tender link")
-        return JSONResponse({"error": "CPPP no longer opens this tender's link."}, 404)
+        cap = cppp_relay.start()
     except (httpx.HTTPError, cppp_relay.RelayError, RuntimeError):
         log.exception("CPPP lookup failed to start")
         return JSONResponse({"error": "CPPP is not answering. Try New image."}, 502)
@@ -889,10 +885,10 @@ async def cppp_open(request: Request, tender_id: int, db: Session = Depends(get_
     state = form.get("state", [""])[0]
     captcha = form.get("captcha", [""])[0].strip()[:20]
     try:
-        got = await run_in_threadpool(cppp_relay.submit, state, _cppp_url(t), captcha)
+        got = await run_in_threadpool(
+            cppp_relay.submit, state, _cppp_id(t.raw_payload or {}, t.external_ref), captcha)
     except cppp_relay.LinkRejected:
-        log.exception("CPPP rejected the tender link")
-        return _cppp_failed(t, "CPPP no longer opens this tender's link")
+        return _cppp_failed(t, "CPPP's search does not list this tender")
     except (httpx.HTTPError, cppp_relay.RelayError, RuntimeError):
         log.exception("CPPP lookup failed")
         return _cppp_failed(t)

@@ -3,7 +3,6 @@ from datetime import date, datetime
 import pytest
 
 from app.connectors.cppp import CPPPConnector, external_ref, is_open, parse_row
-from app.cppp_relay import is_detail_url
 
 # Copied from the live 14-day tab on 2026-11-03.
 ROW = [
@@ -61,13 +60,6 @@ def test_only_tenders_still_open_for_bids_are_kept():
     raw = parse_row(ROW)   # closes 03-11-2026 05:30 PM
     assert is_open(raw, now=datetime(2026, 11, 3, 17, 29))
     assert not is_open(raw, now=datetime(2026, 11, 3, 17, 31))
-
-
-def test_retires_the_expiring_detail_link():
-    """Merged over a stored row, the blank removes the dead /cppp/tendersfullview/ link."""
-    stored = {"url": "https://eprocure.gov.in/cppp/tendersfullview/MTQwOTE3MjE="}
-    assert is_detail_url(stored["url"])
-    assert not is_detail_url({**stored, **parse_row(ROW)}["url"])
 
 
 def test_points_back_at_the_listing_the_row_came_from(cppp):
