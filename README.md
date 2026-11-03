@@ -33,7 +33,7 @@ Live site: https://tender-0s.vercel.app
 ```
   Government portals                    Fetching laptop (Mac or Windows)
   ------------------                    --------------------------------
-  CPPP  eprocure.gov.in    --HTTP-->    Daily run      (server + job thread)
+  CPPP  eprocure.gov.in    --browser->  Daily run      (server + job thread)
   20 GePNIC portals        --HTTP-->      purge -> every source -> documents -> dedup
   GeM   bidplus.gem.gov.in --Chromium-> gem_deep.py    (3 crawlers, pages 501..end,
         bid PDFs           --HTTP-->                    then a document pass)
@@ -43,7 +43,7 @@ Live site: https://tender-0s.vercel.app
                                                  v
                                      Neon Postgres (free plan, us-east-1)
                                                  ^
-                       reads (edge-cached)       |      CPPP + states daily,
+                       reads (edge-cached)       |      states daily,
   Visitors --> Vercel (iad1) --> FastAPI app ----+----  purge twice daily
                                                         (GitHub Actions)
 ```
@@ -58,8 +58,10 @@ is where it runs and therefore what it can reach.
 |---|---|---|
 | Website + JSON API | Vercel serverless (`api/index.py`, region `iad1`) | Free, no server to keep up. Pinned next to the database, see [Function region](#function-region). |
 | Database | Neon Postgres, free plan, `us-east-1` | Hosted Postgres with scale-to-zero. Its 5 GB/month of network transfer is the tightest limit in the system, see [Living on Neon's free plan](#living-on-neons-free-plan). |
-| GeM crawl and all bid-document reading | The fetching laptop (Mac, or this Windows PC) | `bidplus.gem.gov.in` refuses datacenter and GitHub-runner addresses at the socket, and Vercel has no browser. A home connection is answered. |
-| CPPP + state portals, daily | GitHub Actions `daily-ingest.yml` (03:00 UTC), and the laptop's Daily run | Plain HTTP, works from anywhere. GeM is skipped there (`SKIP_CONNECTORS: GeM`). |
+| GeM crawl and all bid-document reading | The fetching laptop (Mac, or this Windows PC) | `bidplus.gem.gov.in` refuses GitHub-runner addresses at the socket, and Vercel has no browser. A home connection is answered. Short probes on 2026-11-03 suggest the rule is location: cloud addresses in India answered (Oracle Mumbai and Hyderabad, AWS Mumbai, GCP Mumbai), and those tried elsewhere did not. No long crawl has been run from a cloud host. |
+| State portals, daily | GitHub Actions `daily-ingest.yml` (03:00 UTC), and the laptop's Daily run | Plain HTTP, works from anywhere. GeM and CPPP are skipped there (`SKIP_CONNECTORS: GeM,CPPP`). |
+| CPPP crawl | The laptop's Daily run | CPPP became a JavaScript site by November 2026, so it needs a browser, which Vercel and the `daily-ingest` job do not have. |
+| Opening a CPPP tender for a visitor | A Kernel cloud browser, driven from Vercel | See [Opening a CPPP tender](#opening-a-cppp-tender). |
 | Purge of closed tenders | GitHub Actions `purge.yml` (00:15 and 12:15 UTC), Vercel Cron `/cron/purge`, and the first step of every Daily run | Cheap, so it runs from several places. |
 | Uptime and Neon alarms | GitHub Actions `keep-warm.yml` (every 5 min), `neon-usage.yml` (10:00 IST) | `neon-usage` emails the owner if the database refuses connections or a free-plan limit is mostly spent. |
 
@@ -86,7 +88,7 @@ Everything else — permission checks, politeness, writing to the database — i
 3. **robots.txt.** Checked before the first request, cached, re-checked weekly.
    A "no" refuses the run and marks the source inactive.
 4. **Fetch politely.** One request per `rate_limit_seconds` per connector (3 s
-   for CPPP and GeM), exponential backoff on 429/5xx, an honest User-Agent with
+   for GeM), exponential backoff on 429/5xx, an honest User-Agent with
    a contact address.
 5. **Skip what the purge would delete.** With `RETENTION_DAYS` set, a row whose
    deadline is already past the purge cutoff is never written.
@@ -159,7 +161,7 @@ job (and by `start fetching`) or by `python run_prod_worker.py --once`:
 | Step | What happens |
 |---|---|
 | Purge | Closed tenders deleted first, so nothing later spends work on rows about to go. |
-| Every source, in turn | CPPP, data.gov.in (switched off), GeM, then the 20 GePNIC portals, each with a 48-hour `since` window. After each source, the documents of the rows it just created are read with `ENRICH_WORKERS` threads (default 6), sharded by id. |
+| Every source, in turn | CPPP, data.gov.in (switched off), GeM, then the 20 GePNIC portals, each with a 48-hour `since` window (CPPP ignores it and reads its whole 14-day list). After each source, the documents of the rows it just created are read with `ENRICH_WORKERS` threads (default 6), sharded by id. |
 | Older documents | Up to `ENRICH_LIMIT` (4,000) more unread documents, soonest deadline first, 6 workers. |
 | Dedup | Cross-source duplicate linking (below). |
 
@@ -263,7 +265,7 @@ light and calm on purpose: most users are 50–60.
 | `/` | Home: corpus figures and a strip of buyer logos. |
 | `/browse` | Search and filter the whole corpus (text, sector, state and city, buyer, source, open only; sortable); a search can be saved. Rows come from `GET /tenders`. |
 | `/t/{id}` | One tender: every fact held (`app/facts.py`), typical eligibility checks (`app/eligibility.py`), and links to its documents. |
-| `/t/{id}/cppp` | Opens a CPPP notice: the visitor types CPPP's own CAPTCHA, our server relays it (`app/cppp_relay.py`). No CAPTCHA is solved by software. |
+| `/t/{id}/cppp`, `/t/{id}/cppp/captcha` | Opens a CPPP tender on our site: the visitor types CPPP's own CAPTCHA (`app/cppp_relay.py`). No CAPTCHA is solved by software. See [Opening a CPPP tender](#opening-a-cppp-tender). |
 | `/buyers`, `/buyer` | Buying organisations and their tenders. |
 | `/profile`, `/matches` | A company's questionnaire and its ranked matches (below). |
 | `/dashboard` | Tracked tenders (wishlist), tenders being bid on ("Ready to fill"), saved searches. |
@@ -292,6 +294,40 @@ value is known — ones beyond its capacity. An unknown value never disqualifies
   (`rate_limits`), so the limit holds across Vercel instances.
 - Security headers and a CSP on every response; `Secure` cookies and HSTS when
   `PUBLIC_BASE_URL` is https.
+
+### Opening a CPPP tender
+
+CPPP has no link to a single tender, and it keeps its CAPTCHA in the live page, so
+the browser has to stay alive while the visitor types. Vercel cannot hold one, so
+`app/cppp_relay.py` uses a [Kernel](https://www.kernel.sh) cloud browser through its
+REST API, with no browser software on Vercel:
+
+1. The visitor clicks **Open tender details**. Nothing starts before this click,
+   because each start runs a browser and uses credit.
+2. The cloud browser opens the 14-day list, finds the row and clicks it, as a visitor
+   would. The list is sorted by closing date, so it starts from the nearer end.
+3. Our page shows the CAPTCHA image. Kernel holds the browser on standby meanwhile.
+4. The visitor types it. The browser enters exactly that, and our own template shows
+   the details with the tender document link. Values are autoescaped, and only
+   http(s) addresses become links.
+
+Limits and what happens at them:
+
+- **Coverage**: tenders closing within 14 days, with an ID of 5 or more characters.
+  Others show a plain link to CPPP, as does every tender while `KERNEL_API_KEY` is
+  unset.
+- **Credit**: `CPPP_LOOKUPS_PER_DAY` (60 across the site) and 30 requests an hour per
+  address, so a busy day or a bot cannot spend Kernel's free $5 a month.
+- **Wait**: 38 s measured once for a tender near the start of the list.
+- **Being told to slow down**: on 2026-11-03, after many test loads, CPPP answered
+  429 and sent the page to its home screen, so lookups timed out. Stop and wait. Do
+  not retry around it (compliance rule 3).
+- **Window width**: below about 1280 px CPPP does not draw the CAPTCHA image.
+
+Not yet confirmed: the first full lookup on the live site reached CPPP's tender page,
+then failed on a reading bug fixed in `4ae22ca`. No lookup has shown the finished
+details page since. Kernel's terms of service have not been read, and credit used
+per lookup has not been measured.
 
 ---
 
@@ -345,11 +381,11 @@ M new`). First-time Mac setup is the `do-setup` skill (`mac/setup.sh`).
 
 | Job | When | Does |
 |---|---|---|
-| `daily-ingest.yml` | 03:00 UTC | `run_prod_worker.py --once` without GeM (its hosts refuse GitHub runners) |
+| `daily-ingest.yml` | 03:00 UTC | `run_prod_worker.py --once` without GeM (its hosts refuse GitHub runners) or CPPP (needs a browser) |
 | `purge.yml` | 00:15, 12:15 UTC | `tenders purge --days 0 --yes` |
 | `keep-warm.yml` | every 5 min | hits `/healthz` so the first visitor does not wait for a cold start |
 | `neon-usage.yml` | 10:00 IST | emails if Neon refuses connections or a limit is mostly spent |
-| Vercel Cron `/cron/ingest` | 01:00 UTC | incremental CPPP + state portals within a 240 s budget (browser sources skipped) |
+| Vercel Cron `/cron/ingest` | 01:00 UTC | incremental state portals within a 240 s budget (browser sources, GeM and CPPP, are skipped) |
 | Vercel Cron `/cron/purge` | 02:00 UTC | the purge, behind `CRON_SECRET` (503 if unset) |
 
 ---
@@ -363,8 +399,8 @@ version of this section).
 |---|------|----------------|
 | 1 | Only approved hosts | `config/approved_sources.yaml`: a connector whose host is not listed refuses to run. Each entry records licence, permitted paths, verification date and who verified it. `compliance.BLOCKED_HOSTS` can still ban a host outright (currently empty). |
 | 2 | robots.txt before the first request, cached, re-checked weekly | `BaseConnector.robots_allowed_cached`; `run()` refuses on a "no". |
-| 3 | No CAPTCHA solving, fingerprint spoofing, stealth browsers or proxy rotation in any connector | 429/5xx are handled by backing off, never by evading. CAPTCHA-gated pages are off-limits; the one CAPTCHA a visitor meets (CPPP's) is typed by that visitor. |
-| 4 | Respect rate limits | `rate_limit_seconds` per connector (2 s default, 3 s CPPP and GeM), exponential backoff on errors. |
+| 3 | No CAPTCHA solving, fingerprint spoofing, stealth browsers or proxy rotation in any connector | 429/5xx are handled by backing off, never by evading. CAPTCHA-gated pages are off-limits; the one CAPTCHA a visitor meets (CPPP's) is typed by that visitor, one tender at a time. |
+| 4 | Respect rate limits | `rate_limit_seconds` per connector (2 s default, 3 s GeM), exponential backoff on errors. CPPP makes one list request a run. |
 | 5 | Identify honestly | `compliance.user_agent()` sends a descriptive UA with a contact address and refuses to run while `CONTACT_EMAIL` is unset or the placeholder. |
 | 6 | Track provenance and licence per source | `sources` table, public at `GET /sources`. |
 | 7 | No personal data | `compliance.scrub_personal` strips emails, phone numbers and officer names from every `raw_payload`. |
@@ -381,11 +417,11 @@ letting the page issue its own requests.
 | Source | Connector | How it is read | Notes |
 |---|---|---|---|
 | **GeM** — bidplus.gem.gov.in | `gem.py` | Headless Chromium on `/all-bids`, bid PDFs over plain HTTP | ~47k live bids, the bulk of the corpus. Only from a home connection. |
-| **CPPP** — eprocure.gov.in | `cppp.py` | Server-rendered listing `/cppp/latestactivetendersnew/cpppdata` | Pagination uses CPPP's own base64 `?url=` parameter (`?page=N` is ignored). The search form and `FrontEndLatestActiveTenders` are CAPTCHA-gated and off-limits. Sorted by publication date, so `since` stops the crawl early; `CPPP_MAX_PAGES` (50) caps a run. |
+| **CPPP** — eprocure.gov.in | `cppp.py` | The "Closing within 14 days" tab of `/cppp/#/tendersClosingToday`, central tenders only, read in a browser | The old listing returns 404 since the rebuild. The page's data service uses encrypted requests and a token, so it is not called directly: the connector reads the table a visitor sees. The tab receives its whole list in one response, so turning pages asks CPPP for nothing further. Keeps only tenders still open and ignores `since`, because a tender first appears when it comes within 14 days of closing. An empty table raises an error rather than logging `ok` with 0 tenders. Active Tenders and Tender Search are CAPTCHA-gated and off-limits to crawling. Ceiling: a tender closing more than 14 days out appears later. |
 | **20 GePNIC portals** (18 states, Defence, Delhi) — MP, HP, Rajasthan, WB, TN, Kerala, Assam, Haryana, Punjab, UP, Uttarakhand, Manipur, Tripura, Arunachal, Odisha, Jharkhand, DNH, Chandigarh, Defence, Delhi | `gepnic.py` (one generic class, `STATE_INSTANCES` table) | `FrontEndListTendersbyDate`, the only GePNIC page without a CAPTCHA | Pagination is Tapestry links with session tokens, so pages are followed, not built. That page defaults to *tenders closing today*, so these portals yield few rows (the 7/14-day tabs need a human CAPTCHA check before they could be added). Each domain was verified separately. |
 | **data.gov.in** | `data_gov_in.py` | Official API, pinned OCDS datasets only (`config/data_gov_in_resources.yaml`) | **Switched off** (`sources.enabled = false`) by the owner on 2026-10-10. |
 
-Detail links that expire with a session (CPPP, GePNIC) are kept in
+Detail links that expire with a session (GePNIC) are kept in
 `raw_payload` for auditing but never published as `document_url`.
 
 ---
@@ -411,7 +447,7 @@ are gitignored.
 
 ```bash
 tenders check-robots                 # robots.txt for every source, writes nothing
-tenders run CPPP --since-hours 12    # one connector
+tenders run GeM --since-hours 12     # one connector
 tenders run GeM --start-page 2701 --max-pages 1000   # a slice of GeM
 tenders sources list                 # on/off and rows held per source
 tenders sources disable data.gov.in
@@ -426,7 +462,8 @@ pytest -q                            # 439 tests, no network needed
 
 Useful settings: `ENRICH_WORKERS` (6), `ENRICH_LIMIT` (4000), `SKIP_CONNECTORS`,
 `ENRICH_SKIP_SOURCES`, `DEDUP_CACHE`, `CPPP_MAX_PAGES`, `RETENTION_DAYS`,
-`AUTOSTART_JOB` (start a dashboard job with the server), `ADMIN_EMAILS`.
+`AUTOSTART_JOB` (start a dashboard job with the server), `ADMIN_EMAILS`,
+`KERNEL_API_KEY` (opens CPPP tenders for visitors; without it they get a plain link).
 
 ---
 
@@ -465,7 +502,8 @@ Pushing to `main` deploys.
    code whose models need them, or the live site fails on those tables.
 3. **Environment variables** in Vercel: `DATABASE_URL`, `SESSION_SECRET`,
    `CONTACT_EMAIL`, `PUBLIC_BASE_URL`, `CRON_SECRET`, `ADMIN_EMAILS`,
-   `RETENTION_DAYS`, and the `SMTP_*` / `GOOGLE_*` keys (see `.env.example`).
+   `RETENTION_DAYS`, `KERNEL_API_KEY`, and the `SMTP_*` / `GOOGLE_*` keys (see
+   `.env.example`). A changed variable takes effect only after a redeploy.
 4. **Google OAuth callback**: `https://<domain>/auth/google/callback`, exactly.
 
 ### Function region
@@ -477,8 +515,9 @@ this with it.
 
 ### What cannot run on Vercel
 
-Long jobs and the GeM browser. A serverless instance is frozen once it answers,
-so crawls run on the fetching laptop. `Dockerfile` and `deploy/oracle-setup.sh`
+Long jobs and any browser. A serverless instance is frozen once it answers,
+so crawls run on the fetching laptop, and a visitor's CPPP lookup uses a Kernel
+cloud browser. `Dockerfile` and `deploy/oracle-setup.sh`
 package one Daily run as a container for any always-on host that GeM answers
 (not GitHub runners), if the laptop is ever to be retired; keep the base image
 tag and the `playwright` pin in step.
@@ -505,7 +544,7 @@ app/
   api.py, web.py     FastAPI app, JSON API, page routes
   facts.py, eligibility.py, geo.py, matching.py   what pages say about a tender
   auth.py, oauth.py, security.py, mailer.py       accounts, sessions, rate limits, mail
-  cppp_relay.py      visitor-typed CAPTCHA relay for CPPP notices
+  cppp_relay.py      opens a CPPP tender: Kernel browser, visitor-typed CAPTCHA
   compliance.py      allowlist checks, honest UA, personal-data scrubbing
   models.py, schemas.py, db.py, cli.py
 run_prod_worker.py   one Daily run (purge, every source, documents, dedup)
@@ -536,3 +575,7 @@ arbitrary.
 | 10 Oct 2026 | CPPP crawl stalled 35 s every 5 pages | CPPP's detail-link token changes each fetch, so no fingerprint ever matched | `FP_VOLATILE` |
 | 10 Oct 2026 | Crawl capped at ~3 rows/s | One Neon round trip (~310 ms) per row | Batches of 50, one query each way |
 | 10 Oct 2026 | Dedup failed after 30 min: `IdleInTransactionSessionTimeout` | The read's transaction stayed open while comparing | End the transaction before comparing |
+| 3 Nov 2026 | CPPP logged `ok` with 0 tenders | CPPP became a JavaScript site and the old listing returned 404 | Read the 14-day tab in a browser; an empty table now raises an error |
+| 3 Nov 2026 | "CAPTCHA was wrong" after a correct CAPTCHA | CPPP's older search form comes back after a right answer that finds nothing, and only about 8% of its tenders are in that form | Replaced by the Kernel browser route |
+| 3 Nov 2026 | Lookup missed tenders on the 14-day list | Clicking the tab before Closing Today had drawn read that table instead | Wait for Closing Today first, then for the 14-day heading |
+| 3 Nov 2026 | Tender page "came back empty" | Read before CPPP filled it in, and from `.card-Header` only, which holds three of its five blocks | Wait for values; read blocks in page order |
