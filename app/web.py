@@ -638,11 +638,9 @@ def results(
 
 # ---- one tender --------------------------------------------------------
 
-# Their advanced search, which opens cold and has a Tender ID box next to its
-# CAPTCHA. The visitor pastes the ID and types the CAPTCHA themselves. The detail
-# pages are hotlink-protected, so the tender id is what makes a notice findable.
-CPPP_SEARCH = ("https://eprocure.gov.in/eprocure/app"
-               "?page=FrontEndAdvancedSearch&service=page")
+# Their active tenders page, whose keyword box matches a Tender ID and sits next to
+# its CAPTCHA, for every central buyer. Used where our own CAPTCHA box cannot help.
+CPPP_SEARCH = "https://eprocure.gov.in/cppp/#/activeTenders"
 
 
 def _portal_url(src: Source | None) -> str:
@@ -791,8 +789,7 @@ def tender_detail(
         source_name=src.name if src else "the source portal",
         licence=src.license if src else "see /sources",
         search_url=_portal_url(src),
-        cppp_box=bool(src and src.name == "CPPP"
-                      and cppp_relay.is_searchable(_cppp_id(raw, t.external_ref))),
+        cppp_box=bool(src and src.name == "CPPP" and _cppp_can_open(t, raw)),
     )
 
 
@@ -817,12 +814,17 @@ def _cppp_id(raw: dict, external_ref: str | None) -> str:
     return (raw.get("tender_id") or external_ref or "").strip()
 
 
+def _cppp_can_open(t: Tender, raw: dict) -> bool:
+    return (cppp_relay.is_searchable(_cppp_id(raw, t.external_ref))
+            and cppp_relay.holds_buyer(t.organization))
+
+
 def _cppp_tender(db: Session, tender_id: int) -> Tender:
     t = db.get(Tender, tender_id)
     src = db.get(Source, t.source_id) if t and t.source_id else None
     raw = t.raw_payload if t and isinstance(t.raw_payload, dict) else {}
     if (t is None or src is None or src.name != "CPPP"
-            or not cppp_relay.is_searchable(_cppp_id(raw, t.external_ref))):
+            or not _cppp_can_open(t, raw)):
         raise HTTPException(status_code=404, detail="no CPPP lookup for this tender")
     return t
 

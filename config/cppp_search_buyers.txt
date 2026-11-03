@@ -1,0 +1,248 @@
+# The Organisation menu of CPPP's older search form, 2026-11-03. Only these
+# buyers' tenders can be found by it. See app/cppp_relay.py.
+Aligarh Muslim University
+All India Council for Technical Education
+All India Institute of Medical Science-Nagpur
+All India Institute of Medical Science-New Delhi
+All India Institute of Medical Sciences - Rajkot
+All India Institute of Medical Sciences Bathinda
+All india Institute of Medical Sciences Bibinagar
+All india Institute of Medical Sciences Bilaspur
+All India Institute of Medical Sciences Vijaypur Jammu
+All India Institute of Medical Sciences- Deoghar
+All India Institute of Medical Sciences-Bhopal
+All India Institute of Medical Sciences-Bhubaneswar
+All India Institute of Medical Sciences-Jodhpur
+All India Institute of Medical Sciences-Mangalagiri-Andhra Pradesh
+All India Institute of Medical Sciences-Patna
+All India Institute of Medical Sciences-Raebareli
+All India Institute of Medical Sciences-Raipur
+All India Institute of Medical Sciences-Rishikesh
+All India Institute of Speech and Hearing
+Andaman Lakshadweep Harbour Works
+Andhra Pradesh MSME Developement Corporation
+Archaeological Survey of India
+Artificial Limbs Manufacturing Corporation of India
+Assam Rifles - MHA
+Atomic Minerals Directorate for Exploration and Research
+Automotive Research Association of India
+Banaras Hindu University
+Bhabha Atomic Research Centre
+Bharat Sanchar Nigam Limited
+Board of Radiation and Isotope Technology
+Brahmaputra Board
+Bridge and Roof Company (India) Limited
+Bureau of Pharma PSUs of India (BPPI)
+Central Board of Secondary Education
+Central Cottage Industries Corporation of India Ltd.
+Central Medical Services Society
+Central University of Haryana
+Central University of Jharkhand
+Central University of Kerala
+Central University of Tamil Nadu
+Central Water and Power Research Station
+Central Water Commission- DoWR RD and GR
+Central Wool Development Board
+Chenab Valley Power Projects (P) Ltd
+Chennai Metro Rail Limited
+Chennai Port Trust
+Cochin Special Economic Zone Authority
+Coffee Board
+Dattopant Thengadi National Board For Workers Education and Development
+Defence Research and Development Organisation
+Delhi Development Authority
+Delhi Metro Rail Corporation Limited
+Delhi University
+Department of Agricultural Research and Education
+Department of Agricultural Research and Education - ADB Tenders
+Department of Animal Husbandry, Dairying and Fisheries
+Department of Atomic Energy
+Department of Electronics and Information Technology(DeitY)
+Department of Expenditure
+Department of Fertilisers
+Department of Financial Services
+Department of Health Research
+Department of Heavy Industry
+Department of Industrial Policy and Promotion
+Department of Industrial Training and Employment
+Department of Posts
+Department of Revenue
+Deposit Insurance and Credit Guarantee Corporation
+Development Commissioner for Handlooms
+DG of Central Industrial Security Force,MHA
+DG Sashastra Seema Bal,MHA
+DG, Indo-Tibetan Border Police Force
+DG,BSF,MHA
+DG,CRPF,MHA
+DG,National Security Guard,MHA
+Dir. Gen. Defence Estates,HQ
+Director-Indian Institute of Technology(IIT Delhi)
+Directorate General Health Services,MHFW
+Directorate General NDRF
+Directorate General of Hydrocarbons
+Directorate General of Lighthouses and Lightships
+Directorate General of Shipping
+Directorate General of Training
+Directorate of Construction Services and Estate Management
+Directorate of Purchase and Stores
+Dr. Ram Manohar Lohia Hospital
+Dr.B.R.Ambedkar National Institute of Technology-Jalandhar
+Employees State Insurance Corporation
+Engineers India Limited,MoPNG
+Entrepreneurship Development Institute of India
+Film and Television Institute of India
+Food Corporation of India
+Food Safety and Standards Authority of India
+General Services Organisation (GSO)
+Government of Gujarat
+Grid Controller of India Limited
+Guru Ghasidas Vishwavidyalaya
+Heavy Water Board
+Hindustan Organic Chemicals Limited
+Hindustan Salts Limited
+Hindustan Urvarak and Rasayan Limited
+IISER Berhampur
+India Trade Promotion Organisation
+Indian Institute of Engineering Science and Technology - Shibpur
+Indian Institute of Information Technology Allahabad
+Indian Institute of Information Technology Design and Manufacturing Kancheepuram
+Indian Institute Of Information Technology Design and Manufacturing Kurnool
+Indian Institute of Management Ahmedabad
+Indian Institute of Management Amritsar
+Indian Institute of Management Bangalore
+INDIAN INSTITUTE OF MANAGEMENT CALCUTTA
+Indian Institute of Management Jammu
+Indian Institute of Management Lucknow
+Indian Institute of Management Mumbai
+Indian Institute of Management Ranchi
+Indian Institute of Management Sirmaur
+Indian Institute of Management Tiruchirappalli
+Indian Institute of Management Udaipur
+Indian Institute of Management-Rajiv Gandhi - Shillong
+Indian Institute of Science - Bangalore
+Indian Institute of Science Education and Research - Kolkata
+Indian Institute of Science Education and Research - Mohali
+Indian Institute of Science Education and Research - Pune
+Indian Institute of Science Education and Research - Thiruvananthapuram
+Indian Institute of Science Education and Research Bhopal
+Indian Institute of Technology (IIT) Goa
+Indian institute of Technology - Dharwad
+Indian Institute of Technology - Hyderabad
+Indian Institute of Technology Bhilai
+Indian Institute of Technology Gandhinagar
+Indian Institute of Technology Guwahati
+Indian Institute of Technology Indore
+Indian Institute of Technology Jammu
+Indian Institute of Technology Jodhpur
+Indian Institute of Technology Kanpur
+Indian Institute of Technology Kharagpur
+Indian Institute of Technology Mandi
+Indian Institute of Technology Patna
+Indian Institute of Technology Roorkee
+Indian Institute of Technology Ropar
+Indian Institute of Technology Tirupati
+Indian Institute of Technology(BHU) Varanasi
+Indian Institute of Technology(ISM) Dhanbad
+Indian Maritime University
+Indira Gandhi Centre for Atomic Research
+Indira Gandhi National Centre for the Arts
+Inland Waterways Authority of India,MoS
+Institute for Plasma Research
+Inter University Accelerator Centre
+Inter-University Centre for Astronomy and Astrophysics
+International Centre For Automotive Technology
+International Financial Services Centres Authority
+Jamia Millia Islamia
+Jawaharlal Nehru Port Trust
+Jawaharlal Nehru University
+Kolkata Port Trust
+Land Ports Authority of India
+LNJN National Institute of Criminology and Forensic Science
+Mahatma Gandhi Institute of Medical Sciences
+Malaviya National Institute of Technology Jaipur
+Maulana Azad National Institute of Technology
+MEPZ-SEZ Authority
+Ministry of Culture
+Ministry of Development of North Eastern Region - World Bank Tenders
+Ministry of Food Processing Industries
+Ministry of Mines
+Ministry of Railways - World Bank Tenders
+Ministry of Road Transport and Highways
+Ministry of Shipping
+Mormugao Port Authority
+Mumbai Port Trust
+Musi Riverfront Development Corporation Limited - ADB
+Narmada Control Authority
+National Aluminium Company Limited,NALCO
+National Bank for Agriculture and Rural Development (NABARD)
+National Book Trust-India-Dept of Higher Education
+National Centre for Earth Science Studies
+National Council for Promotion of Urdu Language
+National Council of Science Museums
+National Forensic Sciences University
+National Handloom Development Corporation Ltd
+National Highways and Infrastructure Development Corporation
+National Horticulture Board-ADB Tender
+National Institute for Empowerment of Persons with Multiple Disablities
+National Institute for Entrepreneurship and Small Business Development
+National Institute for Micro Small and Medium Enterprises
+National Institute of Ayurveda
+National Institute of Food Technology Entrepreneurship and Management
+National Institute of Ocean Technology
+National Institute of Science Education and Research - Odisha
+National Institute of Technology Agartala
+National Institute of Technology Arunachal Pradesh - World Bank Tenders
+National Institute of Technology Calicut
+National Institute of Technology Karnataka
+National Institute of Technology Kurukshetra
+National Institute of Technology Nagaland
+National Institute of Technology Puducherry
+National Institute of Technology Rourkela
+National Institute of Technology Srinagar
+National Institute of Technology Tiruchirappalli
+National Institute of Technology Warangal
+National Institute of Unani Medicine
+National Mission for Clean Ganga
+National Project Implementation Unit - World Bank Tenders
+Navodaya Vidyalaya Samiti
+New Mangalore Port Trust
+NHDC Ltd.
+NHPC Limited
+NITTTR Chennai
+North-Eastern Hill University (NEHU)
+Nuclear Fuel Complex
+Nuclear Recycle Board
+Numaligarh Refinery Limited
+Office of the CAG of India
+Petroleum and Natural Gas Regulatory Board
+Petroleum Planning and Analysis Cell
+Pondicherry University
+Postgraduate Institute of Medical and Education and Research Chandigarh
+Projects and Development India Limited, Fert
+Raja Ramanna Centre for Advanced Technology Indore
+Rashtriya Chemicals and Fertilizers Ltd.
+Regional Centre for Urban and Environmental Studies-Lucknow
+Regional Institute of Medical Sciences
+ReserveBank Information technology Pvt Ltd.
+S. V. National Institute of Technology-Surat
+Sant Longowal Institute of Engineering and Technology
+Santacruz Electronics Export Processing Zone Special Economic Zone Mumbai
+School of Planning and Architecture - Vijayawada
+Semi-Conductor Laboratory (SCL)
+SINDHU RESETTLEMENT CORPORATION LIMITED
+Sports Authority of India
+Survey of India
+Tata Institute of Social Sciences
+Tata Memorial Centre
+Tezpur University
+THDC India Limited
+The Braithwaite Burn and Jessop Construction Co. Ltd
+The Fertilisers And Chemicals Travancore Ltd.
+The Indian Law Institute
+The State Trading Corporation of India Ltd
+Tripura University
+University of Allahabad
+University of Hyderabad
+Variable Energy Cyclotron Centre
+Visva-Bharati
+VMMC and Safdarjung Hospital

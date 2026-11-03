@@ -197,10 +197,12 @@ def test_tender_page_shows_fit_duplicates_buyer_and_similar(client, session_fact
 _TID = "2026_AIMSD_931033_1"
 
 
-def _cppp_id(session_factory, tender_id=_TID) -> int:
+def _cppp_id(session_factory, tender_id=_TID,
+             organization="All India Institute of Medical Science-New Delhi") -> int:
     with session_factory() as db:
         t = db.query(Tender).one()
         t.raw_payload = {"tender_id": tender_id}
+        t.organization = organization
         db.commit()
         return t.id
 
@@ -212,11 +214,13 @@ def test_cppp_tender_page_has_the_captcha_box_when_the_id_can_be_searched(client
     assert f'data-captcha="/t/{tid}/cppp/captcha"' in html
     assert any("form.dataset.captcha" in js for js in page_scripts(html))
     assert '<a class="btn ghost" href="#cpppForm">' in html   # View on portal
-    _cppp_id(session_factory, "1")      # an id no search could tell apart
-    html = client.get(f"/t/{tid}").text
-    assert 'FrontEndAdvancedSearch&amp;service=page"' in html and "cpppForm" not in html
-    assert client.get(f"/t/{tid}/cppp").status_code == 404
-    assert client.get(f"/t/{tid}/cppp/captcha").status_code == 404
+    for args in (("1",), (_TID, "Ministry of Railways")):   # no search could find these
+        _cppp_id(session_factory, *args)
+        html = client.get(f"/t/{tid}").text
+        assert 'href="https://eprocure.gov.in/cppp/#/activeTenders"' in html
+        assert "cpppForm" not in html
+        assert client.get(f"/t/{tid}/cppp").status_code == 404
+        assert client.get(f"/t/{tid}/cppp/captcha").status_code == 404
 
 
 @pytest.mark.parametrize("name,base,expected", [

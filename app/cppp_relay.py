@@ -27,6 +27,7 @@ import logging
 import os
 import re
 from dataclasses import dataclass
+from functools import lru_cache
 from pathlib import Path
 from urllib.parse import urljoin
 
@@ -79,6 +80,25 @@ class CaptchaForm:
 def is_searchable(tender_id: str | None) -> bool:
     """Some buyers publish an id like "1", which no search could tell apart."""
     return len((tender_id or "").strip()) >= 5
+
+
+def _normal(name: str | None) -> str:
+    return " ".join((name or "").split()).lower()
+
+
+@lru_cache(maxsize=1)
+def _search_buyers() -> frozenset[str]:
+    # ponytail: a snapshot of the form's menu, so viewing a tender costs CPPP no
+    # request. A buyer added later shows the portal link until this is refreshed.
+    path = Path(__file__).resolve().parents[1] / "config" / "cppp_search_buyers.txt"
+    lines = path.read_text(encoding="utf-8").splitlines()
+    return frozenset(_normal(x) for x in lines if x and not x.startswith("#"))
+
+
+def holds_buyer(organization: str | None) -> bool:
+    """The form lists 246 buyers. Railways, MES and NHAI, most of CPPP, are not
+    among them, so a CAPTCHA for their tenders could only ever end in "not found"."""
+    return _normal(organization) in _search_buyers()
 
 
 def _client(cookies: dict | None = None) -> httpx.Client:
