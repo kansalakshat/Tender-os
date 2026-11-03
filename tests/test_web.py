@@ -275,7 +275,9 @@ def test_cppp_lookup_sends_the_humans_captcha_and_returns_the_tender(
         form = parse_qs(request.content.decode())
         posts.append(form)
         if form["captchaText"] != ["RIGHT1"]:
-            return httpx.Response(200, html=_FORM.replace("__N__", "9"))
+            return httpx.Response(200, html=_FORM.replace("__N__", "9").replace(
+                "<body>", '<body><td class="error"><b>Invalid Captcha! Please Enter '
+                          'Correct Captcha.</b></td>'))
         return httpx.Response(200, html=_RESULTS)
 
     monkeypatch.setattr(cppp_relay, "TRANSPORT", httpx.MockTransport(cppp))
@@ -314,7 +316,8 @@ def test_cppp_lookup_tries_limited_tenders_once_then_says_it_is_not_listed(
         if request.method == "GET":
             return httpx.Response(200, html=_FORM.replace("__N__", "0"))
         types.append(parse_qs(request.content.decode())["TenderType"][0])
-        return httpx.Response(200, html="<html><body>No tenders found</body></html>")
+        # A right CAPTCHA that finds nothing still gets the form back, with no error.
+        return httpx.Response(200, html=_FORM.replace("__N__", "5"))
 
     monkeypatch.setattr(cppp_relay, "TRANSPORT", httpx.MockTransport(cppp))
     state = client.get(f"/t/{tid}/cppp/captcha").json()["state"]

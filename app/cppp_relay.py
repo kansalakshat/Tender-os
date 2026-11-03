@@ -146,6 +146,12 @@ def tender_link(html: str, tender_id: str) -> str | None:
     return None
 
 
+def portal_error(html: str) -> str:
+    """CPPP's own error line. Only these nodes: its script holds the same words."""
+    nodes = HTMLParser(html).css(".error")
+    return " ".join(re.sub(r"\s+", " ", n.text()).strip() for n in nodes).strip()
+
+
 def submit(state: str, tender_id: str, captcha_text: str) -> TenderPage | Captcha:
     """The tender page, or a fresh CAPTCHA with a message saying what went wrong."""
     data = _unpack(state)
@@ -170,12 +176,16 @@ def submit(state: str, tender_id: str, captcha_text: str) -> TenderPage | Captch
                 raise RelayError(f"CPPP result links off-site: {url!r}")
             page = c.get(url, headers={"Referer": str(resp.url)})
             return TenderPage(page.text, str(page.url))
-        if parse_form(resp.text) is not None:
+        error = portal_error(resp.text)
+        if "invalid captcha" in error.lower():
             return _captcha_from(resp, c, "CPPP says the CAPTCHA was wrong. Try this one.",
                                  data["t"])
-    # The CAPTCHA passed and the search found nothing. The menu is required and
-    # our listing does not say which kind this is, so the other kind gets one try.
-    log.warning("CPPP search found no %s (type %s) at %s", tender_id, data["t"], resp.url)
+    # The CAPTCHA passed and the search found nothing. CPPP shows its form again
+    # for this too, so the form alone does not mean a wrong CAPTCHA. The menu is
+    # required and our listing does not say which kind this is, so the other kind
+    # gets one try.
+    log.warning("CPPP search found no %s (type %s) at %s: %r",
+                tender_id, data["t"], resp.url, error)
     if data["t"] == OPEN_TENDER:
         return start("One more step: CPPP checks limited tenders separately. "
                      "Please type this one too.", LIMITED_TENDER)
