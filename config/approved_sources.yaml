@@ -28,16 +28,18 @@ sources:
   - domain: eprocure.gov.in
     name: CPPP
     license: public-published
-    robots_verified_on: 2026-08-25
-    verified_by: initial-build
-    paths: ["/cppp/latestactivetendersnew/cpppdata"]
+    robots_verified_on: 2026-11-03
+    verified_by: operator-authorised (nirmaanos35@gmail.com)
+    paths: ["/cppp/"]
     notes: >
-      Central Public Procurement Portal (NIC). robots.txt returns HTTP 404 (no
-      restrictions) as of the verification date. We read ONLY the default
-      server-rendered listing at /cppp/latestactivetendersnew/cpppdata and its
-      pagination links, which require no CAPTCHA. The search form on that page
-      and the whole /eprocure/app?page=FrontEndLatestActiveTenders page ARE
-      CAPTCHA-gated and are therefore permanently off-limits (rule #3).
+      Central Public Procurement Portal (NIC), rebuilt as a JavaScript site by
+      November 2026. robots.txt returns HTTP 404 (no restrictions) as of the
+      verification date. We read ONLY the table on the public "Closing within 14
+      days" tab of /cppp/#/tendersClosingToday, in a browser, with no CAPTCHA. The
+      Active Tenders and Tender Search pages ARE CAPTCHA-gated and are therefore
+      permanently off-limits (rule #3). Terms of Use contain no automated-access
+      rule; the Copyright Policy asks for permission from the owning department
+      to reproduce material, and for the source to be acknowledged.
       Tenders here are mandatory public disclosures under GFR 2017.
 
   - domain: mptenders.gov.in

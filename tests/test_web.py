@@ -205,21 +205,34 @@ def _cppp_link(session_factory, url=_DETAIL) -> int:
         return t.id
 
 
-def test_cppp_tender_page_carries_the_captcha_box_only_with_a_tender_link(
-        client, session_factory):
+def test_a_dead_cppp_link_shows_the_search_form_not_a_captcha_box(client, session_factory):
+    """CPPP's rebuild retired /cppp/tendersfullview/, so the box could only ever fail."""
     tid = _cppp_link(session_factory)
     html = client.get(f"/t/{tid}").text
-    assert f'<form method=post action="/t/{tid}/cppp" target=_blank' in html
-    assert f'data-captcha="/t/{tid}/cppp/captcha"' in html
-    assert any("form.dataset.captcha" in js for js in page_scripts(html))
-    assert "id=cpppSk class=skimg" in html   # a placeholder until the image lands
+    assert "cpppForm" not in html
+    assert 'FrontEndAdvancedSearch&amp;service=page"' in html
     _cppp_link(session_factory, None)
-    html = client.get(f"/t/{tid}").text
-    assert 'FrontEndAdvancedSearch&amp;service=page"' in html and "cpppForm" not in html
     assert client.get(f"/t/{tid}/cppp").status_code == 404
     assert client.get(f"/t/{tid}/cppp/captcha").status_code == 404
     _cppp_link(session_factory, "https://evil.example/cppp/tendersfullview/x")
     assert client.get(f"/t/{tid}/cppp").status_code == 404
+
+
+@pytest.mark.parametrize("name,base,expected", [
+    ("CPPP", "https://eprocure.gov.in", "https://eprocure.gov.in/eprocure/app?page=FrontEndAdvancedSearch&amp;service=page"),
+    ("GeM", "https://bidplus.gem.gov.in", "https://bidplus.gem.gov.in/all-bids"),
+    ("UP eProcurement", "https://etender.up.nic.in", "https://etender.up.nic.in"),
+])
+def test_view_on_portal_opens_the_portal_in_a_new_tab(client, session_factory, name, base, expected):
+    with session_factory() as db:
+        t = db.query(Tender).one()
+        src = db.get(Source, t.source_id)
+        src.name, src.base_url = name, base
+        db.commit()
+        tid = t.id
+    html = client.get(f"/t/{tid}").text
+    assert f'<a class="btn ghost" href="{expected}" target=_blank rel="noopener noreferrer">' in html
+    assert re.search(r'target=_blank rel="noopener noreferrer">.{0,400}?View on portal', html, re.S)
 
 
 _FORM = """<html><head></head><body>__MSG__

@@ -1,70 +1,15 @@
 from datetime import date, timedelta
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
-from app.connectors.cppp import CPPPConnector, external_ref
+from app.connectors.cppp import external_ref
 from app.connectors.data_gov_in import DataGovInConnector, parse_date, parse_value, pick_field
 from app.schemas import TenderRecord
 
-FIXTURE = Path(__file__).parent / "fixtures" / "cppp_listing.html"
 
 
-@pytest.fixture(scope="module")
-def cppp():
-    return object.__new__(CPPPConnector)  # parsing needs no HTTP client
-
-
-@pytest.fixture(scope="module")
-def rows(cppp):
-    return cppp.parse_rows(FIXTURE.read_text(encoding="utf-8", errors="replace"))
-
-
-# ---- CPPP: parsed from a real captured listing page ----
-
-def test_parses_every_row_on_the_page(rows):
-    assert len(rows) == 10
-
-
-def test_row_fields_are_extracted(rows):
-    first = rows[0]
-    assert first["title"].startswith("HIRING RESIDENTIAL ENGINEER")
-    assert first["organisation"] == "Bharat Petroleum Corporation Limited"
-    assert first["published"] == "24-Aug-2026 10:24 PM"
-    assert first["tender_id"] == "2026_BPCL_26361"
-
-
-def test_normalizes_dates_and_status(cppp, rows):
-    rec = cppp.normalize(rows[0])
-    assert rec.published_date == date(2026, 8, 24)
-    assert rec.deadline == date(2026, 9, 7)
-    assert rec.status in {"open", "closed"}
-    assert rec.currency == "INR"
-
-
-def test_ignores_tables_that_are_not_the_tender_listing(cppp):
-    """CPPP reuses class="list_table" for its forms, so the header is the real guard."""
-    not_the_listing = """
-      <table class="list_table">
-        <thead><tr><th>Tender ID</th><th>Tender Title</th></tr></thead>
-        <tbody><tr>
-          <td>1</td><td>2</td><td>3</td><td>4</td>
-          <td><a href="https://eprocure.gov.in/cppp/tendersfullview/Zm9v">x</a></td>
-          <td>6</td><td>7</td>
-        </tr></tbody>
-      </table>
-    """
-    assert cppp.parse_rows(not_the_listing) == []
-
-
-def test_titles_containing_slashes_survive(cppp, rows):
-    """Titles and reference numbers routinely contain '/', so text splitting fails."""
-    ref_row = next(r for r in rows if "/" in r["title"])
-    rec = cppp.normalize(ref_row)
-    assert "/" in rec.title
-    assert rec.external_ref
-
+# ---- CPPP's listing is covered in test_cppp.py ----
 
 def test_external_ref_prefers_the_canonical_tender_id():
     assert external_ref({"tender_id": "2026_BPCL_26361", "internal_id": "14084436"}) == "2026_BPCL_26361"
@@ -74,16 +19,6 @@ def test_external_ref_prefers_the_canonical_tender_id():
 def test_external_ref_falls_back_when_the_id_is_org_local():
     # '166992' is a department-internal number and could collide across organisations.
     assert external_ref({"tender_id": "166992", "internal_id": "14084425"}) == "cppp-14084425"
-
-
-def test_every_row_yields_a_unique_ref(cppp, rows):
-    refs = [cppp.normalize(r).external_ref for r in rows]
-    assert len(set(refs)) == len(refs)
-
-
-def test_source_url_points_back_at_the_source(cppp, rows):
-    rec = cppp.normalize(rows[0])
-    assert rec.source_url.startswith("https://eprocure.gov.in/")
 
 
 # ---- data.gov.in: column names differ per dataset ----

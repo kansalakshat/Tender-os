@@ -645,6 +645,13 @@ CPPP_SEARCH = ("https://eprocure.gov.in/eprocure/app"
                "?page=FrontEndAdvancedSearch&service=page")
 
 
+def _portal_url(src: Source | None) -> str:
+    """Where "View on portal" goes. GeM's bare address did not reliably open."""
+    if not src or src.name == "CPPP":
+        return CPPP_SEARCH
+    return src.base_url + "/all-bids" if src.name == "GeM" else src.base_url
+
+
 def _fit(db: Session, company: Company | None, t: Tender, today: date) -> str:
     """Whether this tender is one of the signed-in company's matches, and why.
 
@@ -780,11 +787,10 @@ def tender_detail(
         checklist=checklist(t, company), summary=_summary(t, sectors, places, label),
         sectors=sectors, facts=facts, days_label=label,
         document={"url": found[0], "source": found[1]} if found else None,
-        cppp_box=bool(src and src.name == "CPPP" and cppp_relay.is_detail_url(raw.get("url"))),
         ref=t.external_ref or "not recorded",
         source_name=src.name if src else "the source portal",
         licence=src.license if src else "see /sources",
-        search_url=CPPP_SEARCH if not src or src.name == "CPPP" else src.base_url,
+        search_url=_portal_url(src),
     )
 
 

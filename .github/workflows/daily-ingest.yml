@@ -70,6 +70,6 @@ jobs:
           # its share of enrichment are skipped rather than spending the run
           # timing out against a host that will not answer. The machine that can
           # reach GeM does that work.
-          SKIP_CONNECTORS: GeM
+          SKIP_CONNECTORS: GeM,CPPP
           ENRICH_SKIP_SOURCES: GeM
         run: python -u run_prod_worker.py --once

@@ -277,11 +277,7 @@ def test_tier1_connectors_are_in_the_allowlist():
 
 
 def test_cppp_never_touches_the_captcha_gated_pages():
-    """The search form and FrontEndLatestActiveTenders are CAPTCHA-gated (rule #3)."""
-    from app.connectors.cppp import CPPPConnector
-    conn = object.__new__(CPPPConnector)
-    urls = [conn.page_url(1), conn.page_url(2), conn.page_url(7)]
-    for url in urls:
-        assert "FrontEndLatestActiveTenders" not in url
-        assert "captcha" not in url.lower()
-        assert url.startswith("https://eprocure.gov.in/cppp/latestactivetendersnew/cpppdata")
+    """Active Tenders and Tender Search are CAPTCHA-gated (rule #3)."""
+    from app.connectors.cppp import LISTING_URL
+    assert LISTING_URL == "https://eprocure.gov.in/cppp/#/tendersClosingToday"
+    assert "activeTenders" not in LISTING_URL and "tenderSearch" not in LISTING_URL
