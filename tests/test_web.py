@@ -283,6 +283,7 @@ def test_cppp_lookup_sends_the_humans_captcha_and_shows_the_tender_here(
     got = client.post(f"/t/{tid}/cppp/captcha", json={}).json()
     assert got["image"] == "data:image/png;base64,IMG1" and got["state"]
     assert json.dumps(_TID) in calls.code[0]
+    assert "fromEnd: false" in calls.code[0]    # closes soon, so near the list's start
 
     html = client.post(f"/t/{tid}/cppp", data={"state": got["state"], "captcha": "wrong1"}).text
     assert '"wrong1"' in calls.code[1]
@@ -295,6 +296,14 @@ def test_cppp_lookup_sends_the_humans_captcha_and_shows_the_tender_here(
     assert '<a href="https://www.ireps.gov.in/a.pdf" target=_blank' in html
     assert 'href="javascript:' not in html      # only http(s) becomes a link
     assert calls.deleted == ["/browsers/s1"] and calls.created == 1
+
+
+def test_cppp_lookup_starts_from_the_end_for_a_tender_closing_later(
+        client, session_factory, monkeypatch):
+    tid = _cppp_id(session_factory, days=10)
+    calls = _kernel(monkeypatch, ["IMG1"])
+    assert client.post(f"/t/{tid}/cppp/captcha", json={}).json()["image"]
+    assert "fromEnd: true" in calls.code[0]
 
 
 def test_cppp_lookup_never_lets_a_visitor_write_into_the_browser_code(

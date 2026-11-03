@@ -46,7 +46,7 @@ fetch(document.getElementById('moreSlot').dataset.src, {credentials: 'same-origi
       });
   }
   start.addEventListener('click', function () {
-    load(start, 'Finding this tender on CPPP. This can take up to a minute. Please keep this page open.');
+    load(start, 'Finding this tender on CPPP. This takes about half a minute. Please keep this page open.');
   });
   var again = document.getElementById('cpppNew');
   again.addEventListener('click', function () { load(again, 'Getting a new image...'); });

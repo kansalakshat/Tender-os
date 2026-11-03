@@ -859,7 +859,7 @@ def cppp_captcha(request: Request, tender_id: int, body: dict = Body(default={})
         security.enforce(db, "cppp:all", CPPP_LOOKUPS_PER_DAY, 86400,
                          "Tender lookups are busy today. Please use the CPPP link below.")
     try:
-        cap = cppp_relay.new_image(state, ref) if state else cppp_relay.start(ref)
+        cap = cppp_relay.new_image(state, ref) if state else cppp_relay.start(ref, t.deadline)
     except cppp_relay.Expired:
         return JSONResponse({"error": "This took too long. Please reload the page and try again."}, 410)
     except cppp_relay.NotListed:

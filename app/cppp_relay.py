@@ -29,7 +29,7 @@ import httpx
 
 from .auth import sign, unsign
 from .compliance import user_agent
-from .connectors.cppp import _CELLS, _FIRST_CELL_CHANGED, _NEXT, _TAB, _VISIBLE_COUNT, LISTING_URL
+from .connectors.cppp import _HEADING, _TAB, _VISIBLE_COUNT, LISTING_URL
 
 API = "https://api.onkernel.com"
 LIST_DAYS = 14
@@ -59,15 +59,20 @@ await page.keyboard.press('Escape').catch(() => {});
 await page.locator('.mdi-refresh, .mdi-reload').first().click({timeout: 5000}).catch(() => {});
 await page.waitForTimeout(1500);
 """
-# CPPP lays each block out as a ribbon title over label and value pairs.
+# CPPP lays each block out as a ribbon title over label and value pairs. Read in page
+# order, because only some blocks sit inside .card-Header: the two that hold the tender
+# document and the buyer's address do not.
 _READ_DETAILS = """
-return await page.evaluate(() => [...document.querySelectorAll('.card-Header')].map(card => ({
-  title: (card.querySelector('.ribbon-text')?.innerText || '').trim(),
-  fields: [...card.querySelectorAll('.v-list-item__content')].map(item => ({
-    label: (item.querySelector('.listTitle')?.innerText || '').trim(),
-    value: (item.querySelector('.Details')?.innerText || '').trim(),
-  })).filter(f => f.label),
-})).filter(s => s.fields.length));
+return await page.evaluate(() => {
+  const sections = [];
+  for (const el of document.querySelectorAll('.ribbon-text, .v-list-item__content')) {
+    if (el.matches('.ribbon-text')) { sections.push({title: el.innerText.trim(), fields: []}); continue; }
+    const label = (el.querySelector('.listTitle')?.innerText || '').trim();
+    if (label && sections.length) sections[sections.length - 1].fields.push(
+      {label, value: (el.querySelector('.Details')?.innerText || '').trim()});
+  }
+  return sections.filter(s => s.fields.length);
+});
 """
 
 
@@ -154,10 +159,17 @@ def _setup() -> str:
     return _SETUP % json.dumps(user_agent())
 
 
-def _find_code(tender_id: str) -> str:
-    """Open the list, click this tender, return the CAPTCHA. Same steps and selectors
-    as the connector. The tab receives its whole list at once, so turning pages asks
-    CPPP for nothing further."""
+def _find_code(tender_id: str, from_end: bool) -> str:
+    """Open the list, click this tender, return the CAPTCHA. Same list as the connector.
+
+    The tab receives its whole list at once and turns pages locally, so walking it
+    asks CPPP for nothing further. Two things keep the visitor's wait short: searching
+    inside the page (65 ms a page against 160 ms) and starting from the nearer end,
+    since the list is sorted by closing date.
+
+    Closing Today is waited for before clicking the tab. Clicking sooner read that
+    table instead (1,556 tenders, not about 9,800) and missed tenders.
+    """
     return _setup() + f"""
 await page.goto({json.dumps(LISTING_URL)}, {{waitUntil: 'domcontentloaded', timeout: 60000}});
 const count = {json.dumps(_VISIBLE_COUNT)};
@@ -165,35 +177,47 @@ await page.waitForFunction(`(${{count}})()`, null, {{timeout: 60000}});
 const listed = page.waitForResponse(/tenderClosingListIn14days/, {{timeout: 120000}});
 await page.getByText({json.dumps(_TAB)}, {{exact: true}}).click();
 await listed;
+await page.getByRole('heading', {{name: {json.dumps(_HEADING)}}}).waitFor({{timeout: 30000}});
 await page.waitForFunction(`(${{count}})()`, null, {{timeout: 60000}});
-const ending = '/' + {json.dumps(tender_id)};
-const cells = {json.dumps(_CELLS)};
-const changed = {json.dumps(_FIRST_CELL_CHANGED)};
-for (let turn = 0; turn < 1000; turn++) {{
-  const rows = await page.evaluate(`(${{cells}})()`);
-  const at = rows.findIndex(r => (r[4] || '').trim().endsWith(ending));
-  if (at >= 0) {{
-    await page.locator('table tbody tr >> visible=true').nth(at).locator('a.table-Link-Url').click();
-    await page.waitForURL(/#\\/captcha/, {{timeout: 30000}});
-    {_IMAGE}
+const at = await page.evaluate(async ({{ending, fromEnd}}) => {{
+  const shown = list => [...document.querySelectorAll(list)].find(e => e.offsetParent !== null);
+  const rows = () => [...shown('table').querySelectorAll('tbody tr')];
+  const first = () => rows()[0]?.children[0]?.innerText.trim();
+  const turn = async button => {{
+    const before = first();
+    button.click();
+    for (let waited = 0; first() === before; waited += 5) {{
+      if (waited > 15000) throw new Error('the list stopped turning');
+      await new Promise(done => setTimeout(done, 5));
+    }}
+  }};
+  const nav = shown('nav.v-pagination');
+  if (fromEnd) await turn([...nav.querySelectorAll('li.v-pagination__item button')].pop());
+  const step = nav.querySelector(fromEnd ? 'li.v-pagination__prev button' : 'li.v-pagination__next button');
+  for (let pages = 0; pages < 2000; pages++) {{
+    const found = rows().findIndex(r => (r.children[4]?.innerText || '').trim().endsWith(ending));
+    if (found >= 0) return found;
+    if (step.disabled) return -1;
+    await turn(step);
   }}
-  const next = page.locator({json.dumps(_NEXT)});
-  if (!rows.length || await next.isDisabled()) return null;
-  await next.click();
-  await page.waitForFunction(`(${{changed}})(${{JSON.stringify(rows[0][0])}})`, null, {{timeout: 30000}});
-}}
-return null;
+  return -1;
+}}, {{ending: '/' + {json.dumps(tender_id)}, fromEnd: {json.dumps(from_end)}}});
+if (at < 0) return null;
+await page.locator('table tbody tr >> visible=true').nth(at).locator('a.table-Link-Url').click();
+await page.waitForURL(/#\\/captcha/, {{timeout: 30000}});
+{_IMAGE}
 """
 
 
-def start(tender_id: str) -> Captcha:
+def start(tender_id: str, deadline: date | None = None) -> Captcha:
     with _client() as c:
         resp = c.post("/browsers", json={"headless": True, "timeout_seconds": BROWSER_SECONDS})
         if resp.status_code >= 400:
             raise RelayError(f"Kernel would not start a browser: HTTP {resp.status_code}")
         session = resp.json()["session_id"]
         try:
-            image = _run(c, session, _find_code(tender_id), FIND_SECONDS)
+            from_end = deadline is not None and deadline > date.today() + timedelta(days=LIST_DAYS // 2)
+            image = _run(c, session, _find_code(tender_id, from_end), FIND_SECONDS)
         except RelayError:
             _delete(c, session)
             raise
@@ -229,7 +253,10 @@ if (!page.url().includes('tendersfullview')) {{
   const again = await (async () => {{ {_IMAGE} }})();
   return {{image: again}};
 }}
-await page.locator('.card-Header').first().waitFor({{timeout: 15000}});
+// The page appears before its data: the blocks are drawn first and filled in after.
+await page.waitForFunction(() => [...document.querySelectorAll('.Details')]
+  .some(e => e.innerText.trim()), null, {{timeout: 30000}});
+await page.waitForTimeout(500);
 const details = await (async () => {{ {_READ_DETAILS} }})();
 return {{details}};
 """)
