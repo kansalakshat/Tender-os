@@ -787,7 +787,7 @@ def tender_detail(
         checklist=checklist(t, company), summary=_summary(t, sectors, places, label),
         sectors=sectors, facts=facts, days_label=label,
         document={"url": found[0], "source": found[1]} if found else None,
-        ref=t.external_ref or "not recorded",
+        ref=_cppp_id(raw, t.external_ref) or "not recorded",
         source_name=src.name if src else "the source portal",
         licence=src.license if src else "see /sources",
         search_url=_portal_url(src),
@@ -828,13 +828,14 @@ def _cppp_tender(db: Session, tender_id: int) -> Tender:
 
 
 def _cppp_captcha_page(t: Tender, cap: cppp_relay.Captcha) -> str:
-    return render("cppp_captcha.html", title="Open on CPPP", t=t, captcha=cap)
+    return render("cppp_captcha.html", title="Open on CPPP", t=t, captcha=cap,
+                  ref=_cppp_id(t.raw_payload or {}, t.external_ref))
 
 
 def _cppp_failed(t: Tender, problem: str = "") -> HTMLResponse:
     return HTMLResponse(
         render("cppp_failed.html", title="CPPP unavailable", t=t, problem=problem,
-               search_url=CPPP_SEARCH),
+               search_url=CPPP_SEARCH, ref=_cppp_id(t.raw_payload or {}, t.external_ref)),
         status_code=404 if problem else 502,
     )
 

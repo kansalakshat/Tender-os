@@ -327,6 +327,7 @@ def test_cppp_lookup_tries_limited_tenders_once_then_says_it_is_not_listed(
     r = client.post(f"/t/{tid}/cppp", data={"state": state, "captcha": "RIGHT2"})
     assert types == ["1", "2"]
     assert r.status_code == 404 and "does not list this tender" in r.text
+    assert f"<span class=mono>{_TID}</span>" in r.text    # CPPP's id, not our key
 
 
 def test_shared_serves_stale_while_one_thread_refreshes(monkeypatch):
