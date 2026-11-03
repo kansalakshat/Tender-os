@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{#- What CPPP shows for one tender after the visitor typed its CAPTCHA. Values come
+    from CPPP: autoescaped, and only http(s) addresses become links. #}
+{% block content %}<div class=backlink><a href="/t/{{ t.id }}">{{ icon('caret-left') }}Back to this tender</a></div>
+<h1>{{ t.title }}</h1>
+<p class=lede>Full details from CPPP for tender <span class=mono>{{ ref }}</span>.</p>
+{%- for section in sections %}
+<h2>{{ section.title }}</h2>
+<dl>
+{%- for f in section.fields %}
+ <dt><b>{{ f.label }}</b></dt>
+ <dd>{% if f.value[:7] == 'http://' or f.value[:8] == 'https://' %}<a href="{{ f.value }}" target=_blank rel="noopener noreferrer">Open this document{{ icon('arrow-up-right') }}</a>{% else %}{{ f.value or 'Not given' }}{% endif %}</dd>
+{%- endfor %}
+</dl>
+{%- endfor %}
+<p class=hint>Fee and EMD amounts may be in another currency. Please check them in the tender document.</p>
+{% endblock %}

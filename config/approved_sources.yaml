@@ -38,8 +38,9 @@ sources:
       days" tab of /cppp/#/tendersClosingToday, in a browser, with no CAPTCHA. The
       Active Tenders and Tender Search pages ARE CAPTCHA-gated and are therefore
       permanently off-limits (rule #3) for crawling. When a visitor asks for one
-      tender, app/cppp_relay.py shows them the older search form's CAPTCHA to type
-      themselves and brings back that tender's page; it never solves one. Terms of Use contain no automated-access
+      tender on the 14-day list, app/cppp_relay.py clicks it in a Kernel cloud browser,
+      shows them CPPP's CAPTCHA to type themselves and shows that tender's details;
+      it never solves one. Terms of Use contain no automated-access
       rule; the Copyright Policy asks for permission from the owning department
       to reproduce material, and for the source to be acknowledged.
       Tenders here are mandatory public disclosures under GFR 2017.

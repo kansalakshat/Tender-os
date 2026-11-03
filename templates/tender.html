@@ -33,7 +33,7 @@
   <span class=sep aria-hidden=true>&middot;</span>{{ icon('calendar') }}Closes: <b>{{ fx.get('Bids close') }}</b>{% if days_label %} <span class=chipish>{{ days_label }}</span>{% endif %}</p>
  <div class=tactions>
   {%- if document %}<a class=btn href="{{ document.url }}" target=_blank rel="noopener noreferrer" download>{{ icon('download') }}Download</a>{% endif %}
-  {%- if cppp_box %}<a class="btn ghost" href="#cpppForm">{{ icon('arrow-up-right') }}View on portal</a>
+  {%- if cppp_box %}<a class="btn ghost" href="#cpppBox">{{ icon('arrow-up-right') }}View on portal</a>
   {%- else %}<a class="btn ghost" href="{{ search_url }}" target=_blank rel="noopener noreferrer">{{ icon('arrow-up-right') }}View on portal</a>{% endif %}
   <a class="btn ghost wa" href="{{ share_url }}" target=_blank rel="noopener noreferrer">{{ icon('share') }}Share on WhatsApp</a>
   <button class=ghost type=button data-action=copy data-copy="{{ page_url }}">Copy link</button>
@@ -140,28 +140,27 @@
 {% endif %}
 </div>{% endif %}
 {% if cppp_box %}
-{#- CPPP rows with a stored tender link: the CAPTCHA sits right here, so opening
-    the full notice is one click. The image is fetched by script after the page
-    loads, so crawlers that do not run script never cost CPPP a request. #}
-<div class=sourcebox>
- <h2>Open the full notice on CPPP</h2>
- <p>CPPP puts a CAPTCHA in front of every tender. Type the characters in the
- image and CPPP's full page for tender <span class=mono>{{ ref }}</span> opens in a
- new tab.</p>
- <form method=post action="/t/{{ t.id }}/cppp" target=_blank id=cpppForm
-       data-captcha="/t/{{ t.id }}/cppp/captcha">
+{#- Starts a cloud browser only when the visitor clicks, so looking at a tender costs
+    nothing. The details then open here. See app/cppp_relay.py. #}
+<div class=sourcebox id=cpppBox>
+ <h2>Open the full tender details</h2>
+ <p>Type the characters from CPPP's image once, and the full notice opens here on
+ our site. There is no tender ID to copy.</p>
+ <p><button class="btn primary" type=button id=cpppStart
+    data-captcha="/t/{{ t.id }}/cppp/captcha">Open tender details</button></p>
+ <p id=cpppMsg class=hint role=status hidden></p>
+ <form method=post action="/t/{{ t.id }}/cppp" id=cpppForm hidden>
   <input type=hidden name=state id=cpppState>
-  <p><span id=cpppSk class=skimg aria-hidden=true></span>
-     <img id=cpppImg alt="CAPTCHA image from CPPP" width=216 height=60 hidden>
-     <span id=cpppMsg class=hint role=status>Loading the CAPTCHA from CPPP&hellip;</span></p>
-  <div class=f><label for=captcha>CAPTCHA</label>
+  <p><img id=cpppImg alt="CAPTCHA image from CPPP"></p>
+  <div class=f><label for=captcha>Type the characters in the image</label>
    <input id=captcha name=captcha required maxlength=20 autocomplete=off
           autocapitalize=off spellcheck=false></div>
-  <p><button class="btn primary" type=submit>Open CPPP{{ icon('arrow-up-right') }}</button>
+  <p><button class="btn primary" type=submit>Open tender details</button>
      <button class=ghost type=button id=cpppNew>New image</button></p>
  </form>
- <p class=hint>Licence: {{ licence }}. We store the notice, never the bid
- documents.</p>
+ <p class=hint>If this does not work, <a target=_blank rel="noopener noreferrer"
+    href="{{ search_url }}">open CPPP</a> and search for tender ID
+    <span class=mono>{{ ref }}</span>. Licence: {{ licence }}.</p>
 </div>
 {%- else %}
 <div class=sourcebox>

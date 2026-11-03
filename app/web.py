@@ -815,8 +815,7 @@ def _cppp_id(raw: dict, external_ref: str | None) -> str:
 
 
 def _cppp_can_open(t: Tender, raw: dict) -> bool:
-    return (cppp_relay.is_searchable(_cppp_id(raw, t.external_ref))
-            and cppp_relay.holds_buyer(t.organization))
+    return cppp_relay.can_open(_cppp_id(raw, t.external_ref), t.deadline)
 
 
 def _cppp_tender(db: Session, tender_id: int) -> Tender:
@@ -829,11 +828,6 @@ def _cppp_tender(db: Session, tender_id: int) -> Tender:
     return t
 
 
-def _cppp_captcha_page(t: Tender, cap: cppp_relay.Captcha) -> str:
-    return render("cppp_captcha.html", title="Open on CPPP", t=t, captcha=cap,
-                  ref=_cppp_id(t.raw_payload or {}, t.external_ref))
-
-
 def _cppp_failed(t: Tender, problem: str = "") -> HTMLResponse:
     return HTMLResponse(
         render("cppp_failed.html", title="CPPP unavailable", t=t, problem=problem,
@@ -842,41 +836,37 @@ def _cppp_failed(t: Tender, problem: str = "") -> HTMLResponse:
     )
 
 
-# CPPP's HTML is served from our origin, so it must not run script or reach our
-# cookies: `sandbox` gives it an opaque origin, script-src 'none' stops its JS.
-CPPP_PAGE_CSP = ("sandbox allow-popups allow-popups-to-escape-sandbox; "
-                 "default-src https://eprocure.gov.in data:; "
-                 "style-src https://eprocure.gov.in 'unsafe-inline'; "
-                 "script-src 'none'; form-action https://eprocure.gov.in")
-
-
 def _cppp_limit(request: Request, db: Session) -> None:
-    # Every request here costs CPPP a hit from our server's address.
+    # Every request here costs CPPP a hit and Kernel's credit some browser time.
     security.enforce(db, f"cppp:{security.client_ip(request)}", 30, 3600,
                      "Too many CPPP lookups. Try again in an hour.")
 
 
-@router.get("/t/{tender_id}/cppp", response_class=HTMLResponse)
-def cppp_captcha(request: Request, tender_id: int, db: Session = Depends(get_db)):
-    t = _cppp_tender(db, tender_id)
-    _cppp_limit(request, db)
-    try:
-        return _cppp_captcha_page(t, cppp_relay.start())
-    except (httpx.HTTPError, cppp_relay.RelayError, RuntimeError):
-        log.exception("CPPP lookup failed to start")
-        return _cppp_failed(t)
+# Kernel's free $5 a month is about 83 browser hours. 60 a day at 90 active seconds
+# each is 45 hours, so a busy day or a bot cannot spend the month's credit.
+CPPP_LOOKUPS_PER_DAY = 60
 
 
-@router.get("/t/{tender_id}/cppp/captcha")
-def cppp_captcha_json(request: Request, tender_id: int, db: Session = Depends(get_db)):
-    """The CAPTCHA for the box on the tender page, loaded by its script."""
+@router.post("/t/{tender_id}/cppp/captcha")
+def cppp_captcha(request: Request, tender_id: int, body: dict = Body(default={}),
+                 db: Session = Depends(get_db)):
+    """Starts only on the visitor's click, because each start runs a cloud browser."""
     t = _cppp_tender(db, tender_id)
     _cppp_limit(request, db)
+    ref = _cppp_id(t.raw_payload or {}, t.external_ref)
+    state = str(body.get("state") or "")
+    if not state:
+        security.enforce(db, "cppp:all", CPPP_LOOKUPS_PER_DAY, 86400,
+                         "Tender lookups are busy today. Please use the CPPP link below.")
     try:
-        cap = cppp_relay.start()
+        cap = cppp_relay.new_image(state, ref) if state else cppp_relay.start(ref)
+    except cppp_relay.Expired:
+        return JSONResponse({"error": "This took too long. Please reload the page and try again."}, 410)
+    except cppp_relay.NotListed:
+        return JSONResponse({"error": "CPPP's list does not show this tender now."}, 404)
     except (httpx.HTTPError, cppp_relay.RelayError, RuntimeError):
         log.exception("CPPP lookup failed to start")
-        return JSONResponse({"error": "CPPP is not answering. Try New image."}, 502)
+        return JSONResponse({"error": "CPPP is not answering. Please use the link below."}, 502)
     return {"state": cap.state, "image": cap.image}
 
 
@@ -887,18 +877,17 @@ async def cppp_open(request: Request, tender_id: int, db: Session = Depends(get_
     form = parse_qs((await request.body()).decode(errors="replace"))
     state = form.get("state", [""])[0]
     captcha = form.get("captcha", [""])[0].strip()[:20]
+    ref = _cppp_id(t.raw_payload or {}, t.external_ref)
     try:
-        got = await run_in_threadpool(
-            cppp_relay.submit, state, _cppp_id(t.raw_payload or {}, t.external_ref), captcha)
-    except cppp_relay.LinkRejected:
-        return _cppp_failed(t, "CPPP's search does not list this tender")
+        got = await run_in_threadpool(cppp_relay.submit, state, ref, captcha)
+    except cppp_relay.Expired:
+        return _cppp_failed(t, "That took too long and CPPP's page has closed")
     except (httpx.HTTPError, cppp_relay.RelayError, RuntimeError):
         log.exception("CPPP lookup failed")
         return _cppp_failed(t)
     if isinstance(got, cppp_relay.Captcha):
-        return _cppp_captcha_page(t, got)
-    return HTMLResponse(cppp_relay.with_base(got.html, str(escape(got.url))),
-                        headers={"Content-Security-Policy": CPPP_PAGE_CSP})
+        return render("cppp_captcha.html", title="Open tender details", t=t, captcha=got)
+    return render("cppp_tender.html", title=t.title, t=t, sections=got.sections, ref=ref)
 
 
 # ---- corpus browser --------------------------------------------------------

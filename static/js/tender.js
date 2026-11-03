@@ -15,31 +15,39 @@ fetch(document.getElementById('moreSlot').dataset.src, {credentials: 'same-origi
     document.getElementById('moreSlot').innerHTML = note;
   });
 
-// The CPPP CAPTCHA box, present only on CPPP tenders whose id can be searched.
+// The CPPP box. Each start runs a cloud browser, so only a click starts one.
 (function () {
+  var start = document.getElementById('cpppStart');
+  if (!start) return;
   var form = document.getElementById('cpppForm');
-  if (!form) return;
-  var img = document.getElementById('cpppImg');
   var msg = document.getElementById('cpppMsg');
-  function load() {
-    var sk = document.getElementById('cpppSk');
-    img.hidden = true; sk.hidden = false; msg.hidden = false;
-    msg.textContent = 'Loading the CAPTCHA from CPPP, this takes a few seconds...';
-    fetch(form.dataset.captcha, {credentials: 'same-origin'})
+  var state = document.getElementById('cpppState');
+  function say(text) { msg.textContent = text; msg.hidden = !text; }
+  function load(button, waiting) {
+    button.disabled = true;
+    say(waiting);
+    fetch(start.dataset.captcha, {
+      method: 'POST', credentials: 'same-origin',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(state.value ? {state: state.value} : {})
+    })
       .then(function (r) { return r.json(); })
       .then(function (d) {
-        if (d.error) { sk.hidden = true; msg.textContent = d.error; return; }
-        document.getElementById('cpppState').value = d.state;
-        img.src = d.image; img.hidden = false; sk.hidden = true; msg.hidden = true;
+        button.disabled = false;
+        if (!d.image) { say(d.error || d.detail || 'CPPP is not answering. Please use the link below.'); return; }
+        state.value = d.state;
+        document.getElementById('cpppImg').src = d.image;
+        start.hidden = true; form.hidden = false; say('');
+        form.captcha.value = ''; form.captcha.focus();
       })
       .catch(function () {
-        sk.hidden = true; msg.textContent = 'CPPP is not answering. Try New image.';
+        button.disabled = false;
+        say('CPPP is not answering. Please use the link below.');
       });
   }
-  document.getElementById('cpppNew').addEventListener('click', load);
-  // A CAPTCHA works once: after this one goes to CPPP, fetch the next.
-  form.addEventListener('submit', function () {
-    setTimeout(function () { form.captcha.value = ''; load(); }, 300);
+  start.addEventListener('click', function () {
+    load(start, 'Finding this tender on CPPP. This can take up to a minute. Please keep this page open.');
   });
-  load();
+  var again = document.getElementById('cpppNew');
+  again.addEventListener('click', function () { load(again, 'Getting a new image...'); });
 })();
