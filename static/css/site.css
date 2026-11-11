@@ -12,11 +12,11 @@
 /* Contrast on white: ink 15.6:1, muted 9.1:1, faint 5.9:1, accent 6.6:1. */
 :root{
  color-scheme:light;
- --paper:#F6F7F9; --panel:#FFFFFF; --bone:#EEF1F5; --stone:#D5DBE3; --stone-2:#B8C1CD;
+ --paper:#EEF4FB; --panel:#FFFFFF; --bone:#E2EBF6; --stone:#D5DBE3; --stone-2:#B8C1CD;
  --ink:#162033; --muted:#3F4A5C; --faint:#5B6678;
  --accent:#1D5BA8; --accent-h:#164A8A; --accent-soft:#E8F0FA; --on-accent:#FFFFFF;
  --ok:#1B7344; --ok-soft:#E7F4EC; --danger:#B42318; --danger-soft:#FDECEA; --warn-soft:#FFF5DE;
- --hair:#E4E8EE;
+ --hair:#DCE6F2;
  --r:8px; --r-lg:12px; --r-xl:16px; --r-sm:6px;
  --shadow:0 1px 2px rgba(22,32,51,.06),0 2px 8px rgba(22,32,51,.05);
  --sans:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
