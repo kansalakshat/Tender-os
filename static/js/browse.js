@@ -41,6 +41,7 @@ function go(e,off){
   // The search lives in the address bar, so a reload, a bookmark or a pasted
   // link all come back to the same page of the same results.
   history.replaceState(null, '', '?'+p);
+  try { sessionStorage.setItem('browseQuery', p.toString()); } catch (_) {}
   // The previous results stay visible (dimmed) until the new ones arrive.
   document.getElementById('count').textContent = 'Loading tenders…';
   document.getElementById('rows').setAttribute('aria-busy', 'true');

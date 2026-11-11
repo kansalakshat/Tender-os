@@ -13,7 +13,7 @@
 {%- set org_labels = ['Buyer', 'Department', 'Organisation chain', 'Buying office', 'Ministry'] -%}
 {%- set date_labels = ['Published', 'Bids close', 'Bids opened', 'Bids opened at', 'Bidding window',
                        'Offer validity', 'First collected', 'Last updated'] -%}
-{% block content %}<div class=backlink><a href="/browse">{{ icon('caret-left') }}Back to all tenders</a></div>
+{% block content %}<div class=backlink><a id=backToBrowse href="/browse">{{ icon('caret-left') }}Back to all tenders</a></div>
 <nav class=ttabs aria-label="On this page"><a href="#overview">Overview</a><a href="#eligibility">Eligibility</a>
  <a href="#dates">Dates</a><a href="#documents">Documents</a></nav>
 
