@@ -1,5 +1,13 @@
 // The tender page (templates/tender.html). Server values arrive as data-*
 // attributes, so this file stays static and cacheable.
+(function () {
+  var back = document.getElementById('backToBrowse');
+  if (!back) return;
+  try {
+    var q = sessionStorage.getItem('browseQuery');
+    if (q) back.href = '/browse?' + q;
+  } catch (_) {}
+})();
 
 // The match score (up to ~3s when its cache is cold) and the related lists come
 // after the notice itself, so the details never wait on them.
