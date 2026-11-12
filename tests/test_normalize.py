@@ -162,3 +162,18 @@ def test_empty_required_fields_are_rejected():
         TenderRecord(external_ref="  ", title="t", source_url="https://x.gov.in")
     with pytest.raises(ValueError):
         TenderRecord(external_ref="a", title="", source_url="https://x.gov.in")
+
+
+def test_contact_details_inside_a_value_are_redacted():
+    """Rule #7. Keys like "contact" were already dropped; a free-text column
+    carrying an officer's number or address was stored as it came."""
+    from app.compliance import scrub_personal
+    out = scrub_personal({"remarks": "call 9876543210 or +91 98765-43210, ee@mppwd.gov.in",
+                          "nested": [{"note": "mail x@y.com"}],
+                          "closing": "2026-11-13 17:00", "ref": "GEM/2026/B/6789012",
+                          "value": "1,00,00,000"})
+    assert "9876543210" not in out["remarks"] and "98765-43210" not in out["remarks"]
+    assert "@" not in out["remarks"] and "@" not in out["nested"][0]["note"]
+    assert out["closing"] == "2026-11-13 17:00"
+    assert out["ref"] == "GEM/2026/B/6789012"
+    assert out["value"] == "1,00,00,000"
