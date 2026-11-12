@@ -170,6 +170,12 @@ def test_saving_while_signed_in_overwrites_instead_of_piling_up(client):
     assert client.get("/me").json()["company"]["name"] == "Acme Renamed"
 
 
+def test_me_returns_the_strict_answers_so_the_form_can_prefill_them(client):
+    client.post("/auth/signup", json=CREDS)
+    client.post("/companies", json={**PROFILE, "strict": ["sectors"]})
+    assert client.get("/me").json()["company"]["strict"] == ["sectors"]
+
+
 def test_another_account_cannot_read_my_profile(client):
     client.post("/auth/signup", json=CREDS)
     mine = client.post("/companies", json=PROFILE).json()["id"]

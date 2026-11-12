@@ -338,6 +338,7 @@ class CompanyOut(BaseModel):
     bid_capacity: Decimal | None
     emd_budget: Decimal | None
     registrations: list[str] | None
+    strict: list[str] | None
     created_at: datetime | None
     updated_at: datetime | None
 

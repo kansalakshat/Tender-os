@@ -21,7 +21,8 @@ function collectProfile(f){
     largest_similar_work:v('largest_similar_work')||null,
     bid_capacity:v('bid_capacity')||null,
     emd_budget:v('emd_budget')||null,
-    registrations:picked('registrations')
+    registrations:picked('registrations'),
+    strict:picked('strict')
   };
 }
 function saveProfile(body){

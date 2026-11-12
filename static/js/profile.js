@@ -14,7 +14,7 @@ fetch('/me').then(r=>r.json()).then(d=>{
   f.emd_budget.value=c.emd_budget??'';
   [['sectors',c.sectors],['states',c.states],['districts',c.districts],
    ['buyers',c.buyers],['exclude_buyers',c.exclude_buyers],
-   ['registrations',c.registrations]].forEach(([n,vals])=>{
+   ['registrations',c.registrations],['strict',c.strict]].forEach(([n,vals])=>{
     const want = new Set(vals||[]);
     f.querySelectorAll('input[name="'+n+'"]').forEach(b=>{ b.checked = want.has(b.value); });
   });
