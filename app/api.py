@@ -855,6 +855,6 @@ def cron_purge(request: Request):
             "deleted": 0,
             "detail": "RETENTION_DAYS is unset, so nothing is deleted",
         }
-    deleted = purge_expired(session_factory=SessionLocal)
+    deleted = purge_expired(DEFAULT_RETENTION_DAYS, session_factory=SessionLocal)
     log.info("cron/purge deleted %d tender(s)", deleted)
     return {"deleted": deleted, "retention_days": DEFAULT_RETENTION_DAYS}

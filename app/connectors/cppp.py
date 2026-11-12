@@ -52,7 +52,7 @@ _SHOWN_TABLE = "[...document.querySelectorAll('table')].find(t => t.offsetParent
 _VISIBLE_COUNT = f"""() => {{
   const shown = [...document.querySelectorAll('.total-count')]
     .find(e => e.offsetParent !== null);
-  const n = shown ? parseInt(shown.textContent.replace(/\D/g, ''), 10) : 0;
+  const n = shown ? parseInt(shown.textContent.replace(/\\D/g, ''), 10) : 0;
   return n > 0 && {_SHOWN_TABLE}?.querySelector('tbody tr td') ? n : 0;
 }}"""
 _CELLS = f"""() => [...{_SHOWN_TABLE}.querySelectorAll('tbody tr')]
