@@ -79,12 +79,14 @@ for(const a of document.querySelectorAll('.top nav a')){
 }
 
 function resend(){
-  fetch('/auth/resend-verification',{method:'POST'}).then(r=>r.json()).then(d=>{
+  fetch('/auth/resend-verification',{method:'POST'}).then(r=>r.json().then(d=>{
+    if(!r.ok) return flash(esc(d.detail||'Could not send the link. Please try again.'));
     flash(d.delivered
       ? 'Sent. Check your inbox.'
+      : d.status==='already verified' ? 'This address is already confirmed.'
       : 'This server has no mail credentials, so the link was written to '
         +'<code>outbox.log</code> in the project folder.', 'good');
-  });
+  }));
 }
 
 // Messages carried back on a redirect (verification click, OAuth failure).
