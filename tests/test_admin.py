@@ -281,6 +281,19 @@ def test_documents_only_is_a_job_of_its_own(client, monkeypatch):
     assert got["name"] == ENRICH_JOB and got["then_enrich"] == 100
 
 
+def test_workers_read_exactly_the_documents_asked_for(monkeypatch):
+    """Each worker used to take max(1, limit // workers): 2 documents on 4
+    workers read 4, 0 read 4, and 2000 on 3 workers read 1998."""
+    from app import adminjobs, enrich
+    asked = []
+    monkeypatch.setattr(enrich, "enrich_pending",
+                        lambda limit, shard: asked.append(limit) or 0)
+    for workers, limit in ((4, 2), (4, 0), (3, 2000)):
+        asked.clear()
+        adminjobs._enrich(adminjobs.Job("x"), workers, limit)
+        assert sum(asked) == limit and len(asked) == workers
+
+
 def test_workers_are_capped(monkeypatch):
     """The cap is politeness to a government host, not a technical ceiling, so
     it must not be settable from a form field."""

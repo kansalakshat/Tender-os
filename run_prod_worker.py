@@ -137,7 +137,7 @@ def run_once(since_hours: float, progress_dir: str | None = None) -> None:
 
     with ThreadPoolExecutor(max_workers=workers) as pool:
         counts = list(pool.map(
-            lambda i: enrich_pending(limit=max(1, limit // workers),
+            lambda i: enrich_pending(limit=limit // workers + (i < limit % workers),
                                      shard=(i, workers), skip_sources=no_docs or None),
             range(workers),
         ))
