@@ -34,6 +34,24 @@
 </div></section>{% endblock %}
 
 {% block body %}
+{#- Right under the figures: India by state. A state on the map and its name in
+    the list beside it are both links to that state's open tenders, and
+    pointing at one lights up the other (static/js/indiamap.js). #}
+<section class=sec id=states><div class=wrap>
+<div class="secHead reveal">
+ <h2>Find tenders by state</h2>
+ <p class=kicker>Every state and union territory. Click one to see its tenders</p>
+</div>
+<div class=mapwrap>
+ <figure class=mapbox>
+  {% include "_india_map.html" %}
+  <figcaption class=mapcredit>Boundaries: <a href="https://github.com/datameet/maps" target=_blank rel="noopener noreferrer">DataMeet India</a>
+   (<a href="https://creativecommons.org/licenses/by/4.0/" target=_blank rel="noopener noreferrer">CC BY 4.0</a>)</figcaption>
+ </figure>
+ <ul class="stiles mapstates">{% for s in states|sort %}<li><a href="/browse?state={{ s|urlquote }}" data-state="{{ s }}">{{ icon('map-pin') }}<span>{{ s }}</span></a></li>{% endfor %}</ul>
+</div>
+</div></section>
+<script defer src="{{ asset('js/indiamap.js') }}"></script>
 <section class=sec id=how><div class=wrap>
 <div class="secHead reveal">
  <h2>How Tenderleo works</h2>
@@ -98,14 +116,6 @@ endless PDFs, and figuring out whether you qualify. Tenderleo simplifies the ent
 <ul class=ltrack>{% for dup in (false, true) %}{% for name, n in buyers %}{{ logo_chip(name, n, dup) }}{% endfor %}{% endfor %}</ul>
 </div>
 <p class=morelink><a class="btn ghost" href="/buyers">View all {{ n_buyers|num }} companies{{ icon('arrow-right') }}</a></p>
-</div></section>
-
-<section class=sec id=states><div class=wrap>
-<div class="secHead reveal">
- <h2>Find tenders by state</h2>
- <p class=kicker>Every state and union territory</p>
-</div>
-<ul class=stiles>{% for s in states %}<li><a href="/browse?state={{ s|urlquote }}">{{ icon('map-pin') }}<span>{{ s }}</span></a></li>{% endfor %}</ul>
 </div></section>
 
 <section class=sec id=compare><div class=wrap>
