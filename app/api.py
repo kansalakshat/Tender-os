@@ -7,6 +7,7 @@ import re
 import threading
 import time
 from contextlib import asynccontextmanager
+from urllib.parse import urlencode
 from datetime import date, timedelta
 from decimal import Decimal
 from pathlib import Path
@@ -462,23 +463,28 @@ def resend_verification(request: Request, db: Session = Depends(get_db),
 
 
 @app.get("/auth/verify")
-def verify_email(request: Request, token: str, db: Session = Depends(get_db)):
-    """Clicked from the email. Confirms the address and signs the person in, so a
-    link opened on a phone does not dead-end on a login form.
+def verify_email(request: Request, token: str, db: Session = Depends(get_db),
+                 me: User | None = Depends(current_user)):
+    """Clicked from the email. Confirms the address only for someone signed in to
+    that account; anyone else is sent to sign in first and comes back here.
 
-    Signs in on the first click only. The link sits in a mailbox (or outbox.log)
-    for 24 hours; if every click signed in, anyone who ever saw it -- a forwarded
-    mail, a shared screen -- would hold a day-long login to the account.
+    Signing up with another person's address costs nothing. If their click
+    confirmed it, the squatter would hold a verified account -- an admin one, for
+    an address on ADMIN_EMAILS -- whose password they chose. Signing in proves the
+    clicker knows the password. It also means a mail scanner's prefetch changes
+    nothing, and the link is never a login on its own.
     """
     user = user_from_verification_token(db, token)
     if user is None:
         return RedirectResponse("/?verify=invalid", status_code=303)
-    response = RedirectResponse("/?verify=ok", status_code=303)
+    if me is None or me.id != user.id:
+        back = f"{request.url.path}?{request.url.query}"
+        return RedirectResponse("/login?" + urlencode({"verify": "signin", "next": back}),
+                                status_code=303)
     if not user.email_verified:
         user.email_verified = True
         db.commit()
-        set_session_cookie(response, user, request)
-    return response
+    return RedirectResponse("/?verify=ok", status_code=303)
 
 
 # ---- Google sign-in ----

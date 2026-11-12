@@ -76,22 +76,34 @@ def test_signup_is_unverified_and_writes_a_link_to_the_outbox(client, session_fa
     assert "/auth/verify?token=" in mailer.OUTBOX.read_text(encoding="utf-8")
 
 
-def test_clicking_the_link_verifies_and_signs_in(client, session_factory):
+def test_clicking_the_link_while_signed_in_verifies(client, session_factory):
+    client.post("/auth/signup", json=CREDS)
+    token = make_verification_token(_user(session_factory))
+    r = client.get(f"/auth/verify?token={token}", follow_redirects=False)
+    assert r.status_code == 303
+    assert r.headers["location"] == "/?verify=ok"
+    assert client.get("/me").json()["user"]["email_verified"] is True
+
+
+def test_a_signed_out_click_signs_in_first_and_never_signs_anyone_in(client, session_factory):
+    """Someone could sign up with another person's address and wait for them to
+    click. If the click confirmed it, the squatter would hold a verified account
+    whose password they chose. Signing in first proves the clicker knows it."""
     client.post("/auth/signup", json=CREDS)
     token = make_verification_token(_user(session_factory))
     client.post("/auth/logout")
 
     r = client.get(f"/auth/verify?token={token}", follow_redirects=False)
-    assert r.status_code == 303
-    assert r.headers["location"] == "/?verify=ok"
-    # Signed in by the click, so a link opened on a phone does not dead-end.
-    me = client.get("/me").json()
-    assert me["user"]["email_verified"] is True
-
-    # Once only: a second click is not a standing 24-hour login.
-    client.post("/auth/logout")
-    client.get(f"/auth/verify?token={token}", follow_redirects=False)
+    assert r.headers["location"].startswith("/login?")
+    from urllib.parse import parse_qs, urlparse
+    back = parse_qs(urlparse(r.headers["location"]).query)["next"]
+    assert back == [f"/auth/verify?token={token}"]           # comes back here after
     assert client.get("/me").json()["user"] is None
+    assert _user(session_factory).email_verified is False
+
+    client.post("/auth/login", json=CREDS)
+    client.get(f"/auth/verify?token={token}", follow_redirects=False)
+    assert client.get("/me").json()["user"]["email_verified"] is True
 
 
 def test_forged_or_expired_link_is_refused(client, session_factory):

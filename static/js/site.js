@@ -92,6 +92,7 @@ function resend(){
 // Messages carried back on a redirect (verification click, OAuth failure).
 const _q = new URLSearchParams(location.search);
 if(_q.get('verify')==='ok') flash('Email address confirmed. Thanks.', 'good');
+if(_q.get('verify')==='signin') flash('Sign in to confirm your email address.');
 if(_q.get('verify')==='invalid')
   flash('That confirmation link is invalid or has expired. '
        +'<a href="#" data-action="resend">Send a new one</a>.');
