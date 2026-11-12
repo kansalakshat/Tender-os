@@ -71,6 +71,7 @@ def test_filters(client):
     assert total(client, department="civil") == 1          # case-insensitive
     assert total(client, organization="cpwd") == 1
     assert total(client, q="drain") == 1
+    assert total(client, q="%") == total(client, q="_") == 0   # literal, not wildcards
     assert total(client, min_value=1_000_000) == 1
     assert total(client, max_value=1_000_000) == 1
     midpoint = (date.today() + timedelta(days=10)).isoformat()

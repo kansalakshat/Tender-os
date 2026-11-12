@@ -3,6 +3,7 @@ from __future__ import annotations
 import hmac
 import logging
 import os
+import re
 import threading
 import time
 from contextlib import asynccontextmanager
@@ -239,6 +240,11 @@ def list_sources(db: Session = Depends(get_db)):
     return list(db.execute(select(Source).order_by(Source.name)).scalars())
 
 
+def _contains(text: str) -> str:
+    """A LIKE pattern for `text` as typed: % and _ in a search are characters."""
+    return "%" + re.sub(r"([\\%_])", r"\\\1", text) + "%"
+
+
 @app.get("/tenders", response_model=Page)
 def list_tenders(
     db: Session = Depends(get_db),
@@ -269,15 +275,15 @@ def list_tenders(
 ):
     filters = []
     if q:
-        filters.append(Tender.title.ilike(f"%{q}%"))
+        filters.append(Tender.title.ilike(_contains(q), escape="\\"))
     if category:
         filters.append(Tender.category == category)
     if status:
         filters.append(Tender.status == status)
     if department:
-        filters.append(Tender.department.ilike(f"%{department}%"))
+        filters.append(Tender.department.ilike(_contains(department), escape="\\"))
     if organization:
-        filters.append(Tender.organization.ilike(f"%{organization}%"))
+        filters.append(Tender.organization.ilike(_contains(organization), escape="\\"))
     if source_id is not None:
         filters.append(Tender.source_id == source_id)
     # Exact names only: each one picks a regex out of a fixed table, and an
