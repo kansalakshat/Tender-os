@@ -22,7 +22,7 @@ from sqlalchemy.orm import Session
 
 from . import activity
 from .db import SessionLocal
-from .models import Tender, utcnow
+from .models import Tender, today_ist, utcnow
 
 log = logging.getLogger(__name__)
 
@@ -279,7 +279,7 @@ def link_duplicates(db: Session | None = None, window_days: int = 120,
     linked = 0
     try:
         _INDEX_CACHE.clear()
-        cutoff = date.today() - timedelta(days=window_days)
+        cutoff = today_ist() - timedelta(days=window_days)
         rows, stamp, fresh, built = _load(db, cutoff, cache_path)
         # The rows are plain copies, so the read's transaction can end here.
         # Comparing takes minutes to half an hour; held open that long, Neon

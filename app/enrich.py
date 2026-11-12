@@ -16,7 +16,6 @@ import logging
 import os
 import threading
 import time
-from datetime import date
 from concurrent.futures import ProcessPoolExecutor
 from concurrent.futures.process import BrokenProcessPool
 from decimal import Decimal
@@ -30,7 +29,7 @@ from . import activity
 from .bidpdf import parse_bid_pdf
 from .compliance import assert_not_blocked, scrub_personal, user_agent
 from .db import SessionLocal
-from .models import Source, Tender, utcnow
+from .models import Source, Tender, today_ist, utcnow
 
 log = logging.getLogger(__name__)
 
@@ -100,7 +99,7 @@ def needs_enrichment(limit: int = 200, shard: tuple[int, int] | None = None,
             .where(Tender.duplicate_of.is_(None))
             # A closed tender is purged, not bid on. Ordered by deadline, the
             # expired ones used to come first and eat the whole pass.
-            .where(or_(Tender.deadline.is_(None), Tender.deadline >= date.today()))
+            .where(or_(Tender.deadline.is_(None), Tender.deadline >= today_ist()))
             .where(
                 or_(
                     Tender.raw_payload.is_(None),

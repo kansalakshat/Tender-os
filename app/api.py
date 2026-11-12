@@ -40,7 +40,7 @@ from .facts import sources
 from .geo import PORTAL_STATE, city_clause, sector_clause, state_clause
 from .matching import ALL_DISTRICTS, SECTOR_LABELS, STATES, find_matches, warm_candidates
 from .models import Company, ConnectorRun, Source, Tender, User
-from .models import utcnow
+from .models import today_ist, utcnow
 from .retention import DEFAULT_RETENTION_DAYS, purge_expired
 from .schemas import (
     CompanyIn,
@@ -317,7 +317,7 @@ def list_tenders(
         # A null deadline is unknown, not expired -- the same rule retention.py
         # follows -- so those rows stay visible.
         filters.append(
-            or_(Tender.deadline.is_(None), Tender.deadline >= date.today())
+            or_(Tender.deadline.is_(None), Tender.deadline >= today_ist())
         )
 
     order = {

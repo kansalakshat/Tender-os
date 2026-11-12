@@ -12,7 +12,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import object_session
 
 from .db import shared
-from .models import Source, Tender
+from .models import Source, Tender, today_ist
 
 def money(value) -> str:
     """Rupees, in the units an Indian bidder actually reads them in."""
@@ -53,7 +53,7 @@ def source_name(t: Tender) -> str:
 def tender_facts(t: Tender, today: date | None = None) -> list[tuple[str, str, bool]]:
     """(label, value, mono). A fact with no value is dropped by whoever prints it,
     so an un-enriched tender simply shows fewer rows."""
-    today = today or date.today()
+    today = today or today_ist()
     # The connector keeps the whole scraped listing row, so the closing *time*,
     # the bid-opening date, the corrigendum flag and the buyer's own reference
     # number are already here -- they just never had a column of their own.

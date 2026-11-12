@@ -30,6 +30,7 @@ import httpx
 from .auth import sign, unsign
 from .compliance import user_agent
 from .connectors.cppp import _HEADING, _TAB, _VISIBLE_COUNT, LISTING_URL
+from .models import today_ist
 
 API = "https://api.onkernel.com"
 LIST_DAYS = 14
@@ -107,7 +108,7 @@ def enabled() -> bool:
 def can_open(tender_id: str | None, deadline: date | None, today: date | None = None) -> bool:
     """Only tenders on the 14-day list, with an id that tells one row from another:
     some buyers publish an id like "1"."""
-    today = today or date.today()
+    today = today or today_ist()
     return (enabled() and len((tender_id or "").strip()) >= 5 and deadline is not None
             and today <= deadline <= today + timedelta(days=LIST_DAYS))
 
@@ -216,7 +217,7 @@ def start(tender_id: str, deadline: date | None = None) -> Captcha:
             raise RelayError(f"Kernel would not start a browser: HTTP {resp.status_code}")
         session = resp.json()["session_id"]
         try:
-            from_end = deadline is not None and deadline > date.today() + timedelta(days=LIST_DAYS // 2)
+            from_end = deadline is not None and deadline > today_ist() + timedelta(days=LIST_DAYS // 2)
             image = _run(c, session, _find_code(tender_id, from_end), FIND_SECONDS)
         except RelayError:
             _delete(c, session)
