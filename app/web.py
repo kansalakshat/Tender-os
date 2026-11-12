@@ -985,9 +985,14 @@ def buyer_page(name: str = "", sort: str = "", page: int = 1,
         ranked = sorted(score_of, key=lambda tid: -score_of[tid][0])
         order = ranked + [i for i in db.scalars(by_deadline) if i not in score_of]
         total = len(order)
+    else:
+        order = None
+        total = db.scalar(select(func.count()).select_from(Tender).where(*live)) or 0
+    pages = max(1, -(-total // BUYER_PAGE))
+    page = min(page, pages)
+    if order is not None:
         page_ids = order[(page - 1) * BUYER_PAGE: page * BUYER_PAGE]
     else:
-        total = db.scalar(select(func.count()).select_from(Tender).where(*live)) or 0
         page_ids = list(db.scalars(by_deadline.offset((page - 1) * BUYER_PAGE).limit(BUYER_PAGE)))
 
     rows_by_id = hydrate(db, page_ids)
@@ -1004,7 +1009,7 @@ def buyer_page(name: str = "", sort: str = "", page: int = 1,
             gutter, rank = days_left(t.deadline, today)
             shown.append((t, gutter, rank, []))
     return render("buyer.html", title=name, buyer=name, sort=sort, page=page,
-                  pages=max(1, -(-total // BUYER_PAGE)), total=total,
+                  pages=pages, total=total,
                   matched=len(score_of) if profile is not None else None,
                   has_profile=profile is not None, shown=shown)
 

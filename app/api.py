@@ -271,7 +271,7 @@ def list_tenders(
         False, description="Include tenders whose deadline has already passed"
     ),
     limit: int = Query(50, ge=1, le=100),
-    offset: int = Query(0, ge=0),
+    offset: int = Query(0, ge=0, le=1_000_000),
     sort: str = Query("deadline", pattern="^(deadline|published_date|first_seen_at)$"),
 ):
     filters = []

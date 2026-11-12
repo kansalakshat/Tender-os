@@ -414,6 +414,9 @@ def test_buyer_strip_and_page_show_only_that_buyers_open_tenders(client, session
     assert "Old closed notice" not in html and "Navy radar" not in html  # exact, open only
     assert "sign in</a> to use it" in html     # relevance needs a profile
     assert client.get("/buyer").status_code == 404
+    # A page past the end shows the last page, not a database overflow.
+    far = client.get("/buyer", params={"name": "Indian Army", "page": 10**21})
+    assert far.status_code == 200 and "Boots sooner" in far.text
     assert '/buyer?name=' in client.get("/").text   # the strip links here
 
     # Signed in with a profile that wants pumps: relevance puts the later-closing
