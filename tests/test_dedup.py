@@ -118,6 +118,16 @@ def test_link_duplicates_points_the_newer_row_at_the_older(session_factory):
         assert db.get(Tender, older_id).duplicate_of is None, "the original stays canonical"
 
 
+def test_link_duplicates_tolerates_the_deadline_slack(session_factory):
+    with session_factory() as db:
+        sid_a, sid_b = two_sources(db)
+        make(db, sid_a, "1", "Repair of boundary wall at depot", deadline=date(2026, 9, 7))
+        make(db, sid_b, "2", "Repair of boundary wall at depot", deadline=date(2026, 9, 9))
+        db.commit()
+    with session_factory() as db:
+        assert link_duplicates(db) == 1
+
+
 def test_rows_from_the_same_source_are_never_linked(session_factory):
     """Same-source repeats are already prevented by the unique key."""
     with session_factory() as db:

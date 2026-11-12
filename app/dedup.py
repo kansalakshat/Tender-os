@@ -135,12 +135,16 @@ def _index(bucket: list[Tender]) -> dict[str, list[Tender]]:
 
 def _candidates(row: Tender, buckets: dict[object, list[Tender]],
                 undated: list[Tender]) -> list[Tender]:
-    """Rows worth comparing with `row`: same deadline bucket, sharing a word."""
-    same = buckets.get(row.deadline, [])
+    """Rows worth comparing with `row`: deadline within DEADLINE_SLACK, sharing a word."""
+    if row.deadline is None:
+        near = [undated]
+    else:
+        near = [buckets.get(row.deadline + timedelta(days=d), [])
+                for d in range(-DEADLINE_SLACK.days, DEADLINE_SLACK.days + 1)] + [undated]
     pool: list[Tender] = []
     seen: set[int] = set()
     words = _tokens(row)
-    for bucket in (same, undated) if row.deadline is not None else (same,):
+    for bucket in near:
         if not bucket:
             continue
         idx = _index(bucket)
