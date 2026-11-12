@@ -55,11 +55,23 @@ def test_money_columns_honour_their_stated_unit():
     assert parse_value("tender_value", "N/A") is None
     assert parse_value("tender_value", "Rs. 5,00,000") == Decimal("500000")
     assert parse_value("tender_value", "Rs.5,00,000/-") == Decimal("500000")
+    # The unit can sit beside the number instead of in the header.
+    assert parse_value("Tender Value", "25 Lakhs") == Decimal("2500000")
+    assert parse_value("Tender Value", "1.5 Cr") == Decimal("15000000")
+    assert parse_value("Estimated Value (Rs. in Cr)", "12.5") == Decimal("125000000")
+    assert parse_value("Replacement Cost", "500") == Decimal("500")   # "lac" inside a word
+    assert parse_value("Tender Value", "0.00") is None                 # not published
 
 
 def test_emd_is_not_read_as_the_tender_value():
     assert pick_field({"EMD Amount": "5000"}, "estimated_value") == (None, None)
     assert pick_field({"Bid Security Amount": "5000"}, "estimated_value") == (None, None)
+    assert pick_field({"Tender Fee Amount": "500"}, "estimated_value") == (None, None)
+    assert pick_field({"Cost of Tender Document": "1000"}, "estimated_value") == (None, None)
+
+
+def test_single_digit_day_with_a_time_keeps_its_date():
+    assert parse_date("1/2/2026 10:00").date() == date(2026, 2, 1)
 
 
 def test_maps_columns_by_alias(dgi):
