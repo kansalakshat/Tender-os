@@ -97,7 +97,7 @@ def _field(flat: str, label: str) -> str | None:
         prev = val
         val = _DOUBLED_LETTER.sub("", val).strip()
         val = _TRAILING_NOISE.sub("", val).strip()
-    if _CONTACT.search(val):
+    if _CONTACT.search(val) and not _MONEY.match(val):
         return None
     return val or None
 
