@@ -71,6 +71,17 @@ def test_the_operator_sees_the_dashboard(client):
     assert "Operations" in r.text
 
 
+def test_the_page_tells_its_script_whether_a_job_is_still_running(client, monkeypatch):
+    """admin.js follows only a running job. Following a finished one reloaded
+    the page every three seconds, for as long as the job stayed in memory."""
+    from app import adminjobs
+    job = adminjobs.Job("GeM")
+    job.status = "ok"
+    monkeypatch.setattr(adminjobs, "current", lambda: job)
+    c, ids = client
+    assert 'data-status="ok"' in _as(c, ids["boss@example.com"]).get("/admin").text
+
+
 def test_stats_and_fetch_are_closed_to_everyone_else(client):
     """The page being hidden is worth little if its endpoints are not."""
     c, ids = client
