@@ -1,4 +1,5 @@
 const LIMIT=25; let offset=0;
+let latest=0;   // only the newest request may paint: two quick clicks can answer out of order
 // esc() comes from the shared chrome in HEAD. Re-declaring it with const here
 // threw "Identifier 'esc' has already been declared", which killed this whole
 // script block -- the listing never rendered and the page sat on "loading...".
@@ -45,7 +46,9 @@ function go(e,off){
   // The previous results stay visible (dimmed) until the new ones arrive.
   document.getElementById('count').textContent = 'Loading tenders…';
   document.getElementById('rows').setAttribute('aria-busy', 'true');
+  const mine = ++latest;
   fetch('/tenders?'+p).then(r=>{ if(!r.ok) throw r; return r.json(); }).then(d=>{
+    if(mine !== latest) return;
     document.getElementById('count').textContent =
       d.total.toLocaleString() + ' tenders, showing ' +
       (d.total?offset+1:0) + ' to ' + Math.min(offset+LIMIT, d.total);
@@ -61,11 +64,13 @@ function go(e,off){
     document.getElementById('next').disabled = offset+LIMIT >= d.total;
     document.getElementById('err').textContent = '';
     rows.removeAttribute('aria-busy');
-  }).catch(()=>{
+  }).catch(e=>{
+    if(mine !== latest) return;
     document.getElementById('rows').removeAttribute('aria-busy');
     document.getElementById('count').textContent = '';
-    document.getElementById('err').textContent =
-      'Could not load tenders. The server did not answer, please try again.';
+    document.getElementById('err').textContent = e && e.status === 429
+      ? 'Too many searches in a minute. Wait a moment, then try again.'
+      : 'Could not load tenders. The server did not answer, please try again.';
   });
 }
 // Restore whatever the URL asks for before the first fetch, so a shared link
