@@ -57,6 +57,11 @@ def test_money_columns_honour_their_stated_unit():
     assert parse_value("tender_value", "Rs.5,00,000/-") == Decimal("500000")
 
 
+def test_emd_is_not_read_as_the_tender_value():
+    assert pick_field({"EMD Amount": "5000"}, "estimated_value") == (None, None)
+    assert pick_field({"Bid Security Amount": "5000"}, "estimated_value") == (None, None)
+
+
 def test_maps_columns_by_alias(dgi):
     row = {
         "Tender ID": "ASM/2026/01",

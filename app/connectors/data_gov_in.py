@@ -68,6 +68,10 @@ _DATE_FORMATS = (
 )
 
 
+# The bidder's deposit, not the tender's value; "emd_amount" would match "amount".
+_DEPOSIT = re.compile(r"emd|earnest|security|deposit")
+
+
 def _norm_key(key: str) -> str:
     return re.sub(r"[^a-z0-9]+", "_", str(key).lower()).strip("_")
 
@@ -80,7 +84,7 @@ def pick_field(raw: dict, canonical: str) -> tuple[str | None, object]:
             return normalized[alias]
     for alias in FIELD_ALIASES.get(canonical, ()):
         for nkey, (orig, val) in normalized.items():
-            if alias in nkey:
+            if alias in nkey and not (canonical == "estimated_value" and _DEPOSIT.search(nkey)):
                 return orig, val
     return None, None
 
