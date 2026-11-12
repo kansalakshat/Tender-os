@@ -137,7 +137,7 @@ def _candidates(row: Tender, buckets: dict[object, list[Tender]],
                 undated: list[Tender]) -> list[Tender]:
     """Rows worth comparing with `row`: deadline within DEADLINE_SLACK, sharing a word."""
     if row.deadline is None:
-        near = [undated]
+        near = list(buckets.values())   # undated pairs with any deadline
     else:
         near = [buckets.get(row.deadline + timedelta(days=d), [])
                 for d in range(-DEADLINE_SLACK.days, DEADLINE_SLACK.days + 1)] + [undated]

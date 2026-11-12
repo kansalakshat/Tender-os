@@ -128,6 +128,27 @@ def test_link_duplicates_tolerates_the_deadline_slack(session_factory):
         assert link_duplicates(db) == 1
 
 
+def test_a_new_undated_row_meets_its_cached_dated_twin(session_factory, tmp_path):
+    from app.models import utcnow
+    cache = str(tmp_path / "dedup.json")
+    with session_factory() as db:
+        sid_a, sid_b = two_sources(db)
+        make(db, sid_a, "1", "Repair of boundary wall at depot")
+        db.commit()
+        # Old enough that the next run reads it from the cache, not the database.
+        db.query(Tender).update({Tender.last_updated_at: utcnow() - timedelta(days=3)})
+        make(db, sid_a, "9", "Painting of office building").last_updated_at = (
+            utcnow() - timedelta(days=1))
+        db.commit()
+    with session_factory() as db:
+        assert link_duplicates(db, cache_path=cache) == 0          # builds the cache
+    with session_factory() as db:
+        make(db, sid_b, "2", "Repair of boundary wall at depot", deadline=None)
+        db.commit()
+    with session_factory() as db:
+        assert link_duplicates(db, cache_path=cache) == 1
+
+
 def test_rows_from_the_same_source_are_never_linked(session_factory):
     """Same-source repeats are already prevented by the unique key."""
     with session_factory() as db:
