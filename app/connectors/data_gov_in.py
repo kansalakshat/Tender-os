@@ -17,7 +17,7 @@ import logging
 import os
 import re
 from datetime import datetime
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 from pathlib import Path
 from typing import Iterator
 
@@ -106,13 +106,11 @@ def parse_value(column: str | None, value) -> Decimal | None:
     Getting the scale wrong turns a 5-lakh tender into a 5-rupee one, so the unit
     is read from the column name rather than assumed.
     """
-    text = re.sub(r"[^0-9.\-]", "", str(value or ""))
-    if not text or text in {"-", ".", "-."}:
+    # The first number, so the dot of a "Rs." prefix is not read as a decimal point.
+    match = re.search(r"-?\d[\d,]*(?:\.\d+)?", str(value or ""))
+    if not match:
         return None
-    try:
-        amount = Decimal(text)
-    except InvalidOperation:
-        return None
+    amount = Decimal(match.group().replace(",", ""))
     header = _norm_key(column or "")
     if "crore" in header:
         amount *= Decimal(10_000_000)

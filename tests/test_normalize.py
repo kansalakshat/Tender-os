@@ -53,6 +53,8 @@ def test_money_columns_honour_their_stated_unit():
     assert parse_value("Value in Crore", "2") == Decimal("20000000")
     assert parse_value("tender_value", "") is None
     assert parse_value("tender_value", "N/A") is None
+    assert parse_value("tender_value", "Rs. 5,00,000") == Decimal("500000")
+    assert parse_value("tender_value", "Rs.5,00,000/-") == Decimal("500000")
 
 
 def test_maps_columns_by_alias(dgi):
