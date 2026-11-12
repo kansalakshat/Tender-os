@@ -143,6 +143,9 @@ def test_cron_purge_rejects_a_wrong_or_missing_secret(client, monkeypatch):
     assert client.get(
         "/cron/purge", headers={"Authorization": "right-secret"}
     ).status_code == 401
+    assert client.get(
+        "/cron/purge", headers={"Authorization": "Bearer é".encode("latin-1")}
+    ).status_code == 401
 
 
 def test_cron_purge_deletes_only_expired_rows(client, monkeypatch, session_factory):

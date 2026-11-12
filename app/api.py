@@ -322,7 +322,7 @@ def list_tenders(
 
     order = {
         "deadline": Tender.deadline.asc(),
-        "published_date": Tender.published_date.desc(),
+        "published_date": Tender.published_date.desc().nulls_last(),
         "first_seen_at": Tender.first_seen_at.desc(),
     }[sort]
     # The total rides along on every row as a window count: one round trip
@@ -756,7 +756,7 @@ def _require_cron_secret(request: Request) -> None:
         log.error("cron endpoint called but CRON_SECRET is not configured")
         raise HTTPException(status_code=503, detail="CRON_SECRET is not configured")
     if not hmac.compare_digest(
-        request.headers.get("authorization", ""), f"Bearer {secret}"
+        request.headers.get("authorization", "").encode(), f"Bearer {secret}".encode()
     ):
         log.warning("cron: rejected a request with a bad or missing secret")
         raise HTTPException(status_code=401, detail="unauthorized")
