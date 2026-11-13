@@ -81,7 +81,12 @@ def _ping_when_idle(engine) -> None:
 
     @event.listens_for(engine, "checkout")
     def _checkout(dbapi_conn, record, proxy):
-        if time.monotonic() - record.info.get("idle_since", 0) < IDLE_PING_SECONDS:
+        # A connection never checked in has no idle time to measure: always
+        # ping it. Defaulting idle_since to 0 measured from the machine's boot
+        # instead (monotonic() is seconds since boot), so on a machine up for
+        # under a minute -- a fresh CI runner -- new connections went unpinged.
+        idle_since = record.info.get("idle_since")
+        if idle_since is not None and time.monotonic() - idle_since < IDLE_PING_SECONDS:
             return
         try:
             engine.dialect.do_ping(dbapi_conn)

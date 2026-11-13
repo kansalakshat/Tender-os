@@ -332,6 +332,25 @@ def test_pool_pings_only_idle_connections(monkeypatch):
     assert len(pings) == 2
 
 
+def test_pool_pings_a_new_connection_on_a_freshly_booted_machine(monkeypatch):
+    """monotonic() counts from boot, so on a machine up for under a minute (a
+    fresh CI runner) a never-used connection must still be pinged; measuring its
+    idle time from 0 skipped it, and the test above failed on such machines."""
+    from sqlalchemy import create_engine, text
+
+    import app.db as db
+
+    monkeypatch.setattr(db.time, "monotonic", lambda: 5.0)   # 5 s after boot
+    engine = create_engine("sqlite://")
+    db._ping_when_idle(engine)
+    pings = []
+    monkeypatch.setattr(engine.dialect, "do_ping", lambda conn: pings.append(1))
+
+    with engine.connect() as c:
+        c.execute(text("select 1"))
+    assert len(pings) == 1
+
+
 def test_no_page_relies_on_inline_event_handlers(client):
     """A nonce whitelists a <script> block; it does NOT whitelist onclick=/onsubmit=
     attributes. Shipping those with our CSP silently broke every form on the site:
