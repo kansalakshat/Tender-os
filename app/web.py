@@ -896,8 +896,11 @@ async def cppp_open(request: Request, tender_id: int, db: Session = Depends(get_
 def browse(db: Session = Depends(get_db)) -> str:
     """Read-only view of the whole corpus. Filtering happens in GET /tenders --
     this page is the form around it, not a second query path."""
-    return shared(db, ("browse",), 300, lambda db: render(
-        "browse.html", title="Browse tenders",
+    # Today in India, for the "Closing" buttons: the same calendar GET /tenders
+    # uses, never the visitor's clock. In the cache key so midnight starts afresh.
+    today = today_ist()
+    return shared(db, ("browse", today), 300, lambda db: render(
+        "browse.html", title="Browse tenders", today=today.isoformat(),
         sources=db.execute(select(Source.id, Source.name).order_by(Source.name)).all(),
         states=STATES, sectors=sorted(SECTOR_LABELS.items(), key=lambda kv: kv[1]),
         districts={st: sorted(ds) for st, ds in DISTRICTS.items()}))
@@ -1112,8 +1115,10 @@ def participate_stop(tender_id: int, db: Session = Depends(get_db),
 
 # The /browse parameters a saved search may carry. Anything else is dropped, so
 # a stored query can only ever reproduce a browse page.
+# `closing` (a "Closing" button) is kept and turned back into a deadline on
+# reopen; the deadline_to it produced is not, since that date goes stale.
 SEARCH_KEYS = ("q", "organization", "source_id", "state", "city", "sector", "sort",
-               "include_closed")
+               "include_closed", "closing")
 MAX_SEARCHES = 50
 
 

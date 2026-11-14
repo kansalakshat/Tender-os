@@ -481,6 +481,10 @@ legend{padding:0 1rem 0 0;font-size:1.35rem;font-weight:700}
    and heading with it. */
 html[data-wide]{font-size:14.5px}
 html[data-wide] body{font-size:16px}
+/* ...but a phone zooms the whole page in when a box under 16px gets focus. */
+@media (max-width:48rem){
+ html[data-wide] input,html[data-wide] select,html[data-wide] textarea{font-size:16px}
+}
 .bpage{padding-block:1.75rem 0}
 .bhead{display:flex;flex-wrap:wrap;align-items:baseline;gap:.25rem .75rem;align-self:center}
 .bhead h1{font-size:clamp(1.6rem,1.2rem + 1vw,2rem)}

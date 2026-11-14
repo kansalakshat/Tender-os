@@ -25,12 +25,14 @@ function cities(keep){
 }
 form.state.addEventListener('change', () => cities());
 
-// A date as YYYY-MM-DD, days from today.
+// A date as YYYY-MM-DD, days after today in India. "Today" comes from the
+// server (data-today), the calendar GET /tenders also uses: the visitor's own
+// clock can be wrong or in another zone, and a "Today" one day behind India
+// matched nothing, since /tenders also hides deadlines before India's today.
 function isoDay(plus){
-  const d = new Date();
-  d.setDate(d.getDate() + plus);
-  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0')
-    + '-' + String(d.getDate()).padStart(2, '0');
+  const d = new Date(form.dataset.today + 'T00:00:00Z');
+  d.setUTCDate(d.getUTCDate() + plus);
+  return d.toISOString().slice(0, 10);
 }
 
 function params(){
@@ -172,6 +174,9 @@ function go(e,off){
   const mine = ++latest;
   fetch('/tenders?'+p).then(r=>{ if(!r.ok) throw r; return r.json(); }).then(d=>{
     if(mine !== latest) return;
+    // A bookmarked later page can fall past the end once fewer tenders match
+    // ("Showing 26 to 20" over an empty list): start again from the first page.
+    if(!d.items.length && d.total && offset > 0){ go(null, 0); return; }
     // The total sits beside the page title; the line over the list says
     // which part of it is on screen.
     document.getElementById('total').textContent =
