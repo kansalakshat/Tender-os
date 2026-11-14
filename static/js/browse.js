@@ -93,56 +93,7 @@ document.getElementById('fchips').addEventListener('click', e => {
 });
 
 // ---- one result ------------------------------------------------------------
-// Buyer first, then where and when, then the work itself with the searched
-// words marked, then a footer with the money, the deadline and the actions.
-function shortDate(iso){
-  if(!iso) return '';
-  const d = new Date(iso + 'T00:00:00');
-  return isNaN(d) ? iso : d.toLocaleDateString('en-IN', {day: 'numeric', month: 'short', year: 'numeric'});
-}
-// The title with each searched word marked. Split the raw text first and
-// escape every piece, so a mark can never land inside an HTML entity.
-function marked(text, q){
-  const words = (q || '').trim().split(/\s+/).filter(w => w.length > 1);
-  if(!words.length) return esc(text);
-  const re = new RegExp('(' + words.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ')', 'gi');
-  return text.split(re).map((part, i) => i % 2 ? '<mark>' + esc(part) + '</mark>' : esc(part)).join('');
-}
-function bcard(t, i, q){
-  const f = Object.fromEntries(t.facts || []);
-  const [days, rank] = left(t.deadline);
-  const value = f['Estimated value'], emd = f['EMD (bid security)'];
-  const where = [t.city, t.state].filter(Boolean).join(', ');
-  const url = '/t/' + esc(t.id);
-  const share = 'https://wa.me/?text=' + encodeURIComponent(t.title + '\n' + location.origin + '/t/' + t.id);
-  // The publish date is already on the line above, so the chips skip it.
-  const chips = (f.Source ? '<li class=port>' + esc(f.Source) + '</li>' : '')
-    + (t.external_ref ? '<li>ID ' + esc(t.external_ref) + '</li>' : '')
-    + (t.department && t.department !== t.organization ? '<li>' + esc(t.department) + '</li>' : '')
-    + ['Bid type', 'Quantity', 'Contract period'].filter(k => f[k])
-        .map(k => '<li>' + k + ': ' + esc(f[k]) + '</li>').join('');
-  return '<li class="row bcard ' + rank + '" data-i="' + i + '">'
-    + '<p class=borg>' + esc(t.organization || 'Unnamed buyer') + '</p>'
-    + '<p class=bmeta>'
-    +   (where ? '<span>' + ico('map-pin') + esc(where) + '</span>' : '')
-    +   (t.published_date ? '<span>' + ico('calendar') + 'Published ' + esc(shortDate(t.published_date)) + '</span>' : '')
-    + '</p>'
-    + '<a class=t href="' + url + '">' + marked(t.title, form.q.value) + '</a>'
-    + (chips ? '<ul class=chips>' + chips + '</ul>' : '')
-    + '<div class=bfoot>'
-    +   '<p class=bmoney>' + (value || emd
-          ? '<span>' + (value ? 'Value' : 'EMD') + '</span><b>' + esc(value || emd) + '</b>'
-          : '<span>Value</span><b class=none>not stated</b>') + '</p>'
-    +   '<p class="bdue' + (rank === 's3' ? ' hot' : '') + '">' + ico('calendar')
-    +     '<span>Closes</span><b><time datetime="' + esc(t.deadline || '') + '">'
-    +     esc(f['Bids close'] || shortDate(t.deadline) || 'not stated') + '</time></b>'
-    +     (days ? '<em>' + esc(days) + '</em>' : '') + '</p>'
-    +   '<p class=bact>'
-    +     '<a class="btn ghost sm wa" href="' + esc(share) + '" target=_blank rel="noopener noreferrer">'
-    +       ico('share') + 'Share</a>'
-    +     '<a class="btn sm" href="' + url + '">View details</a></p>'
-    + '</div></li>';
-}
+// The site's shared card (card() in site.js), with the searched words marked.
 
 function go(e,off){
   if(e) e.preventDefault();
@@ -172,7 +123,7 @@ function go(e,off){
       ? 'Showing ' + (offset + 1) + ' to ' + Math.min(offset + LIMIT, d.total)
       : 'No tenders found';
     rows.className = 'rows browse';
-    rows.innerHTML = d.items.map((t, i) => bcard(t, i)).join('')
+    rows.innerHTML = d.items.map(t => card(t, '', left(t.deadline)[1], '', form.q.value)).join('')
       || '<li class=empty><p>Nothing matched those filters. Try a shorter word, or '
          + 'remove a filter.</p></li>';
     document.getElementById('prev').disabled = offset===0;

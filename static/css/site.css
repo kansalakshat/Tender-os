@@ -537,6 +537,10 @@ html[data-wide] body{font-size:16px}
    footer with the money, the deadline and the actions */
 .row.bcard{display:block;padding:1.3rem 1.5rem 1.1rem}
 .borg{margin:0;font-size:1.2rem;font-weight:700;color:var(--ink)}
+/* A list's own number for the card, such as a match score, before the buyer. */
+.bscore{display:inline-block;margin-right:.6rem;padding:.15rem .55rem;border-radius:var(--r-sm);
+  background:var(--accent);color:var(--on-accent);font-size:.9rem;font-weight:700;vertical-align:.1em}
+.bcard .tags{margin:.6rem 0 0}
 .bmeta{display:flex;flex-wrap:wrap;gap:.3rem 1.1rem;margin:.35rem 0 .7rem;color:var(--muted);font-size:.95rem}
 .bmeta span{display:inline-flex;align-items:center;gap:.35rem}
 .bmeta .i{color:var(--faint)}
