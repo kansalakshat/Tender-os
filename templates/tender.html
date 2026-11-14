@@ -32,7 +32,8 @@
  <p class="tline money">{{ icon('currency-inr') }}{% if has_value %}Amount: <b>{{ value }}</b>{% elif emd %}EMD: <b>{{ emd }}</b>{% else %}Amount: <b class=none>not published</b>{% endif %}
   <span class=sep aria-hidden=true>&middot;</span>{{ icon('calendar') }}Closes: <b>{{ fx.get('Bids close') }}</b>{% if days_label %} <span class=chipish>{{ days_label }}</span>{% endif %}</p>
  <div class=tactions>
-  {%- if document %}<a class=btn href="{{ document.url }}" target=_blank rel="noopener noreferrer" download>{{ icon('download') }}Download</a>{% endif %}
+  {%- if document %}<a class=btn href="{{ document.url }}" target=_blank rel="noopener noreferrer" download>{{ icon('download') }}Download</a>
+  {%- elif document_locked %}<a class=btn href="{{ login_url }}">{{ icon('lock-simple') }}Sign in to download</a>{% endif %}
   {%- if cppp_box %}<a class="btn ghost" href="#cpppBox">{{ icon('arrow-up-right') }}View on portal</a>
   {%- else %}<a class="btn ghost" href="{{ search_url }}" target=_blank rel="noopener noreferrer">{{ icon('arrow-up-right') }}View on portal</a>{% endif %}
   <a class="btn ghost wa" href="{{ share_url }}" target=_blank rel="noopener noreferrer">{{ icon('share') }}Share on WhatsApp</a>
@@ -123,6 +124,12 @@
 {#- Shown only when a document URL was recorded. Most portals hand out
     session-bound links that expire, so there is usually no dead "Download"
     button on a page that has nothing to download. #}
+{% if document_locked %}<div class=docbox>
+ <h2>Bid document</h2>
+ <p>The buyer's own tender document, exactly as the portal publishes it.</p>
+ <p><a class="btn primary" href="{{ login_url }}">{{ icon('lock-simple') }}Sign in to download document (PDF)</a></p>
+ <p class=hint>Free account. You come straight back to this tender.</p>
+</div>{% endif %}
 {% if document %}<div class=docbox>
  <h2>Bid document</h2>
  <p>The buyer's own tender document, exactly as the portal publishes it.</p>

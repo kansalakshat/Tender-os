@@ -784,7 +784,11 @@ def tender_detail(
             and company.emd_budget is None and not company.registrations),
         checklist=checklist(t, company), summary=_summary(t, sectors, places, label),
         sectors=sectors, facts=facts, days_label=label,
-        document={"url": found[0], "source": found[1]} if found else None,
+        # The bid document is for signed-in visitors only. Signed out, its link
+        # is not printed at all; the page shows a sign-in button in its place.
+        document={"url": found[0], "source": found[1]} if found and user else None,
+        document_locked=bool(found) and user is None,
+        login_url="/login?" + urlencode({"next": f"/t/{t.id}"}),
         ref=_cppp_id(raw, t.external_ref) or "not recorded",
         source_name=src.name if src else "the source portal",
         licence=src.license if src else "see /sources",
@@ -1112,8 +1116,10 @@ def participate_stop(tender_id: int, db: Session = Depends(get_db),
 
 # The /browse parameters a saved search may carry. Anything else is dropped, so
 # a stored query can only ever reproduce a browse page.
+# `closing` (a "Closing" button) is kept and turned back into a deadline on
+# reopen; the deadline_to it produced is not, since that date goes stale.
 SEARCH_KEYS = ("q", "organization", "source_id", "state", "city", "sector", "sort",
-               "include_closed")
+               "include_closed", "closing")
 MAX_SEARCHES = 50
 
 
