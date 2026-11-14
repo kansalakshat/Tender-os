@@ -3,9 +3,11 @@ from __future__ import annotations
 import hmac
 import logging
 import os
+import re
 import threading
 import time
 from contextlib import asynccontextmanager
+from urllib.parse import urlencode
 from datetime import date, timedelta
 from decimal import Decimal
 from pathlib import Path
@@ -40,7 +42,7 @@ from .facts import sources
 from .geo import PORTAL_STATE, city_clause, sector_clause, state_clause
 from .matching import ALL_DISTRICTS, SECTOR_LABELS, STATES, find_matches, warm_candidates
 from .models import Company, ConnectorRun, Source, Tender, User
-from .models import utcnow
+from .models import today_ist, utcnow
 from .retention import DEFAULT_RETENTION_DAYS, purge_expired
 from .schemas import (
     CompanyIn,
@@ -239,6 +241,11 @@ def list_sources(db: Session = Depends(get_db)):
     return list(db.execute(select(Source).order_by(Source.name)).scalars())
 
 
+def _contains(text: str) -> str:
+    """A LIKE pattern for `text` as typed: % and _ in a search are characters."""
+    return "%" + re.sub(r"([\\%_])", r"\\\1", text) + "%"
+
+
 @app.get("/tenders", response_model=Page)
 def list_tenders(
     db: Session = Depends(get_db),
@@ -264,20 +271,20 @@ def list_tenders(
         False, description="Include tenders whose deadline has already passed"
     ),
     limit: int = Query(50, ge=1, le=100),
-    offset: int = Query(0, ge=0),
+    offset: int = Query(0, ge=0, le=1_000_000),
     sort: str = Query("deadline", pattern="^(deadline|published_date|first_seen_at)$"),
 ):
     filters = []
     if q:
-        filters.append(Tender.title.ilike(f"%{q}%"))
+        filters.append(Tender.title.ilike(_contains(q), escape="\\"))
     if category:
         filters.append(Tender.category == category)
     if status:
         filters.append(Tender.status == status)
     if department:
-        filters.append(Tender.department.ilike(f"%{department}%"))
+        filters.append(Tender.department.ilike(_contains(department), escape="\\"))
     if organization:
-        filters.append(Tender.organization.ilike(f"%{organization}%"))
+        filters.append(Tender.organization.ilike(_contains(organization), escape="\\"))
     if source_id is not None:
         filters.append(Tender.source_id == source_id)
     # Exact names only: each one picks a regex out of a fixed table, and an
@@ -317,12 +324,12 @@ def list_tenders(
         # A null deadline is unknown, not expired -- the same rule retention.py
         # follows -- so those rows stay visible.
         filters.append(
-            or_(Tender.deadline.is_(None), Tender.deadline >= date.today())
+            or_(Tender.deadline.is_(None), Tender.deadline >= today_ist())
         )
 
     order = {
         "deadline": Tender.deadline.asc(),
-        "published_date": Tender.published_date.desc(),
+        "published_date": Tender.published_date.desc().nulls_last(),
         "first_seen_at": Tender.first_seen_at.desc(),
     }[sort]
     # The total rides along on every row as a window count: one round trip
@@ -456,23 +463,28 @@ def resend_verification(request: Request, db: Session = Depends(get_db),
 
 
 @app.get("/auth/verify")
-def verify_email(request: Request, token: str, db: Session = Depends(get_db)):
-    """Clicked from the email. Confirms the address and signs the person in, so a
-    link opened on a phone does not dead-end on a login form.
+def verify_email(request: Request, token: str, db: Session = Depends(get_db),
+                 me: User | None = Depends(current_user)):
+    """Clicked from the email. Confirms the address only for someone signed in to
+    that account; anyone else is sent to sign in first and comes back here.
 
-    Signs in on the first click only. The link sits in a mailbox (or outbox.log)
-    for 24 hours; if every click signed in, anyone who ever saw it -- a forwarded
-    mail, a shared screen -- would hold a day-long login to the account.
+    Signing up with another person's address costs nothing. If their click
+    confirmed it, the squatter would hold a verified account -- an admin one, for
+    an address on ADMIN_EMAILS -- whose password they chose. Signing in proves the
+    clicker knows the password. It also means a mail scanner's prefetch changes
+    nothing, and the link is never a login on its own.
     """
     user = user_from_verification_token(db, token)
     if user is None:
         return RedirectResponse("/?verify=invalid", status_code=303)
-    response = RedirectResponse("/?verify=ok", status_code=303)
+    if me is None or me.id != user.id:
+        back = f"{request.url.path}?{request.url.query}"
+        return RedirectResponse("/login?" + urlencode({"verify": "signin", "next": back}),
+                                status_code=303)
     if not user.email_verified:
         user.email_verified = True
         db.commit()
-        set_session_cookie(response, user, request)
-    return response
+    return RedirectResponse("/?verify=ok", status_code=303)
 
 
 # ---- Google sign-in ----
@@ -756,7 +768,7 @@ def _require_cron_secret(request: Request) -> None:
         log.error("cron endpoint called but CRON_SECRET is not configured")
         raise HTTPException(status_code=503, detail="CRON_SECRET is not configured")
     if not hmac.compare_digest(
-        request.headers.get("authorization", ""), f"Bearer {secret}"
+        request.headers.get("authorization", "").encode(), f"Bearer {secret}".encode()
     ):
         log.warning("cron: rejected a request with a bad or missing secret")
         raise HTTPException(status_code=401, detail="unauthorized")
@@ -855,6 +867,6 @@ def cron_purge(request: Request):
             "deleted": 0,
             "detail": "RETENTION_DAYS is unset, so nothing is deleted",
         }
-    deleted = purge_expired(session_factory=SessionLocal)
+    deleted = purge_expired(DEFAULT_RETENTION_DAYS, session_factory=SessionLocal)
     log.info("cron/purge deleted %d tender(s)", deleted)
     return {"deleted": deleted, "retention_days": DEFAULT_RETENTION_DAYS}

@@ -63,7 +63,7 @@ here runs in this process, so it uses this machine's connection.</p>
  portal fetches its listing and then reads that many documents in the same job,
  so a tender never sits half-collected waiting for a second pass.</p>
  {%- endif %}
- <pre id=joblog class=joblog>{% if job %}{{ job.lines | join('\n') }}{% else %}No run started yet.{% endif %}</pre>
+ <pre id=joblog class=joblog data-status="{{ job.status if job else '' }}">{% if job %}{{ job.lines | join('\n') }}{% else %}No run started yet.{% endif %}</pre>
 </div>
 
 <h2>Still to collect</h2>

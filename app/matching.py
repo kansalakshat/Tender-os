@@ -28,7 +28,7 @@ from sqlalchemy.orm import Session
 
 from .db import SessionLocal, memo
 from .districts import DISTRICTS
-from .models import Tender
+from .models import Tender, today_ist
 
 # ---- Sector taxonomy -------------------------------------------------------
 # Derived from the real mptenders.gov.in listing, not invented. A tender may
@@ -317,7 +317,7 @@ def match_score(
     keywords, districts, min_lead_days and max_project_value works, so both the
     Company ORM row and the CompanyIn pydantic model can be passed directly.
     """
-    today = today or date.today()
+    today = today or today_ist()
     strict = strict_set(profile, strict)
     lead = profile.min_lead_days
     if lead is None:
@@ -567,7 +567,7 @@ def warm_candidates() -> None:
     is not paid by whoever signs in first."""
     try:
         with SessionLocal() as db:
-            _candidates(db, date.today())
+            _candidates(db, today_ist())
     except Exception:
         logging.getLogger(__name__).exception("warming match candidates failed")
 
@@ -591,7 +591,7 @@ def _reload_candidates(stamp: tuple, today: date) -> None:
 def match_digest(db: Session, profile, today: date | None = None,
                  strict: set[str] | None = None) -> MatchDigest:
     """The digest for one profile, computed at most once per corpus change."""
-    today = today or date.today()
+    today = today or today_ist()
     # The override belongs in the key too: the same profile viewed strictly and
     # loosely is two different result sets.
     version, rows = _candidates(db, today)
@@ -659,7 +659,7 @@ def find_matches(
     it is well under a second; caching the document frequencies on the `tenders`
     table is the upgrade path if the corpus outgrows that.
     """
-    today = today or date.today()
+    today = today or today_ist()
     scored = _score_all(_candidates(db, today)[1], profile, today, strict)
     if limit is not None:
         scored = scored[:limit]

@@ -22,7 +22,7 @@ from sqlalchemy.orm import Session
 
 from . import activity
 from .db import SessionLocal
-from .models import Tender, utcnow
+from .models import Tender, today_ist, utcnow
 
 log = logging.getLogger(__name__)
 
@@ -135,12 +135,16 @@ def _index(bucket: list[Tender]) -> dict[str, list[Tender]]:
 
 def _candidates(row: Tender, buckets: dict[object, list[Tender]],
                 undated: list[Tender]) -> list[Tender]:
-    """Rows worth comparing with `row`: same deadline bucket, sharing a word."""
-    same = buckets.get(row.deadline, [])
+    """Rows worth comparing with `row`: deadline within DEADLINE_SLACK, sharing a word."""
+    if row.deadline is None:
+        near = list(buckets.values())   # undated pairs with any deadline
+    else:
+        near = [buckets.get(row.deadline + timedelta(days=d), [])
+                for d in range(-DEADLINE_SLACK.days, DEADLINE_SLACK.days + 1)] + [undated]
     pool: list[Tender] = []
     seen: set[int] = set()
     words = _tokens(row)
-    for bucket in (same, undated) if row.deadline is not None else (same,):
+    for bucket in near:
         if not bucket:
             continue
         idx = _index(bucket)
@@ -275,7 +279,7 @@ def link_duplicates(db: Session | None = None, window_days: int = 120,
     linked = 0
     try:
         _INDEX_CACHE.clear()
-        cutoff = date.today() - timedelta(days=window_days)
+        cutoff = today_ist() - timedelta(days=window_days)
         rows, stamp, fresh, built = _load(db, cutoff, cache_path)
         # The rows are plain copies, so the read's transaction can end here.
         # Comparing takes minutes to half an hour; held open that long, Neon

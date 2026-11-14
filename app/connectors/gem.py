@@ -19,11 +19,12 @@ from __future__ import annotations
 import json
 import logging
 import re
-from datetime import date, datetime
+from datetime import datetime
 from pathlib import Path
 from typing import Iterator
 
 from ..compliance import user_agent
+from ..models import today_ist
 from ..schemas import TenderRecord
 from .base import BaseConnector
 
@@ -287,7 +288,7 @@ class GeMConnector(BaseConnector):
         """The page today's run of this same slice had committed up to, else start_page."""
         try:
             saved = json.loads(Path(self.resume_file).read_text(encoding="utf-8"))
-            if saved["day"] == date.today().isoformat() and saved["start"] == self.start_page:
+            if saved["day"] == today_ist().isoformat() and saved["start"] == self.start_page:
                 return max(self.start_page, int(saved["page"]))
         except (TypeError, OSError, ValueError, KeyError):   # unset, missing or garbled
             pass
@@ -301,7 +302,7 @@ class GeMConnector(BaseConnector):
         try:
             path = Path(self.resume_file)
             path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_text(json.dumps({"day": date.today().isoformat(),
+            path.write_text(json.dumps({"day": today_ist().isoformat(),
                                         "start": self.start_page, "page": self._page}),
                             encoding="utf-8")
         except OSError as exc:              # a lost bookmark must not end the crawl

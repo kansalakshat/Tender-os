@@ -55,7 +55,7 @@ from .matching import (
     strict_set,
     STRICT_LABELS,
 )
-from .models import Company, ConnectorRun, SavedSearch, Source, Tender, User, WishlistItem, ist
+from .models import Company, ConnectorRun, SavedSearch, Source, Tender, User, WishlistItem, ist, today_ist
 
 log = logging.getLogger(__name__)
 
@@ -160,7 +160,7 @@ def days_left(deadline: date | None, today: date | None = None) -> tuple[str, st
     static/js/site.js, which does the same job on rows fetched by JSON."""
     if deadline is None:
         return "", "s0"
-    n = (deadline - (today or date.today())).days
+    n = (deadline - (today or today_ist())).days
     if n < 0:
         return "closed", "s0"
     if n == 0:
@@ -366,7 +366,7 @@ def _figures(db: Session, today: date) -> dict:
 
 def _welcome_signed_in(db: Session, company: Company) -> str:
     """The home page for someone who has answered the questions."""
-    today = date.today()
+    today = today_ist()
     # Everything below comes from one cached digest, so a page load does not
     # re-score the corpus. Only the six rows actually printed are fetched.
     d = match_digest(db, company, today)
@@ -408,7 +408,7 @@ def _welcome(db: Session) -> str:
     which is derived once at ingest and is stale the morning after a tender
     closes. A hard-coded "8,000+" was wrong within weeks; this cannot be.
     """
-    today = date.today()
+    today = today_ist()
     return shared(db, ("welcome", today), 60, lambda db: _render_welcome(db, today))
 
 
@@ -759,7 +759,7 @@ def tender_detail(
     sectors = sorted(SECTOR_LABELS[k] for k in derive_sectors(t.title))
     places = sorted(derive_states(t.title) | derive_districts(t.title))
 
-    today = date.today()
+    today = today_ist()
     company = _profile_of(db, user)
     label, _rank = days_left(t.deadline, today)
     facts = tender_facts(t, today)
@@ -803,7 +803,7 @@ def tender_extras(
     t = db.get(Tender, tender_id)
     if t is None:
         raise HTTPException(status_code=404, detail="tender not found")
-    today = date.today()
+    today = today_ist()
     return {"fit": _fit(db, _profile_of(db, user), t, today),
             "more": _related(db, t, today)}
 
@@ -928,7 +928,7 @@ def _open_buyers(db: Session, today: date) -> list[tuple[str, int]]:
 def buyers_strip(db: Session = Depends(get_db)) -> JSONResponse:
     """All buyers for the home-page strip. Fetched after the page shows, so the
     thousand-odd names do not weigh down every home page load."""
-    return JSONResponse([[n, c] for n, c in _open_buyers(db, date.today())])
+    return JSONResponse([[n, c] for n, c in _open_buyers(db, today_ist())])
 
 
 BUYERS_PAGE = 60
@@ -939,7 +939,7 @@ def buyers_page(q: str = "", page: int = 1, db: Session = Depends(get_db)) -> st
     """Every company with an open tender, as logo tiles, searchable by name.
     Filtered in memory: the list is the one already cached for the strip."""
     q = q.strip()[:100]
-    every = _open_buyers(db, date.today())
+    every = _open_buyers(db, today_ist())
     hits = [b for b in every if q.lower() in b[0].lower()] if q else every
     pages = max(1, -(-len(hits) // BUYERS_PAGE))
     page = min(max(page, 1), pages)
@@ -963,7 +963,7 @@ def buyer_page(name: str = "", sort: str = "", page: int = 1,
     name = name.strip()
     if not name:
         raise HTTPException(status_code=404, detail="no buyer named")
-    today = date.today()
+    today = today_ist()
     profile = _profile_of(db, user)
     if sort not in ("relevance", "deadline"):
         sort = "relevance" if profile is not None else "deadline"
@@ -985,9 +985,14 @@ def buyer_page(name: str = "", sort: str = "", page: int = 1,
         ranked = sorted(score_of, key=lambda tid: -score_of[tid][0])
         order = ranked + [i for i in db.scalars(by_deadline) if i not in score_of]
         total = len(order)
+    else:
+        order = None
+        total = db.scalar(select(func.count()).select_from(Tender).where(*live)) or 0
+    pages = max(1, -(-total // BUYER_PAGE))
+    page = min(page, pages)
+    if order is not None:
         page_ids = order[(page - 1) * BUYER_PAGE: page * BUYER_PAGE]
     else:
-        total = db.scalar(select(func.count()).select_from(Tender).where(*live)) or 0
         page_ids = list(db.scalars(by_deadline.offset((page - 1) * BUYER_PAGE).limit(BUYER_PAGE)))
 
     rows_by_id = hydrate(db, page_ids)
@@ -1004,7 +1009,7 @@ def buyer_page(name: str = "", sort: str = "", page: int = 1,
             gutter, rank = days_left(t.deadline, today)
             shown.append((t, gutter, rank, []))
     return render("buyer.html", title=name, buyer=name, sort=sort, page=page,
-                  pages=max(1, -(-total // BUYER_PAGE)), total=total,
+                  pages=pages, total=total,
                   matched=len(score_of) if profile is not None else None,
                   has_profile=profile is not None, shown=shown)
 
@@ -1038,7 +1043,7 @@ def wishlist(db: Session = Depends(get_db), user: User | None = Depends(current_
         .order_by(Tender.deadline.asc().nulls_last(), WishlistItem.created_at.desc())
     ).all()
     return render("wishlist.html", title="Saved tenders",
-                  saved=[t for t, _ in rows], today=date.today())
+                  saved=[t for t, _ in rows], today=today_ist())
 
 
 @router.post("/wishlist/{tender_id}")
@@ -1136,7 +1141,7 @@ def dashboard(db: Session = Depends(get_db), user: User | None = Depends(current
     return render("dashboard.html", title="Your dashboard", email=user.email,
                   company=_profile_of(db, user),
                   bidding=[t for t, p in rows if p], saved=[t for t, p in rows if not p],
-                  searches=searches, today=date.today())
+                  searches=searches, today=today_ist())
 
 
 @router.post("/searches")

@@ -71,6 +71,8 @@ def test_filters(client):
     assert total(client, department="civil") == 1          # case-insensitive
     assert total(client, organization="cpwd") == 1
     assert total(client, q="drain") == 1
+    assert client.get("/tenders", params={"offset": 10**21}).status_code == 422   # not a 500
+    assert total(client, q="%") == total(client, q="_") == 0   # literal, not wildcards
     assert total(client, min_value=1_000_000) == 1
     assert total(client, max_value=1_000_000) == 1
     midpoint = (date.today() + timedelta(days=10)).isoformat()
@@ -142,6 +144,9 @@ def test_cron_purge_rejects_a_wrong_or_missing_secret(client, monkeypatch):
     ).status_code == 401
     assert client.get(
         "/cron/purge", headers={"Authorization": "right-secret"}
+    ).status_code == 401
+    assert client.get(
+        "/cron/purge", headers={"Authorization": "Bearer é".encode("latin-1")}
     ).status_code == 401
 
 

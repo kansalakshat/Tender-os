@@ -30,6 +30,8 @@ if(btn){
         flash(r.status === 401
           ? 'Sign in to save tenders.'
           : 'Could not save that just now. Try again.', 'warn');
+      } else if(on && ready){
+        paintReady(false);            // unsaving drops the bid with the row
       }
     }catch(e){
       paint(on);

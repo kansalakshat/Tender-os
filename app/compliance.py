@@ -84,10 +84,16 @@ _PERSONAL_KEY_RE = re.compile(
     re.I,
 )
 _REDACTED = "[redacted:personal-data-rule-7]"
+# The same data inside a value: an email, or an Indian mobile number. Narrow on
+# purpose -- dates, amounts and tender ids are digit runs too, and must survive.
+_PERSONAL_TEXT_RE = re.compile(
+    r"[\w.+-]+@[\w-]+\.[\w.]+|(?<![\w/.-])(?:\+?91[\s-]?)?[6-9]\d{4}[\s-]?\d{5}(?![\w/.-])"
+)
 
 
 def scrub_personal(value):
-    """Recursively drop keys that look like personal/contact data.
+    """Recursively drop keys that look like personal/contact data, and redact
+    emails and mobile numbers written inside values.
 
     Deliberately over-broad: a false positive costs one audit field, a false
     negative means we stored someone's phone number.
@@ -99,4 +105,6 @@ def scrub_personal(value):
         }
     if isinstance(value, (list, tuple)):
         return [scrub_personal(v) for v in value]
+    if isinstance(value, str):
+        return _PERSONAL_TEXT_RE.sub(_REDACTED, value)
     return value

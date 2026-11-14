@@ -12,12 +12,12 @@ from __future__ import annotations
 
 import os
 import time
-from datetime import date, timedelta
+from datetime import timedelta
 
 from sqlalchemy import Text, case, func, select
 from sqlalchemy.orm import Session
 
-from .models import Company, ConnectorRun, Source, Tender, User, utcnow
+from .models import Company, ConnectorRun, Source, Tender, User, today_ist, utcnow
 from .enrich import DONE_KEY
 
 # The owner's address is the default so a fresh deployment is not locked out of
@@ -67,7 +67,7 @@ def daily_intake(db: Session, days: int = 7) -> list[dict]:
 
 def by_source(db: Session) -> list[dict]:
     """Per portal: what we hold, what is still open, and when it last answered."""
-    today = date.today()
+    today = today_ist()
     open_case = case(
         # The join is an outer one, so a source with no tenders at all arrives
         # as a row of NULLs -- and "deadline IS NULL" would count that phantom
@@ -138,7 +138,7 @@ def failing_sources(db: Session, days: int = 7) -> list[dict]:
 
 
 def totals(db: Session) -> dict:
-    today = date.today()
+    today = today_ist()
     one = lambda stmt: db.execute(stmt).scalar_one()          # noqa: E731
     open_filter = (Tender.deadline.is_(None)) | (Tender.deadline >= today)
     return {
@@ -190,7 +190,7 @@ def live_counts(db: Session, now=None) -> dict:
     if _cache is not None and clock() - _cache[0] < _CACHE_SECONDS:
         return _cache[1]
 
-    today = date.today()
+    today = today_ist()
     open_filter = (Tender.deadline.is_(None)) | (Tender.deadline >= today)
     total = db.execute(select(func.count()).select_from(Tender)).scalar_one()
     open_ = db.execute(

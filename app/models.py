@@ -18,6 +18,12 @@ def utcnow() -> datetime:
 IST = timezone(timedelta(hours=5, minutes=30))
 
 
+def today_ist() -> date:
+    """Today in India. Deadlines are Indian calendar dates; the server's own date
+    is UTC on Vercel and GitHub Actions, a day behind from 00:00 to 05:30 IST."""
+    return datetime.now(IST).date()
+
+
 def ist(dt: datetime) -> datetime:
     """A naive-UTC column value as India time, for showing to the operator."""
     return dt.replace(tzinfo=timezone.utc).astimezone(IST)

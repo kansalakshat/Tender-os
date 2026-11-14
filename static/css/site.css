@@ -254,6 +254,21 @@ a.more:hover{background:var(--accent-soft)}
   border-radius:var(--r);background:var(--panel);color:var(--ink);text-decoration:none;font-weight:500}
 .stiles a:hover{border-color:var(--accent);background:var(--accent-soft)}
 .stiles .i{color:var(--accent)}
+/* Home: India by state. The map and the state list side by side. */
+.mapwrap{display:grid;gap:1.5rem 2.5rem;align-items:start}
+@media (min-width:62rem){.mapwrap{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+.mapbox{margin:0;padding:1rem;border:1px solid var(--stone);border-radius:var(--r-lg);background:var(--panel)}
+.indiamap{display:block;width:100%;max-width:36rem;height:auto;margin:0 auto}
+.indiamap path{fill:color-mix(in srgb,var(--accent) 20%,var(--panel));stroke:var(--panel);stroke-width:1;transition:fill .15s}
+.indiamap a{cursor:pointer;outline:none}
+.indiamap a:hover path,.indiamap a:focus-visible path,.indiamap a.lit path{fill:var(--accent)}
+.indiamap a:focus-visible path{stroke:var(--ink);stroke-width:1.5}
+.indiamap path.off{fill:var(--bone)}
+.mapcredit{margin:.5rem 0 0;text-align:right;font-size:.8rem;color:var(--faint)}
+.mapcredit a{color:inherit}
+.mapstates{grid-template-columns:repeat(auto-fill,minmax(min(100%,10.5rem),1fr));gap:.45rem}
+.mapstates a{min-height:2.5rem;padding:.35rem .7rem;font-size:.9rem;gap:.4rem}
+.mapstates a.lit{border-color:var(--accent);background:var(--accent-soft)}
 /* Buyer logos: the file when there is one, else a quiet monogram tile */
 .logo{display:grid;place-items:center;flex:none;width:2.6rem;height:2.6rem;border-radius:var(--r);
   font-weight:700;font-size:.9rem;color:#1E2B3D}

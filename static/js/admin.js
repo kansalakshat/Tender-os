@@ -127,8 +127,9 @@ if(form){
   });
 }
 
-// A run started before this page loaded is still worth following.
-if(out && out.textContent.indexOf('No run started yet.') === -1){ follow(); }
+// A run started before this page loaded is still worth following. Only a
+// running one: following a finished one reloads the page, forever.
+if(out && out.dataset.status === 'running'){ follow(); }
 
 
 // Page and since-hours mean nothing for a documents-only job; hiding them stops

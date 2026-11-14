@@ -28,6 +28,11 @@ def test_letterless_trailing_noise_is_removed():
             == "Ministry Of Power")
 
 
+def test_ten_digit_value_is_money_not_a_phone_number():
+    assert _money(_field("Estimated Bid Value 1000000000 /Type of Bid", "Estimated Bid Value")) == 1e9
+    assert _field("Office Name Stores 9876543210 /Type of Bid", "Office Name") is None
+
+
 def test_contact_details_never_survive_extraction():
     """Rule #7: the document prints buyer emails; none may reach a field."""
     office = _field(NOISY, "Office Name")

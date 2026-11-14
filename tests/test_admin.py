@@ -71,6 +71,17 @@ def test_the_operator_sees_the_dashboard(client):
     assert "Operations" in r.text
 
 
+def test_the_page_tells_its_script_whether_a_job_is_still_running(client, monkeypatch):
+    """admin.js follows only a running job. Following a finished one reloaded
+    the page every three seconds, for as long as the job stayed in memory."""
+    from app import adminjobs
+    job = adminjobs.Job("GeM")
+    job.status = "ok"
+    monkeypatch.setattr(adminjobs, "current", lambda: job)
+    c, ids = client
+    assert 'data-status="ok"' in _as(c, ids["boss@example.com"]).get("/admin").text
+
+
 def test_stats_and_fetch_are_closed_to_everyone_else(client):
     """The page being hidden is worth little if its endpoints are not."""
     c, ids = client
@@ -268,6 +279,19 @@ def test_documents_only_is_a_job_of_its_own(client, monkeypatch):
     _as(c, ids["boss@example.com"]).post(
         "/admin/fetch", json={"connector": ENRICH_JOB, "enrich": 100})
     assert got["name"] == ENRICH_JOB and got["then_enrich"] == 100
+
+
+def test_workers_read_exactly_the_documents_asked_for(monkeypatch):
+    """Each worker used to take max(1, limit // workers): 2 documents on 4
+    workers read 4, 0 read 4, and 2000 on 3 workers read 1998."""
+    from app import adminjobs, enrich
+    asked = []
+    monkeypatch.setattr(enrich, "enrich_pending",
+                        lambda limit, shard: asked.append(limit) or 0)
+    for workers, limit in ((4, 2), (4, 0), (3, 2000)):
+        asked.clear()
+        adminjobs._enrich(adminjobs.Job("x"), workers, limit)
+        assert sum(asked) == limit and len(asked) == workers
 
 
 def test_workers_are_capped(monkeypatch):

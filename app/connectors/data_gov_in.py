@@ -17,7 +17,7 @@ import logging
 import os
 import re
 from datetime import datetime
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 from pathlib import Path
 from typing import Iterator
 
@@ -68,6 +68,11 @@ _DATE_FORMATS = (
 )
 
 
+# A deposit or fee the bidder pays, not the tender's value: "emd_amount" would
+# match "amount", "cost_of_tender_document" would match "cost".
+_NOT_THE_VALUE = re.compile(r"emd|earnest|security|deposit|fee|document")
+
+
 def _norm_key(key: str) -> str:
     return re.sub(r"[^a-z0-9]+", "_", str(key).lower()).strip("_")
 
@@ -80,7 +85,7 @@ def pick_field(raw: dict, canonical: str) -> tuple[str | None, object]:
             return normalized[alias]
     for alias in FIELD_ALIASES.get(canonical, ()):
         for nkey, (orig, val) in normalized.items():
-            if alias in nkey:
+            if alias in nkey and not (canonical == "estimated_value" and _NOT_THE_VALUE.search(nkey)):
                 return orig, val
     return None, None
 
@@ -90,7 +95,7 @@ def parse_date(value) -> datetime | None:
     if not text or text.lower() in {"na", "n/a", "-", "--", "null", "none"}:
         return None
     # Try the whole string first, then common truncations (trailing time, timezone).
-    candidates = list(dict.fromkeys([text, text[:19], text[:11], text[:10]]))
+    candidates = list(dict.fromkeys([text, text[:19], text[:11], text[:10], text.split()[0]]))
     for fmt in _DATE_FORMATS:
         for candidate in candidates:
             try:
@@ -101,24 +106,24 @@ def parse_date(value) -> datetime | None:
 
 
 def parse_value(column: str | None, value) -> Decimal | None:
-    """Parse a money column, honouring lakh/crore units named in the column header.
+    """Parse a money column, honouring lakh/crore units named in the column header
+    or written beside the number ("25 Lakhs").
 
     Getting the scale wrong turns a 5-lakh tender into a 5-rupee one, so the unit
-    is read from the column name rather than assumed.
+    is read rather than assumed. Zero is "not published", not a free tender.
     """
-    text = re.sub(r"[^0-9.\-]", "", str(value or ""))
-    if not text or text in {"-", ".", "-."}:
+    # The first number, so the dot of a "Rs." prefix is not read as a decimal point.
+    match = re.search(r"\d[\d,]*(?:\.\d+)?", str(value or ""))
+    if not match:
         return None
-    try:
-        amount = Decimal(text)
-    except InvalidOperation:
-        return None
-    header = _norm_key(column or "")
-    if "crore" in header:
+    amount = Decimal(match.group().replace(",", ""))
+    # Whole words only: "lac" is inside "replacement", "cr" inside "description".
+    unit = f"{_norm_key(column or '')}_{_norm_key(value)}"
+    if re.search(r"crore|(?<![a-z])cr(?![a-z])", unit):
         amount *= Decimal(10_000_000)
-    elif "lakh" in header or "lac" in header:
+    elif re.search(r"lakh|(?<![a-z])lacs?(?![a-z])", unit):
         amount *= Decimal(100_000)
-    return amount
+    return amount or None
 
 
 class DataGovInConnector(BaseConnector):

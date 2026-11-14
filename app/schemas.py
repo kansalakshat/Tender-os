@@ -7,7 +7,7 @@ from decimal import Decimal
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from .compliance import scrub_personal
-from .models import utcnow
+from .models import today_ist, utcnow
 
 VALID_STATUSES = {"open", "closed", "awarded", "cancelled"}
 
@@ -67,7 +67,7 @@ class TenderRecord(BaseModel):
     @model_validator(mode="after")
     def _derive_status(self):
         if self.status is None and self.deadline is not None:
-            self.status = "open" if self.deadline >= date.today() else "closed"
+            self.status = "open" if self.deadline >= today_ist() else "closed"
         return self
 
 
@@ -338,6 +338,7 @@ class CompanyOut(BaseModel):
     bid_capacity: Decimal | None
     emd_budget: Decimal | None
     registrations: list[str] | None
+    strict: list[str] | None
     created_at: datetime | None
     updated_at: datetime | None
 

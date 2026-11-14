@@ -89,7 +89,7 @@ def _enrich(job: Job, workers: int, limit: int) -> int:
     def work(index: int) -> None:
         try:
             done[index] = enrich_pending(
-                limit=max(1, limit // workers), shard=(index, workers)
+                limit=limit // workers + (index < limit % workers), shard=(index, workers)
             )
         except Exception as exc:                # one worker must not sink the job
             job.log(f"enrich worker {index}: {type(exc).__name__}: {exc}")

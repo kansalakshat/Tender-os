@@ -79,17 +79,20 @@ for(const a of document.querySelectorAll('.top nav a')){
 }
 
 function resend(){
-  fetch('/auth/resend-verification',{method:'POST'}).then(r=>r.json()).then(d=>{
+  fetch('/auth/resend-verification',{method:'POST'}).then(r=>r.json().then(d=>{
+    if(!r.ok) return flash(esc(d.detail||'Could not send the link. Please try again.'));
     flash(d.delivered
       ? 'Sent. Check your inbox.'
+      : d.status==='already verified' ? 'This address is already confirmed.'
       : 'This server has no mail credentials, so the link was written to '
         +'<code>outbox.log</code> in the project folder.', 'good');
-  });
+  }));
 }
 
 // Messages carried back on a redirect (verification click, OAuth failure).
 const _q = new URLSearchParams(location.search);
 if(_q.get('verify')==='ok') flash('Email address confirmed. Thanks.', 'good');
+if(_q.get('verify')==='signin') flash('Sign in to confirm your email address.');
 if(_q.get('verify')==='invalid')
   flash('That confirmation link is invalid or has expired. '
        +'<a href="#" data-action="resend">Send a new one</a>.');

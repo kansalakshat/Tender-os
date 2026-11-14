@@ -53,6 +53,25 @@ def test_money_columns_honour_their_stated_unit():
     assert parse_value("Value in Crore", "2") == Decimal("20000000")
     assert parse_value("tender_value", "") is None
     assert parse_value("tender_value", "N/A") is None
+    assert parse_value("tender_value", "Rs. 5,00,000") == Decimal("500000")
+    assert parse_value("tender_value", "Rs.5,00,000/-") == Decimal("500000")
+    # The unit can sit beside the number instead of in the header.
+    assert parse_value("Tender Value", "25 Lakhs") == Decimal("2500000")
+    assert parse_value("Tender Value", "1.5 Cr") == Decimal("15000000")
+    assert parse_value("Estimated Value (Rs. in Cr)", "12.5") == Decimal("125000000")
+    assert parse_value("Replacement Cost", "500") == Decimal("500")   # "lac" inside a word
+    assert parse_value("Tender Value", "0.00") is None                 # not published
+
+
+def test_emd_is_not_read_as_the_tender_value():
+    assert pick_field({"EMD Amount": "5000"}, "estimated_value") == (None, None)
+    assert pick_field({"Bid Security Amount": "5000"}, "estimated_value") == (None, None)
+    assert pick_field({"Tender Fee Amount": "500"}, "estimated_value") == (None, None)
+    assert pick_field({"Cost of Tender Document": "1000"}, "estimated_value") == (None, None)
+
+
+def test_single_digit_day_with_a_time_keeps_its_date():
+    assert parse_date("1/2/2026 10:00").date() == date(2026, 2, 1)
 
 
 def test_maps_columns_by_alias(dgi):
@@ -143,3 +162,18 @@ def test_empty_required_fields_are_rejected():
         TenderRecord(external_ref="  ", title="t", source_url="https://x.gov.in")
     with pytest.raises(ValueError):
         TenderRecord(external_ref="a", title="", source_url="https://x.gov.in")
+
+
+def test_contact_details_inside_a_value_are_redacted():
+    """Rule #7. Keys like "contact" were already dropped; a free-text column
+    carrying an officer's number or address was stored as it came."""
+    from app.compliance import scrub_personal
+    out = scrub_personal({"remarks": "call 9876543210 or +91 98765-43210, ee@mppwd.gov.in",
+                          "nested": [{"note": "mail x@y.com"}],
+                          "closing": "2026-11-13 17:00", "ref": "GEM/2026/B/6789012",
+                          "value": "1,00,00,000"})
+    assert "9876543210" not in out["remarks"] and "98765-43210" not in out["remarks"]
+    assert "@" not in out["remarks"] and "@" not in out["nested"][0]["note"]
+    assert out["closing"] == "2026-11-13 17:00"
+    assert out["ref"] == "GEM/2026/B/6789012"
+    assert out["value"] == "1,00,00,000"

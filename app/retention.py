@@ -33,7 +33,7 @@ from sqlalchemy import and_, delete, func, select, update
 from sqlalchemy.exc import OperationalError
 
 from .db import SessionLocal
-from .models import Tender, utcnow
+from .models import Tender, today_ist, utcnow
 
 log = logging.getLogger(__name__)
 
@@ -46,7 +46,7 @@ DEFAULT_RETENTION_DAYS = int(_RETENTION_ENV) if _RETENTION_ENV else None
 
 def cutoff_date(days: int, today: date | None = None) -> date:
     """Tenders with a deadline strictly before this date are purged."""
-    return (today or date.today()) - timedelta(days=days)
+    return (today or today_ist()) - timedelta(days=days)
 
 
 # Seconds to wait before each retry. Neon waking from scale-to-zero, a dropped
