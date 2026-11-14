@@ -85,6 +85,27 @@ def test_tender_page(client):
     assert 'href="/browse?state=Rajasthan"' in html          # the breadcrumb
 
 
+def test_bid_document_needs_sign_in(client, session_factory):
+    """Signed out, the bid PDF's link is not on the page; both download buttons
+    lead to sign-in and back. Signed in, the real link is there. Nothing else
+    on the page changes."""
+    doc = "https://bidplus.gem.gov.in/showbidDocument/9962428"
+    tid = client.get("/tenders", params={"q": "Katrathal"}).json()["items"][0]["id"]
+    with session_factory() as db:
+        db.get(Tender, tid).document_url = doc
+        db.commit()
+
+    html = client.get(f"/t/{tid}").text
+    assert doc not in html
+    assert "Sign in to download document (PDF)" in html
+    assert f'href="/login?next=%2Ft%2F{tid}"' in html
+    assert "https://wa.me/?text=" in html and "id=savebtn" in html   # the rest as before
+
+    client.post("/auth/signup", json={"email": "pdf@example.invalid", "password": "coconut-husk-2026"})
+    html = client.get(f"/t/{tid}").text
+    assert f'href="{doc}"' in html and "Sign in to download" not in html
+
+
 def test_dashboard_bids_and_saved_searches(client, session_factory):
     assert client.get("/dashboard", follow_redirects=False).status_code == 303
     assert client.post("/participate/1").status_code == 401
