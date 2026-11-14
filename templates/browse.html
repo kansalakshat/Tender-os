@@ -20,7 +20,7 @@
          placeholder="Search by work, buyer or tender ID, e.g. CCTV, road repair">
   <button form=f>{{ icon('magnifying-glass') }}Search</button>
  </div>
-<form id=f class=fside data-districts='{{ districts|tojson }}' data-today="{{ today }}">
+<form id=f class=fside data-districts='{{ districts|tojson }}'>
  <p class=fsidehead>{{ icon('sliders-horizontal') }}Filters <a href="/browse" class=fclear>Clear all</a></p>
  <fieldset class=fquick>
   <legend>Closing</legend>

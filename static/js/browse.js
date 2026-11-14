@@ -25,16 +25,6 @@ function cities(keep){
 }
 form.state.addEventListener('change', () => cities());
 
-// A date as YYYY-MM-DD, days after today in India. "Today" comes from the
-// server (data-today), the calendar GET /tenders also uses: the visitor's own
-// clock can be wrong or in another zone, and a "Today" one day behind India
-// matched nothing, since /tenders also hides deadlines before India's today.
-function isoDay(plus){
-  const d = new Date(form.dataset.today + 'T00:00:00Z');
-  d.setUTCDate(d.getUTCDate() + plus);
-  return d.toISOString().slice(0, 10);
-}
-
 function params(){
   const p = new URLSearchParams();
   for(const k of FIELDS){
@@ -46,13 +36,10 @@ function params(){
   // date. Reading the visitor's clock instead meant a wrong or simply
   // differently-zoned device decided what counted as still open.
   if(!form.open_only.checked) p.set('include_closed', 'true');
-  // "Closing within" caps the deadline. `closing` itself is kept in the URL so
-  // a reload or a shared link shows the same button pressed; /tenders ignores it.
-  const c = form.closing.value;
-  if(c){
-    p.set('closing', c);
-    p.set('deadline_to', isoDay(c === 'today' ? 0 : Number(c)));
-  }
+  // "Closing within": sent as today / 7 / 30, and GET /tenders turns it into a
+  // deadline against India's date on each request, for the same reason as the
+  // open-only rule above (and so a page left open past midnight stays right).
+  if(form.closing.value) p.set('closing', form.closing.value);
   return p;
 }
 

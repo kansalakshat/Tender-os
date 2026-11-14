@@ -896,11 +896,8 @@ async def cppp_open(request: Request, tender_id: int, db: Session = Depends(get_
 def browse(db: Session = Depends(get_db)) -> str:
     """Read-only view of the whole corpus. Filtering happens in GET /tenders --
     this page is the form around it, not a second query path."""
-    # Today in India, for the "Closing" buttons: the same calendar GET /tenders
-    # uses, never the visitor's clock. In the cache key so midnight starts afresh.
-    today = today_ist()
-    return shared(db, ("browse", today), 300, lambda db: render(
-        "browse.html", title="Browse tenders", today=today.isoformat(),
+    return shared(db, ("browse",), 300, lambda db: render(
+        "browse.html", title="Browse tenders",
         sources=db.execute(select(Source.id, Source.name).order_by(Source.name)).all(),
         states=STATES, sectors=sorted(SECTOR_LABELS.items(), key=lambda kv: kv[1]),
         districts={st: sorted(ds) for st, ds in DISTRICTS.items()}))
