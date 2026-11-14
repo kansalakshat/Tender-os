@@ -317,10 +317,15 @@ function signinPrompt(){
   if(!pop || typeof pop.showModal !== 'function') return;
   if(/^\/(login|signup|admin)/.test(location.pathname)) return;
   const QUIET = 3 * 24 * 3600 * 1000;
-  try {
-    if(sessionStorage.getItem('signpopShown')) return;
-    if(Date.now() - Number(localStorage.getItem('signpopLater') || 0) < QUIET) return;
-  } catch (_) {}
+  // "Not now" is shared by every tab (localStorage), so it is read again just
+  // before opening: one tab's "Not now" must also quiet a tab opened earlier.
+  function quiet(){
+    try {
+      return Date.now() - Number(localStorage.getItem('signpopLater') || 0) < QUIET;
+    } catch (_) { return false; }
+  }
+  try { if(sessionStorage.getItem('signpopShown')) return; } catch (_) {}
+  if(quiet()) return;
   // Sign in brings them back to this page.
   document.getElementById('signpopLogin').href =
     '/login?next=' + encodeURIComponent(location.pathname + location.search);
@@ -331,6 +336,7 @@ function signinPrompt(){
     done = true;
     window.removeEventListener('scroll', onScroll);
     clearTimeout(timer);
+    if(quiet()) return;
     try { sessionStorage.setItem('signpopShown', '1'); } catch (_) {}
     pop.showModal();
   }
