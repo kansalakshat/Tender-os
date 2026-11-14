@@ -318,8 +318,11 @@ def list_tenders(
         # Worked out here, against India's date at the moment of the request,
         # not by the browser: a page left open across midnight, or a device
         # clock in another zone, would send a stale date and match nothing.
+        # Both ends: "closing within 7 days" means from today on, even when
+        # include_closed is set, or it would also match tenders long closed.
         days = 0 if closing == "today" else int(closing)
-        filters.append(Tender.deadline <= today_ist() + timedelta(days=days))
+        today = today_ist()
+        filters.append(Tender.deadline.between(today, today + timedelta(days=days)))
     if min_value is not None:
         filters.append(Tender.estimated_value >= min_value)
     if max_value is not None:

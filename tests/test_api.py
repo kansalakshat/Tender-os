@@ -88,6 +88,10 @@ def test_closing_within_is_counted_from_indias_date_on_the_server(client):
     assert total(client, closing="7") == 1
     assert total(client, closing="30") == 1
     assert client.get("/tenders", params={"closing": "5"}).status_code == 422
+    # With closed tenders shown, the one that expired 200 days ago is still not
+    # "closing today": the window starts today either way.
+    assert total(client, closing="today", include_closed=True) == 0
+    assert total(client, closing="7", include_closed=True) == 1
 
 
 def test_closed_tenders_are_hidden_by_default(client):
