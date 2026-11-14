@@ -1116,8 +1116,10 @@ def participate_stop(tender_id: int, db: Session = Depends(get_db),
 
 # The /browse parameters a saved search may carry. Anything else is dropped, so
 # a stored query can only ever reproduce a browse page.
+# `closing` (a "Closing" button) is kept and turned back into a deadline on
+# reopen; the deadline_to it produced is not, since that date goes stale.
 SEARCH_KEYS = ("q", "organization", "source_id", "state", "city", "sector", "sort",
-               "include_closed")
+               "include_closed", "closing")
 MAX_SEARCHES = 50
 
 

@@ -178,3 +178,9 @@ def test_filter_and_card_read_the_buyers_office_alike(client, session_factory):
     assert (item["state"], item["city"]) == ("Madhya Pradesh", "Jabalpur")
     # "Mandi" here is a market, not the Himachal district
     assert "f" not in refs(client, state="Himachal Pradesh")
+
+
+def test_clean_query_keeps_the_closing_button_but_not_its_date():
+    """A saved "Next 7 days" search reopens as "Next 7 days", recomputed from
+    that day; the stored deadline_to would have meant a fixed, stale date."""
+    assert clean_query("state=Goa&closing=7&deadline_to=2026-11-21") == "state=Goa&closing=7"

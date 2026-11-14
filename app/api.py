@@ -262,6 +262,9 @@ def list_tenders(
     published_to: date | None = None,
     deadline_from: date | None = None,
     deadline_to: date | None = None,
+    closing: str | None = Query(
+        None, pattern="^(today|7|30)$",
+        description="Closing within: today, or the next 7 or 30 days (India's date)"),
     min_value: Decimal | None = None,
     max_value: Decimal | None = None,
     include_duplicates: bool = Query(
@@ -311,6 +314,15 @@ def list_tenders(
         filters.append(Tender.deadline >= deadline_from)
     if deadline_to:
         filters.append(Tender.deadline <= deadline_to)
+    if closing:
+        # Worked out here, against India's date at the moment of the request,
+        # not by the browser: a page left open across midnight, or a device
+        # clock in another zone, would send a stale date and match nothing.
+        # Both ends: "closing within 7 days" means from today on, even when
+        # include_closed is set, or it would also match tenders long closed.
+        days = 0 if closing == "today" else int(closing)
+        today = today_ist()
+        filters.append(Tender.deadline.between(today, today + timedelta(days=days)))
     if min_value is not None:
         filters.append(Tender.estimated_value >= min_value)
     if max_value is not None:

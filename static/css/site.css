@@ -474,9 +474,23 @@ legend{padding:0 1rem 0 0;font-size:1.35rem;font-weight:700}
 .req{display:inline-block;margin-left:.4rem;padding:.1rem .45rem;border-radius:4px;background:var(--accent-soft);
   color:var(--accent);font-size:.8rem;font-weight:600;vertical-align:middle}
 
-/* browse: filters down the left */
-.bwrap{display:grid;gap:1.75rem;align-items:start}
-@media (min-width:60rem){.bwrap{grid-template-columns:18.5rem minmax(0,1fr)}
+/* browse: a wide page. Title and search on top; filters down the left. */
+[data-wide] .wrap{max-width:100rem}
+/* A results page is scanned, not read, so it runs about a tenth smaller than
+   the reading pages: body text 16px over 18px, and every rem-sized gap, box
+   and heading with it. */
+html[data-wide]{font-size:14.5px}
+html[data-wide] body{font-size:16px}
+/* ...but a phone zooms the whole page in when a box under 16px gets focus. */
+@media (max-width:48rem){
+ html[data-wide] input,html[data-wide] select,html[data-wide] textarea{font-size:16px}
+}
+.bpage{padding-block:1.75rem 0}
+.bhead{display:flex;flex-wrap:wrap;align-items:baseline;gap:.25rem .75rem;align-self:center}
+.bhead h1{font-size:clamp(1.6rem,1.2rem + 1vw,2rem)}
+.btotal{margin:0;color:var(--muted);font-size:.95rem;font-variant-numeric:tabular-nums}
+.bwrap{display:grid;gap:1.25rem 1.75rem;align-items:start}
+@media (min-width:60rem){.bwrap{grid-template-columns:20rem minmax(0,1fr)}
  .fside{position:sticky;top:5.5rem;max-height:calc(100dvh - 6.5rem);overflow-y:auto}}
 .fside{display:grid;gap:1rem;padding:1.25rem}
 .fside .f{margin:0;max-width:none}
@@ -487,6 +501,63 @@ legend{padding:0 1rem 0 0;font-size:1.35rem;font-weight:700}
 .savesearch{display:grid;gap:.6rem;padding-top:1rem;border-top:1px solid var(--stone)}
 .savesearch .hint:empty{display:none}
 .bresults{min-width:0}
+/* "Closing" quick buttons in the sidebar */
+.fquick{border:0;margin:0;padding:0;min-width:0}
+.fquick legend{padding:0;margin:0 0 .5rem;font-size:1rem;font-weight:600;color:var(--ink)}
+.fquickbtns{display:flex;flex-wrap:wrap;gap:.4rem}
+.fquickbtns button{min-height:2.5rem;padding:.35rem .75rem;font-size:.95rem;font-weight:500;
+  background:var(--panel);color:var(--ink);border:1px solid var(--stone);border-radius:var(--r)}
+.fquickbtns button:hover{border-color:var(--accent);color:var(--accent)}
+.fquickbtns button[aria-pressed=true]{background:var(--accent-soft);border-color:var(--accent);
+  color:var(--accent-h);font-weight:600}
+/* over the results: search, the filters in use, count and sort */
+.bsearch{margin:0}
+.factive{margin:0 0 .9rem}
+.fchips{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;margin:0;padding:0;list-style:none}
+.fchips li{display:inline-flex;align-items:center;gap:.4rem;padding:.2rem .25rem .2rem .85rem;
+  border:1px solid var(--accent);border-radius:999px;background:var(--accent-soft);color:var(--ink);font-size:.95rem}
+.fchips b{color:var(--accent-h)}
+.fchips button{min-height:2.25rem;width:2.25rem;padding:0;border-radius:50%;
+  background:var(--panel);color:var(--accent);border-color:transparent}
+.fchips button:hover{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.fchips .i{width:.9rem;height:.9rem}
+.fchips li.fall{border:0;background:none;padding:0 .4rem;font-weight:600}
+.bbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.5rem 1rem;margin:0 0 .9rem}
+.bbar .count{margin:0}
+.bbar .count b{color:var(--ink)}
+.bsort{display:flex;align-items:center;gap:.5rem;font-size:.95rem;color:var(--muted)}
+.bsort select{width:auto;min-height:2.6rem}
+#ftoggle{display:none}
+@media (max-width:59.99rem){
+ #ftoggle{display:inline-flex}
+ .fside:not(.open){display:none}
+ .bbar .count{flex:1 1 100%}
+}
+/* one result on the browse page: buyer, where and when, the work, then a
+   footer with the money, the deadline and the actions */
+.row.bcard{display:block;padding:1.3rem 1.5rem 1.1rem}
+.borg{margin:0;font-size:1.2rem;font-weight:700;color:var(--ink)}
+.bmeta{display:flex;flex-wrap:wrap;gap:.3rem 1.1rem;margin:.35rem 0 .7rem;color:var(--muted);font-size:.95rem}
+.bmeta span{display:inline-flex;align-items:center;gap:.35rem}
+.bmeta .i{color:var(--faint)}
+.bcard .t{font-size:1.1rem;font-weight:500}
+.bcard mark{background:var(--warn-soft);color:inherit;font-weight:700;border-radius:3px;padding:0 .1em}
+.bcard .chips li.port{background:var(--accent-soft);color:var(--accent-h);font-weight:600}
+.bfoot{display:flex;flex-wrap:wrap;align-items:center;gap:.75rem 1.5rem;margin-top:1rem;
+  padding-top:.9rem;border-top:1px solid var(--hair)}
+.bmoney,.bdue{display:flex;align-items:baseline;gap:.4rem;margin:0}
+.bmoney span,.bdue span{color:var(--muted);font-size:.9rem}
+.bmoney b,.bdue b{font-size:1.05rem;font-variant-numeric:tabular-nums}
+.bmoney b.none{font-weight:400;color:var(--faint)}
+.bdue .i{align-self:center;color:var(--accent)}
+.bdue em{font-style:normal;font-weight:700;font-size:.85rem;padding:.15rem .45rem;border-radius:var(--r-sm);
+  background:var(--bone);color:var(--muted)}
+.bdue.hot .i,.bdue.hot b{color:var(--danger)}
+.bdue.hot em{background:var(--danger-soft);color:var(--danger)}
+.bact{display:flex;gap:.5rem;margin:0 0 0 auto}
+.bact .wa{background:#1E8E4E;border-color:#1E8E4E;color:#fff}
+.bact .wa:hover{background:#176F3D;border-color:#176F3D;color:#fff}
+@media (max-width:40rem){.bact{margin-left:0;width:100%} .bact .btn{flex:1}}
 
 /* dashboard */
 .stats.dash{grid-template-columns:repeat(auto-fit,minmax(10rem,1fr))}

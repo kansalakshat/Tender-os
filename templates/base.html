@@ -1,4 +1,4 @@
-<!doctype html><html lang=en><meta charset=utf-8><meta name=viewport
+<!doctype html><html lang=en{% block htmlattrs %}{% endblock %}><meta charset=utf-8><meta name=viewport
  content="width=device-width,initial-scale=1"><title>{{ title }}</title>
 <meta name=description content="Tenderleo: AI-powered tender intelligence. Find the
  Indian government tenders that fit your business, check eligibility and get bid-ready.">
@@ -29,7 +29,8 @@
  <a class="btn ghost sm demo" href="{{ demo }}" target=_blank rel="noopener noreferrer">{{ icon('calendar') }}Book a Demo</a>
  <span class=acct id=me></span>
 </div></header>
-{#- Icons for markup that site.js builds (the account menu). #}
+{#- Icons for markup that site.js and browse.js build (the account menu, the
+    browse page's cards and filter chips). #}
 <template id=icons>
  <span data-icon=caret-down>{{ icon('caret-down') }}</span>
  <span data-icon=target>{{ icon('target') }}</span>
@@ -37,6 +38,9 @@
  <span data-icon=sliders-horizontal>{{ icon('sliders-horizontal') }}</span>
  <span data-icon=sign-out>{{ icon('sign-out') }}</span>
  <span data-icon=stack-simple>{{ icon('stack-simple') }}</span>
+ <span data-icon=x>{{ icon('x') }}</span>
+ <span data-icon=calendar>{{ icon('calendar') }}</span>
+ <span data-icon=share>{{ icon('share') }}</span>
 </template>
 {% block hero %}{% endblock %}
 <div class=wrap><div id=flash></div></div>
