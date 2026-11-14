@@ -115,6 +115,7 @@ fetch('/me').then(r=>r.json()).then(d=>{
   if(!d.user){
     el.innerHTML = '<a href="/login">Sign in</a>'
       + '<a class="btn sm" href="/signup">Get ranked matches</a>';
+    signinPrompt();
     return;
   }
   // Signed in: a real account menu, not a row of loose links. The label is the
@@ -304,3 +305,50 @@ document.addEventListener('change', e => {
   s.form.requestSubmit(s.form.querySelector('button[aria-pressed="true"]'));
 });
 
+
+// ---- sign-in prompt (signed-out visitors) ----------------------------------
+// After a visitor has read a little (scrolled ~600px, or 20 seconds on the
+// page) the dialog in base.html asks them to sign in. At most once per visit,
+// and "Not now" quiets it for three days. Never on the pages that are already
+// about signing in. Storage can be blocked, so every read and write is guarded:
+// without it the prompt simply shows once per page load.
+function signinPrompt(){
+  const pop = document.getElementById('signpop');
+  if(!pop || typeof pop.showModal !== 'function') return;
+  if(/^\/(login|signup|admin)/.test(location.pathname)) return;
+  const QUIET = 3 * 24 * 3600 * 1000;
+  // "Not now" is shared by every tab (localStorage), so it is read again just
+  // before opening: one tab's "Not now" must also quiet a tab opened earlier.
+  function quiet(){
+    try {
+      return Date.now() - Number(localStorage.getItem('signpopLater') || 0) < QUIET;
+    } catch (_) { return false; }
+  }
+  try { if(sessionStorage.getItem('signpopShown')) return; } catch (_) {}
+  if(quiet()) return;
+  // Sign in brings them back to this page.
+  document.getElementById('signpopLogin').href =
+    '/login?next=' + encodeURIComponent(location.pathname + location.search);
+
+  let done = false;
+  function open(){
+    if(done || pop.open || document.querySelector('dialog[open]')) return;
+    done = true;
+    window.removeEventListener('scroll', onScroll);
+    clearTimeout(timer);
+    if(quiet()) return;
+    try { sessionStorage.setItem('signpopShown', '1'); } catch (_) {}
+    pop.showModal();
+  }
+  function onScroll(){ if(window.scrollY > 600) open(); }
+  window.addEventListener('scroll', onScroll, {passive: true});
+  const timer = setTimeout(open, 20000);
+
+  // A click on the dimmed backdrop (outside the box) closes it too.
+  pop.addEventListener('click', e => { if(e.target === pop) pop.close('close'); });
+  pop.addEventListener('close', () => {
+    if(pop.returnValue === 'later'){
+      try { localStorage.setItem('signpopLater', String(Date.now())); } catch (_) {}
+    }
+  });
+}

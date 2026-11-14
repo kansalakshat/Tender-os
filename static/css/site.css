@@ -610,3 +610,23 @@ pre#err:empty{display:none}
  .ltrack{animation:none}
  .ltrack [aria-hidden=true]{display:none}
 }
+
+/* Sign-in prompt for signed-out visitors (base.html, site.js) */
+.signpop{width:min(30rem,calc(100% - 2rem));padding:1.75rem 1.75rem 1.25rem;border:1px solid var(--stone);
+  border-radius:var(--r-xl);background:var(--panel);color:var(--ink);box-shadow:0 20px 60px rgba(22,32,51,.25)}
+.signpop::backdrop{background:rgba(15,23,42,.45);backdrop-filter:blur(2px)}
+.signpop h2{display:block;margin:.25rem 0 1rem;font-size:1.45rem;line-height:1.25}
+.signpop .kicker{margin:0}
+.signpopx{position:absolute;top:.75rem;right:.75rem;margin:0}
+.signpopx button{min-height:2.5rem;width:2.5rem;padding:0;border-radius:50%;background:transparent;
+  border-color:transparent;color:var(--muted)}
+.signpopx button:hover{background:var(--bone);color:var(--ink)}
+.signpoplist{list-style:none;margin:0 0 1.25rem;padding:0;display:grid;gap:.6rem}
+.signpoplist li{display:flex;gap:.6rem;align-items:flex-start;color:var(--muted)}
+.signpoplist .i{flex:none;margin-top:.15rem;color:var(--ok)}
+.signpopact{display:flex;flex-wrap:wrap;gap:.6rem;margin:0}
+.signpopact .btn{flex:1 1 10rem;justify-content:center}
+.signpop form:last-child{margin:.75rem 0 0;text-align:center}
+.signpoplater{min-height:2.5rem;background:none;border:0;color:var(--muted);font-weight:500;
+  text-decoration:underline;text-underline-offset:3px}
+.signpoplater:hover{color:var(--ink);background:none}

@@ -80,3 +80,20 @@
  automated access, so that data needs an agreement, not a scraper.</p>
 </div></div>
 </footer>
+{#- Asks a signed-out visitor to sign in, once they have read a little.
+    Opened (or not) by static/js/site.js once /me says nobody is signed in. #}
+<dialog class=signpop id=signpop aria-labelledby=signpopTitle>
+ <form method=dialog class=signpopx><button value=close aria-label="Close">{{ icon('x') }}</button></form>
+ <p class=kicker>Free account</p>
+ <h2 id=signpopTitle>Get tenders that fit your business</h2>
+ <ul class=signpoplist>
+  <li>{{ icon('check-circle') }}Matches ranked for your company, every day</li>
+  <li>{{ icon('check-circle') }}Save tenders and track the ones you bid on</li>
+  <li>{{ icon('check-circle') }}Save searches and come back to them in one click</li>
+ </ul>
+ <p class=signpopact>
+  <a class=btn href="/signup" autofocus>Create free account</a>
+  <a class="btn ghost" id=signpopLogin href="/login">Sign in</a>
+ </p>
+ <form method=dialog><button class=signpoplater value=later>Not now</button></form>
+</dialog>
