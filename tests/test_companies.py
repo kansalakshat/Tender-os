@@ -175,7 +175,9 @@ def test_results_page_sorts_every_match_both_ways(client, session_factory):
 
     def lots(**q):
         html = client.get(f"/c/{company_id}", params=q).text
-        return [int(x) for x in __import__("re").findall(r"transformer lot (\d)", html)]
+        # The visible title only (">title"): a card also carries it in its
+        # Share button's data-title.
+        return [int(x) for x in __import__("re").findall(r">transformer lot (\d)", html)]
 
     assert lots(sort="emd", order="desc") == [2, 0, 3, 1]    # missing EMD last
     assert lots(sort="emd", order="asc") == [3, 0, 2, 1]     # ...both ways

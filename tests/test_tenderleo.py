@@ -1,5 +1,6 @@
 """The Tenderleo changes: state on every card, the browse filters behind it, the
 new pages, and the dashboard (bids in progress, saved searches)."""
+import re
 from datetime import date, timedelta
 
 import pytest
@@ -59,7 +60,8 @@ def test_every_card_leads_with_its_state(client):
     assert items["b"]["state"] == "Rajasthan"          # from the portal alone
     assert items["d"]["state"] == ""                   # a national buyer names none
     home_signed_out = client.get("/buyer", params={"name": "District Office Gwalior"}).text
-    assert "<span class=st>Madhya Pradesh</span>" in home_signed_out
+    # The card's place line (city, state) under the buyer's name.
+    assert re.search(r"<p class=bmeta><span>.*?Madhya Pradesh</span>", home_signed_out, re.S)
 
 
 @pytest.mark.parametrize("path", ["/", "/about", "/buyers", "/buyers?q=rail", "/browse"])

@@ -247,6 +247,8 @@ _env.filters["num"] = lambda n: f"{n:,}"
 _env.filters["extract"] = lambda key, mapping: mapping.get(key, key)
 _env.filters["urlquote"] = quote
 _env.filters["ist"] = lambda dt: ist(dt).strftime("%d %b %H:%M IST")
+# A card's dates, the way shortDate() in site.js writes them: "23 Oct 2026".
+_env.filters["short_date"] = lambda d: f"{d.day} {d:%b %Y}" if d else ""
 
 
 def render(name: str, **context) -> str:

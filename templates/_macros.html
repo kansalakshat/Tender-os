@@ -3,8 +3,7 @@
 
 {#- The small facts under a row's title, as chips: tender ID, publication date
     and the buyer's office. Department is skipped when it only repeats the buyer,
-    which is every CPPP row. Mirrored by extra() in static/js/site.js for rows
-    that arrive as JSON. -#}
+    which is every CPPP row. Used through extra_line() in app/web.py. -#}
 {% macro extra_line(t) -%}
 {%- if t.external_ref %}<li>ID {{ t.external_ref }}</li>{% endif -%}
 {%- if t.published_date %}<li>Published <time datetime='{{ t.published_date }}'>{{ t.published_date }}</time></li>{% endif -%}
@@ -25,36 +24,44 @@
 <li>Copy of EFT Mandate duly certified by Bank.</li></ol></div>
 {%- endmacro %}
 
-{#- One list row, laid out as a fixed card so every tender reads the same way:
-    buyer and source on top, the title, a synopsis, then chips; the money and
-    the deadline always sit in the same two boxes on the right, whether or not
-    they are known. The title opens our own page rather than the source portal:
-    eprocure.gov.in serves "Invalid Url" for any tendersfullview link that
-    arrives without a Referer from its own domain. Attachments are left to the
-    tender's own page, not repeated down a list. Mirrored by card() in
-    static/js/site.js for rows fetched as JSON. -#}
-{% macro row(gutter, rank, t, tags=(), summary=true) -%}
+{#- One tender in a list, as one card the whole site shares: the buyer on top,
+    where and when, the work itself, chips, then a footer with the money, the
+    deadline and the actions. Drawn the same way by card() in static/js/site.js
+    for rows fetched as JSON (the browse page, the profile's matches), so a
+    tender looks the same wherever it is listed. The title opens our own page
+    rather than the source portal: eprocure.gov.in serves "Invalid Url" for any
+    tendersfullview link that arrives without a Referer from its own domain.
+    `gutter` is a list's own number for the row (a match score), shown beside
+    the buyer when it says more than the days left; `tags` are that list's
+    reasons. `summary` is accepted for old callers and no longer drawn: the
+    synopsis repeated what the card already shows. -#}
+{% macro row(gutter, rank, t, tags=(), summary=false) -%}
 {%- set f = dict(preview_facts(t)) -%}
 {%- set days = days_left(t.deadline)[0] -%}
 {%- set value = f.get('Estimated value') -%}
 {%- set emd = f.get('EMD (bid security)') -%}
 {%- set state, city = place_of(t) -%}
-<li class="row {{ rank }}"><div class=rmain>
-<p class=rhead>{% if state %}<span class=st>{{ state }}</span>{% endif -%}
-{% if gutter and gutter != days %}<span class=n>{{ gutter }}</span>{% endif -%}
-<b class=rorg>{{ t.organization or 'unnamed buyer' }}</b>
-{%- if f.Source %}<span class=src>{{ f.Source }}</span>{% endif %}</p>
+<li class="row bcard {{ rank }}">
+<p class=borg>{% if gutter and gutter != days %}<span class=bscore>{{ gutter }}</span>{% endif %}{{ t.organization or 'Unnamed buyer' }}</p>
+<p class=bmeta>
+{%- if city or state %}<span>{{ icon('map-pin') }}{{ [city, state]|select|join(', ') }}</span>{% endif -%}
+{%- if t.published_date %}<span>{{ icon('calendar') }}Published {{ t.published_date|short_date }}</span>{% endif -%}
+</p>
 <a class=t href="/t/{{ t.id }}">{{ t.title }}</a>
-{%- if summary %}<p class=rowsum>{{ summary_for(t) }}</p>{% endif -%}
-<ul class=chips>{% if city or state %}<li class=loc>{{ icon('map-pin') }}{{ [city, state]|select|join(', ') }}</li>{% endif -%}
-{{- extra_line(t) -}}
-{%- for k in ('Quantity', 'Bid type', 'Contract period') if f[k] %}<li>{{ k }}: {{ f[k] }}</li>{% endfor -%}
+<ul class=chips>
+{%- if f.Source %}<li class=port>{{ f.Source }}</li>{% endif -%}
+{%- if t.external_ref %}<li>ID {{ t.external_ref }}</li>{% endif -%}
+{%- if t.department and t.department != t.organization %}<li>{{ t.department }}</li>{% endif -%}
+{%- for k in ('Bid type', 'Quantity', 'Contract period') if f[k] %}<li>{{ k }}: {{ f[k] }}</li>{% endfor -%}
 </ul>
-{%- if tags %}<ul class=tags>{% for tag in tags %}<li class=tag>{{ tag }}</li>{% endfor %}</ul>{% endif -%}
-</div><div class=rside>
-<div class=box><span>{{ 'Est. value' if value else 'EMD' if emd else 'Value' }}</span>{% if value or emd %}<b>{{ value or emd }}</b>{% else %}<b class=none>not stated</b>{% endif %}</div>
-<div class="box due"><span>Closes{% if days %} <em>{{ days }}</em>{% endif %}</span><b><time datetime='{{ t.deadline or '' }}'>{{ f.get('Bids close') or t.deadline or 'not stated' }}</time></b></div>
-<a class="btn sm" href="/t/{{ t.id }}">View details</a>
+{%- if tags %}<ul class=tags>{% for tag in tags %}<li class=tag>{{ tag }}</li>{% endfor %}</ul>{% endif %}
+<div class=bfoot>
+<p class=bmoney>{% if value or emd %}<span>{{ 'Value' if value else 'EMD' }}</span><b>{{ value or emd }}</b>
+{%- else %}<span>Value</span><b class=none>not stated</b>{% endif %}</p>
+<p class="bdue{{ ' hot' if rank == 's3' else '' }}">{{ icon('calendar') }}<span>Closes</span><b><time datetime='{{ t.deadline or '' }}'>{{ f.get('Bids close') or (t.deadline|short_date) or 'not stated' }}</time></b>
+{%- if days %}<em>{{ days }}</em>{% endif %}</p>
+<p class=bact><a class="btn ghost sm wa" href="/t/{{ t.id }}" data-share="{{ t.id }}" data-title="{{ t.title }}">{{ icon('share') }}Share</a>
+<a class="btn sm" href="/t/{{ t.id }}">View details</a></p>
 </div></li>
 {%- endmacro %}
 

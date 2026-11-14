@@ -6,17 +6,6 @@
 function esc(s){return String(s??'').replace(/[<>&"']/g,
   c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c]));}
 
-// The small facts under a row's title, as chips. Mirrors extra_line() in
-// _macros.html, for the rows that arrive as JSON instead of server-rendered HTML.
-function extra(t){
-  const b=[];
-  if(t.external_ref) b.push('ID '+esc(t.external_ref));
-  if(t.published_date) b.push('Published <time datetime="'+esc(t.published_date)+'">'
-    +esc(t.published_date)+'</time>');
-  if(t.department && t.department!==t.organization) b.push(esc(t.department));
-  return b.map(x=>'<li>'+x+'</li>').join('');
-}
-
 // Time left, as the row labels it. Mirrors days_left() in web.py. Display only:
 // whether a tender still counts as open is decided by the server's clock.
 function left(d){
@@ -32,33 +21,78 @@ function left(d){
   return [n+'d', n<=3 ? 's3' : n<=10 ? 's2' : 's1'];
 }
 
-// One list row as a fixed card. Mirrors row() in _macros.html; the facts arrive
-// preformatted from app/facts.py, the synopsis from summary_for in web.py.
-function card(t, gutter, rank, tagsHtml){
+// A card's dates: "23 Oct 2026".
+function shortDate(iso){
+  if(!iso) return '';
+  const d = new Date(iso + 'T00:00:00');
+  return isNaN(d) ? iso : d.toLocaleDateString('en-IN', {day: 'numeric', month: 'short', year: 'numeric'});
+}
+// The title with each searched word marked. Split the raw text first and
+// escape every piece, so a mark can never land inside an HTML entity.
+function marked(text, q){
+  const words = (q || '').trim().split(/\s+/).filter(w => w.length > 1);
+  if(!words.length) return esc(text);
+  const re = new RegExp('(' + words.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ')', 'gi');
+  return text.split(re).map((part, i) => i % 2 ? '<mark>' + esc(part) + '</mark>' : esc(part)).join('');
+}
+// WhatsApp share link for a tender: its title and our page's full address.
+function shareUrl(id, title){
+  return 'https://wa.me/?text=' + encodeURIComponent(title + '\n' + location.origin + '/t/' + id);
+}
+
+// One tender in a list, as the card the whole site shares. Mirrors row() in
+// _macros.html, which draws the same card on the server; the facts arrive
+// preformatted from app/facts.py. `gutter` is the list's own number for the
+// row (a match score), `tagsHtml` its reasons, `q` words to mark in the title.
+function card(t, gutter, rank, tagsHtml, q){
   const f = Object.fromEntries(t.facts || []);
   const days = left(t.deadline)[0];
   const value = f['Estimated value'], emd = f['EMD (bid security)'];
   const where = [t.city, t.state].filter(Boolean).join(', ');
-  const chips = (where ? '<li class=loc>'+ico('map-pin')+esc(where)+'</li>' : '')
-    + extra(t)
-    + ['Quantity','Bid type','Contract period'].filter(k=>f[k])
-        .map(k=>'<li>'+k+': '+esc(f[k])+'</li>').join('');
-  const url = '/t/'+esc(t.id);
-  return '<li class="row '+rank+'"><div class=rmain>'
-    + '<p class=rhead>'+(t.state ? '<span class=st>'+esc(t.state)+'</span>' : '')
-    + (gutter && gutter!==days ? '<span class=n>'+esc(gutter)+'</span>' : '')
-    + '<b class=rorg>'+esc(t.organization||'unnamed buyer')+'</b>'
-    + (f.Source ? '<span class=src>'+esc(f.Source)+'</span>' : '')+'</p>'
-    + '<a class=t href="'+url+'">'+esc(t.title)+'</a>'
-    + (t.summary ? '<p class=rowsum>'+esc(t.summary)+'</p>' : '')
-    + '<ul class=chips>'+chips+'</ul>'+(tagsHtml||'')
-    + '</div><div class=rside>'
-    + '<div class=box><span>'+(value?'Est. value':emd?'EMD':'Value')+'</span>'
-    +   (value||emd ? '<b>'+esc(value||emd)+'</b>' : '<b class=none>not stated</b>')+'</div>'
-    + '<div class="box due"><span>Closes'+(days?' <em>'+days+'</em>':'')+'</span><b>'
-    +   '<time datetime="'+esc(t.deadline||'')+'">'+esc(f['Bids close']||t.deadline||'not stated')+'</time></b></div>'
-    + '<a class="btn sm" href="'+url+'">View details</a></div></li>';
+  const url = '/t/' + esc(t.id);
+  // The publish date is already on the line above, so the chips skip it.
+  const chips = (f.Source ? '<li class=port>' + esc(f.Source) + '</li>' : '')
+    + (t.external_ref ? '<li>ID ' + esc(t.external_ref) + '</li>' : '')
+    + (t.department && t.department !== t.organization ? '<li>' + esc(t.department) + '</li>' : '')
+    + ['Bid type', 'Quantity', 'Contract period'].filter(k => f[k])
+        .map(k => '<li>' + k + ': ' + esc(f[k]) + '</li>').join('');
+  return '<li class="row bcard ' + rank + '">'
+    + '<p class=borg>' + (gutter && gutter !== days ? '<span class=bscore>' + esc(gutter) + '</span>' : '')
+    +   esc(t.organization || 'Unnamed buyer') + '</p>'
+    + '<p class=bmeta>'
+    +   (where ? '<span>' + ico('map-pin') + esc(where) + '</span>' : '')
+    +   (t.published_date ? '<span>' + ico('calendar') + 'Published ' + esc(shortDate(t.published_date)) + '</span>' : '')
+    + '</p>'
+    + '<a class=t href="' + url + '">' + marked(t.title, q) + '</a>'
+    + (chips ? '<ul class=chips>' + chips + '</ul>' : '')
+    + (tagsHtml || '')
+    + '<div class=bfoot>'
+    +   '<p class=bmoney>' + (value || emd
+          ? '<span>' + (value ? 'Value' : 'EMD') + '</span><b>' + esc(value || emd) + '</b>'
+          : '<span>Value</span><b class=none>not stated</b>') + '</p>'
+    +   '<p class="bdue' + (rank === 's3' ? ' hot' : '') + '">' + ico('calendar')
+    +     '<span>Closes</span><b><time datetime="' + esc(t.deadline || '') + '">'
+    +     esc(f['Bids close'] || shortDate(t.deadline) || 'not stated') + '</time></b>'
+    +     (days ? '<em>' + esc(days) + '</em>' : '') + '</p>'
+    +   '<p class=bact>'
+    +     '<a class="btn ghost sm wa" href="' + esc(shareUrl(t.id, t.title)) + '" target=_blank rel="noopener noreferrer">'
+    +       ico('share') + 'Share</a>'
+    +     '<a class="btn sm" href="' + url + '">View details</a></p>'
+    + '</div></li>';
 }
+
+// Cards drawn on the server do not know the site's own address, so their
+// Share buttons point at the tender page until this gives them the WhatsApp
+// link. Also run for lists that arrive later (the tender page's related lists).
+function shareLinks(root){
+  for(const a of (root || document).querySelectorAll('a[data-share]')){
+    a.href = shareUrl(a.dataset.share, a.dataset.title || '');
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    a.removeAttribute('data-share');
+  }
+}
+shareLinks();
 
 function flash(html, kind){
   document.getElementById('flash').innerHTML =

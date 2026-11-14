@@ -16,6 +16,7 @@ fetch(document.getElementById('moreSlot').dataset.src, {credentials: 'same-origi
   .then(function (d) {
     document.getElementById('fitSlot').innerHTML = d.fit;
     document.getElementById('moreSlot').innerHTML = d.more;
+    shareLinks(document.getElementById('moreSlot'));
   })
   .catch(function () {
     var note = '<p class=hint role=status>Could not load this part. Reload the page to try again.</p>';
