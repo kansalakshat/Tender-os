@@ -687,7 +687,7 @@ pre#err:empty{display:none}
 @media (prefers-reduced-motion:reduce){
  .lstrip{overflow-x:auto;-webkit-mask-image:none;mask-image:none}
  .ltrack{animation:none}
- .ltrack [aria-hidden=true]{display:none}
+ .ltrack>[aria-hidden=true]{display:none}
 }
 
 /* Sign-in prompt for signed-out visitors (base.html, site.js) */

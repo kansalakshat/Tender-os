@@ -73,6 +73,8 @@ def test_home_moves_only_the_logo_strip_and_gently(client):
     assert ".lstrip:hover .ltrack,.lstrip:focus-within .ltrack{animation-play-state:paused}" in css
     reduced = css[css.rindex("@media (prefers-reduced-motion:reduce)"):]
     assert ".ltrack{animation:none}" in reduced
+    # only the loop's second copy goes; a tile's own aria-hidden picture stays
+    assert ".ltrack>[aria-hidden=true]{display:none}" in reduced
 
 
 @pytest.mark.parametrize("path", PAGES)
