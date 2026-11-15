@@ -80,6 +80,30 @@ def test_home_has_the_new_sections(client):
     assert "Closing soonest" not in html
 
 
+def test_home_finds_tenders_by_keyword_and_by_portal(client):
+    """Two strips after the companies: search words and portals, each tile
+    with its count of open tenders and a link that gives exactly those."""
+    html = client.get("/").text
+    sections = re.findall(r"<section class=sec id=(\w+)", html)
+    assert sections.index("companies") + 1 == sections.index("keywords")
+    assert sections.index("keywords") + 1 == sections.index("portals")
+    assert sections.index("portals") + 1 == sections.index("how")
+    # "Construction" and "Hiring" are each in one title; a word in none is left out
+    assert "<span class=cname>Construction</span><span class=ccount>1 open</span>" in html
+    assert 'href="/browse?q=Hiring"' in html and "/browse?q=CCTV" not in html
+    assert len(refs(client, q="Construction")) == 1
+    # three open tenders on CPPP, one on the Rajasthan portal, busiest first
+    portals = html[html.index("id=portals"):html.index("id=how")]
+    assert portals.index("cname>CPPP<") < portals.index("cname>Rajasthan eProcurement<")
+    assert "<span class=cname>CPPP</span><span class=ccount>3 open</span>" in portals
+    assert re.search(r'href="/browse\?source_id=\d+"', portals)
+    # each tile has a picture: a glyph for a word or a national portal, the
+    # state's outline for a state's own portal
+    keywords = html[html.index("id=keywords"):html.index("id=portals")]
+    assert keywords.count("logo big art") >= 2 and "<svg" in keywords
+    assert portals.count("logo big art") == 2 and 'class="i shape"' in portals
+
+
 def test_tender_page(client):
     tid = client.get("/tenders", params={"q": "Katrathal"}).json()["items"][0]["id"]
     html = client.get(f"/t/{tid}").text

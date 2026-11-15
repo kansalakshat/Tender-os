@@ -680,10 +680,17 @@ pre#err:empty{display:none}
   color:var(--ink);text-decoration:none;text-align:center}
 .lchip:hover{color:var(--ink);border-color:var(--accent)}
 .lchip .cname{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:.95rem}
+/* Every picture in a strip sits in the same white, hairline-framed square as
+   a company's logo file, whether it is a logo, a glyph, a state or initials. */
+.lchip .logo{background:#fff;border:1px solid var(--hair)}
+.lchip .logo.art .i{width:2.6rem;height:2.6rem;color:var(--accent)}
+/* A strip too short to loop (home.html) stands still and wraps. */
+.lstrip.still{-webkit-mask-image:none;mask-image:none}
+.lstrip.still .ltrack{animation:none;flex-wrap:wrap;width:auto}
 @media (prefers-reduced-motion:reduce){
  .lstrip{overflow-x:auto;-webkit-mask-image:none;mask-image:none}
  .ltrack{animation:none}
- .ltrack [aria-hidden=true]{display:none}
+ .ltrack>[aria-hidden=true]{display:none}
 }
 
 /* Sign-in prompt for signed-out visitors (base.html, site.js) */

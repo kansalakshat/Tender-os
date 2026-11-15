@@ -94,6 +94,12 @@
 <li{% if dup %} aria-hidden=true{% endif %}><a class=lchip href="/buyer?name={{ name|urlquote }}"{% if dup %} tabindex=-1{% endif %}>{{ logo(name, "big") }}<span class=cname>{{ name }}</span><span class=ccount>{{ n|num }} open</span></a></li>
 {%- endmacro %}
 
+{#- One tile in a home page strip that is not a company (a keyword, a portal):
+    `art` is what sits where a company's logo would. Same copy rule as above. -#}
+{% macro strip_chip(href, art, name, n, dup=false) -%}
+<li{% if dup %} aria-hidden=true{% endif %}><a class=lchip href="{{ href }}"{% if dup %} tabindex=-1{% endif %}>{{ art }}<span class=cname>{{ name }}</span><span class=ccount>{{ n|num }} open</span></a></li>
+{%- endmacro %}
+
 {#- One company as a tile with its logo, for the company grids. -#}
 {% macro company_tile(name, n) -%}
 <li><a class=ctile href="/buyer?name={{ name|urlquote }}">{{ logo(name, "big") }}<span class=cname>{{ name }}</span><span class=ccount>{{ n|num }} open</span></a></li>

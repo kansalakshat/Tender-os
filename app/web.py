@@ -30,7 +30,7 @@ from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse, RedirectResponse
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from markupsafe import Markup, escape
-from sqlalchemy import distinct, func, or_, select
+from sqlalchemy import case, distinct, func, or_, select
 from sqlalchemy.orm import Session
 
 from .connectors import REGISTRY
@@ -41,7 +41,7 @@ from .db import get_db, shared
 from .districts import DISTRICTS
 from .eligibility import REGISTRATIONS, checklist, needs_check
 from .facts import links as tender_links, money, preview_facts, sources, tender_facts
-from .geo import place_of
+from .geo import PORTAL_STATE, place_of
 from .matching import (
     SECTOR_LABELS,
     STATES,
@@ -65,7 +65,9 @@ _ROOT = Path(__file__).resolve().parent.parent
 _STATIC = _ROOT / "static"
 
 
-# Phosphor Regular, one family for the whole site, read off disk once at import
+# Phosphor Regular, one family for the whole site (plus a few Duotone glyphs,
+# files named *-duotone.svg, drawn large on the home page's keyword and portal
+# tiles; Phosphor is MIT licensed), read off disk once at import
 # and inlined. An <svg><use href="/static/..."> would be a request per icon and
 # is blocked cross-document in some browsers; inlining also lets each glyph
 # inherit currentColor, and the theme with it.
@@ -421,8 +423,108 @@ def _render_welcome(db: Session, today: date) -> str:
         n_open=f["n_open"], n_soon=f["n_soon"],
         n_sources=f["n_sources"], n_buyers=f["n_buyers"], last=f["last"],
         buyers=_logo_buyers(db, today), states=STATES,
+        keywords=_keyword_counts(db, today), portals=_portal_counts(db, today),
         today=today,
     )
+
+
+# Words people search for most, each a tile on the home page that opens
+# /browse?q=<word>. Counted the way that search counts: open tenders whose
+# title contains the word.
+KEYWORD_ICONS = {
+    "CCTV": "security-camera", "Solar": "solar-panel", "Road": "road-horizon",
+    "Construction": "hard-hat", "Repair": "wrench", "Computer": "desktop",
+    "Laptop": "laptop", "Printer": "printer", "Furniture": "chair",
+    "Transformer": "lightning", "Cable": "plugs", "Pump": "drop", "Pipe": "pipe",
+    "Medicine": "pill", "Ambulance": "ambulance", "Hiring": "car",
+    "Security": "shield-check", "Cleaning": "broom", "Uniform": "t-shirt",
+}
+HOME_KEYWORDS = tuple(KEYWORD_ICONS)
+
+# A portal's picture on its tile: the national portals get a glyph, a state's
+# own portal the outline of its state (PORTAL_STATE).
+PORTAL_ICONS = {"GeM": "storefront", "CPPP": "bank", "data.gov.in": "database"}
+
+
+def _state_shapes() -> dict[str, tuple[str, str]]:
+    """{state: (viewBox, path)} cut from the home page's India map, so a state
+    portal's tile shows its state alone, framed tight."""
+    out = {}
+    try:
+        text = (_ROOT / "templates" / "_india_map.html").read_text(encoding="utf-8")
+    except OSError:
+        return out
+    for state, d in re.findall(r'data-state="([^"]+)"><path d="([^"]+)"', text):
+        nums = [float(x) for x in re.findall(r"-?\d+(?:\.\d+)?", d)]
+        xs, ys = nums[0::2], nums[1::2]
+        x, y = min(xs), min(ys)
+        side = max(max(xs) - x, max(ys) - y) or 1      # square, so shapes keep their proportions
+        x -= (side - (max(xs) - x)) / 2
+        y -= (side - (max(ys) - y)) / 2
+        out[state] = (f"{x:g} {y:g} {side:g} {side:g}", d)
+    return out
+
+
+_STATE_SHAPES = _state_shapes()
+
+
+def keyword_art(word: str) -> Markup:
+    """The glyph on a keyword's tile, in a tinted square like a logo tile."""
+    return Markup(f'<span class="logo big art t{tile_tone(word)}" aria-hidden=true>'
+                  f'{icon(KEYWORD_ICONS.get(word, "magnifying-glass") + "-duotone")}</span>')
+
+
+def portal_art(name: str) -> Markup:
+    """A portal's picture: its logo file if one is listed in static/logos,
+    else its glyph, else its state's outline, else its two-letter tile."""
+    if logo_url(name):
+        return Markup(f'<img class="logo img big" src="{escape(logo_url(name))}" alt="" loading=lazy>')
+    tone = tile_tone(name)
+    if name in PORTAL_ICONS:
+        art = icon(PORTAL_ICONS[name] + "-duotone")
+    elif PORTAL_STATE.get(name) in _STATE_SHAPES:
+        box, d = _STATE_SHAPES[PORTAL_STATE[name]]
+        art = Markup(f'<svg class="i shape" viewBox="{box}" fill="currentColor" '
+                     f'aria-hidden=true focusable=false><path d="{d}"/></svg>')
+    else:
+        return Markup(f'<span class="logo big t{tone}" aria-hidden=true>{escape(initials(name))}</span>')
+    return Markup(f'<span class="logo big art t{tone}" aria-hidden=true>{art}</span>')
+
+
+_env.globals.update(keyword_art=keyword_art, portal_art=portal_art)
+
+
+def _open_now(today: date):
+    """The same "open" rule as GET /tenders: the deadline decides, and a row
+    already linked to an earlier duplicate is not counted twice."""
+    return (or_(Tender.deadline.is_(None), Tender.deadline >= today),
+            Tender.duplicate_of.is_(None))
+
+
+def _keyword_counts(db: Session, today: date) -> list[tuple[str, int]]:
+    """(keyword, open tenders) for HOME_KEYWORDS, busiest first; none at 0.
+    One pass over the table for all of them, shared for ten minutes."""
+    def compute(db):
+        row = db.execute(select(*[
+            func.coalesce(func.sum(case((Tender.title.ilike(f"%{k}%"), 1), else_=0)), 0)
+            for k in HOME_KEYWORDS]).where(*_open_now(today))).one()
+        found = [(k, int(n)) for k, n in zip(HOME_KEYWORDS, row) if n]
+        return sorted(found, key=lambda kn: -kn[1])
+    return shared(db, ("home_keywords", today), 600, compute)
+
+
+def _portal_counts(db: Session, today: date) -> list[tuple[int, str, int]]:
+    """(source id, portal name, open tenders) for every portal with an open
+    tender, busiest first. Each opens /browse?source_id=<id>."""
+    def compute(db):
+        names = {i: r.name for i, r in sources(db).items()}
+        rows = db.execute(
+            select(Tender.source_id, func.count())
+            .where(Tender.source_id.is_not(None), *_open_now(today))
+            .group_by(Tender.source_id)
+            .order_by(func.count().desc()))
+        return [(i, names[i], n) for i, n in rows if i in names]
+    return shared(db, ("home_portals", today), 600, compute)
 
 
 # Company logos running across the home page; every company is on /buyers.
