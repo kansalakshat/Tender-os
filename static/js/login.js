@@ -1,6 +1,7 @@
 function go(e){
   e.preventDefault();
-  const f=e.target, btn=f.querySelector('button');
+  // The Sign in button, not the eye in the password box (also a button).
+  const f=e.target, btn=f.querySelector('button[type=submit]');
   btn.disabled = true;
   fetch('/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({email:f.email.value,password:f.password.value})})
