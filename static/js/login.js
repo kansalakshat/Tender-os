@@ -1,6 +1,7 @@
 function go(e){
   e.preventDefault();
-  const f=e.target, btn=f.querySelector('button');
+  // The Sign in button, not the eye in the password box (also a button).
+  const f=e.target, btn=f.querySelector('button[type=submit]');
   btn.disabled = true;
   fetch('/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({email:f.email.value,password:f.password.value})})
@@ -20,3 +21,13 @@ function go(e){
    });
 }
 document.getElementById('f').addEventListener('submit', go);
+
+// The eye in the password box: shows the password while pressed in, hides it again.
+const pwBtn = document.querySelector('[data-pw]');
+if (pwBtn) pwBtn.addEventListener('click', () => {
+  const pw = document.getElementById('pw');
+  const show = pw.type === 'password';
+  pw.type = show ? 'text' : 'password';
+  pwBtn.setAttribute('aria-pressed', String(show));
+  pwBtn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+});

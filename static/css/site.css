@@ -705,3 +705,40 @@ pre#err:empty{display:none}
 .signpoplater{min-height:2.5rem;background:none;border:0;color:var(--muted);font-weight:500;
   text-decoration:underline;text-underline-offset:3px}
 .signpoplater:hover{color:var(--ink);background:none}
+
+/* Sign-in card (login.html): one card in the middle of the page, a soft
+   blue glow and grid behind its top, like the hero's background. */
+.authsec{display:grid;place-items:center;min-height:calc(100vh - 12rem)}
+.authcard{position:relative;width:min(27rem,100%);margin:0 auto;padding:2.25rem 2rem 1.75rem;overflow:hidden;
+  border:1px solid var(--stone);border-radius:var(--r-lg);background:var(--panel);box-shadow:var(--shadow)}
+.authcard::before{content:"";position:absolute;inset:0 0 auto;height:9rem;pointer-events:none;
+  background:radial-gradient(60% 100% at 50% 0,var(--accent-soft),transparent 75%),
+    linear-gradient(var(--hair) 1px,transparent 1px) 50% 0/1.6rem 1.6rem,
+    linear-gradient(90deg,var(--hair) 1px,transparent 1px) 50% 0/1.6rem 1.6rem;
+  -webkit-mask-image:radial-gradient(55% 100% at 50% 0,#000,transparent);
+  mask-image:radial-gradient(55% 100% at 50% 0,#000,transparent)}
+.authcard>*{position:relative}
+.authhead{text-align:center;margin-bottom:1.5rem}
+.authhead .mark{width:2.6rem;height:2.6rem;margin:0 auto .5rem}
+.authbrand{margin:0 0 .75rem;font-weight:700;font-size:1.1rem}
+.authbrand span{color:var(--accent)}
+.authhead h1{margin:0;font-size:2rem}
+.authsub{margin:.4rem 0 0;color:var(--muted);font-size:.95rem}
+.authgoogle{width:100%}
+.author{display:flex;align-items:center;gap:.75rem;margin:1.25rem 0;color:var(--muted);font-size:.85rem;text-transform:uppercase}
+.author::before,.author::after{content:"";flex:1;border-top:1px solid var(--stone)}
+.af{display:block;margin:0 0 .4rem}
+.af span{font-weight:600;font-size:.95rem}
+.af input{margin:.4rem 0 1rem}
+.pwbox{position:relative;margin-bottom:1.5rem}
+.pwbox input{padding-right:3.25rem}
+.pwshow{position:absolute;top:50%;right:.35rem;transform:translateY(-50%);min-height:2.5rem;width:2.5rem;padding:0;
+  background:none;border:0;color:var(--muted)}
+.pwshow:hover{background:var(--accent-soft);color:var(--accent)}
+.pwshow .i{width:1.3rem;height:1.3rem}
+.pwshow .i+.i,.pwshow[aria-pressed=true] .i:first-child{display:none}
+.pwshow[aria-pressed=true] .i+.i{display:inline}
+.authgo{width:100%}
+.authcard #err:empty{display:none}
+.authfoot{margin:1.25rem 0 0;text-align:center;color:var(--muted)}
+.authfoot a{font-weight:600}
