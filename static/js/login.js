@@ -20,3 +20,13 @@ function go(e){
    });
 }
 document.getElementById('f').addEventListener('submit', go);
+
+// The eye in the password box: shows the password while pressed in, hides it again.
+const pwBtn = document.querySelector('[data-pw]');
+if (pwBtn) pwBtn.addEventListener('click', () => {
+  const pw = document.getElementById('pw');
+  const show = pw.type === 'password';
+  pw.type = show ? 'text' : 'password';
+  pwBtn.setAttribute('aria-pressed', String(show));
+  pwBtn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+});

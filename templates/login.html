@@ -1,14 +1,33 @@
 {% extends "base.html" %}
-{% block content %}<h1>Sign in</h1>
-{% with alternative="sign in with a password" %}{% include "_google.html" %}{% endwith %}
-<form id=f>
-<label class=f><span>Email</span>
-   <input name=email type=email required autocomplete=username spellcheck=false></label>
-<label class=f><span>Password</span>
-   <input name=password type=password required autocomplete=current-password></label>
-<p class=hint>Takes you straight to your matches. Your answers are already saved.</p>
-<p class=actions><button>Sign in</button></p>
-</form>
-<pre id=err role=alert></pre>
-<p class=hint>No account yet? <a href="/signup">Create one</a>.</p>
+{#- One card in the middle of the page. Google first when it is configured,
+    then email and password; login.js signs in and shows or hides the password. -#}
+{% block body %}<section class="sec authsec"><div class=wrap>
+<div class=authcard>
+ <div class=authhead>
+  <svg class=mark viewBox="0 0 32 32" aria-hidden=true focusable=false>
+   <rect class=bg width="32" height="32"/>
+   <g class=fg><rect x="7" y="9" width="18" height="3"/>
+   <rect x="7" y="14.5" width="12" height="3"/></g>
+   <rect class=fg2 x="7" y="20" width="6" height="3"/>
+  </svg>
+  <p class=authbrand>Tender<span>leo</span></p>
+  <h1>Welcome back</h1>
+  <p class=authsub>Sign in to see your ranked tenders. Your answers are already saved.</p>
+ </div>
+ {% if google_configured %}<a class="btn ghost authgoogle" href="/auth/google">{{ icon('google-logo') }}Continue with Google</a>
+ <p class=author><span>or</span></p>{% endif %}
+ <form id=f>
+  <label class=af><span>Email address</span>
+   <input name=email type=email required autocomplete=username spellcheck=false placeholder="name@company.com"></label>
+  <label class=af for=pw><span>Password</span></label>
+  <div class=pwbox>
+   <input id=pw name=password type=password required autocomplete=current-password placeholder="Your password">
+   <button class=pwshow type=button data-pw aria-label="Show password" aria-pressed=false>{{ icon('eye') }}{{ icon('eye-slash') }}</button>
+  </div>
+  <button class=authgo>Sign in</button>
+ </form>
+ <pre id=err role=alert></pre>
+ <p class=authfoot>Don't have an account? <a href="/signup">Sign up</a></p>
+</div>
+</div></section>
 <script defer src="{{ asset('js/login.js') }}"></script>{% endblock %}
