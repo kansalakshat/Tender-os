@@ -52,6 +52,25 @@
 </div>
 </div></section>
 <script defer src="{{ asset('js/indiamap.js') }}"></script>
+<section class=sec id=companies><div class=wrap>
+<div class="secHead reveal">
+ <h2>Find tenders by company</h2>
+ <p class=kicker>Pick a buyer, see every open tender it has</p>
+</div>
+<form class="search slim reveal" action="/buyers" method=get>
+ <label class=sr for=bq>Search companies</label>
+ <input id=bq name=q autocomplete=off spellcheck=false placeholder="Search a company, e.g. Railways&hellip;">
+ <button>{{ icon('magnifying-glass') }}Search</button>
+</form>
+{#- Moves slowly on its own and stops under the pointer or keyboard focus, so
+    any logo can be read and clicked; with reduced motion it is a row you
+    scroll yourself. -#}
+<div class=lstrip aria-label="Companies with open tenders" role=region>
+<ul class=ltrack>{% for dup in (false, true) %}{% for name, n in buyers %}{{ logo_chip(name, n, dup) }}{% endfor %}{% endfor %}</ul>
+</div>
+<p class=morelink><a class="btn ghost" href="/buyers">View all {{ n_buyers|num }} companies{{ icon('arrow-right') }}</a></p>
+</div></section>
+
 <section class=sec id=how><div class=wrap>
 <div class="secHead reveal">
  <h2>How Tenderleo works</h2>
@@ -97,25 +116,6 @@ endless PDFs, and figuring out whether you qualify. Tenderleo simplifies the ent
  </li>
 </ol>
 <p class="flowline big reveal"><b>Discover. Analyse. Qualify. Prepare.</b> One intelligent workflow for the entire tender journey.</p>
-</div></section>
-
-<section class=sec id=companies><div class=wrap>
-<div class="secHead reveal">
- <h2>Find tenders by company</h2>
- <p class=kicker>Pick a buyer, see every open tender it has</p>
-</div>
-<form class="search slim reveal" action="/buyers" method=get>
- <label class=sr for=bq>Search companies</label>
- <input id=bq name=q autocomplete=off spellcheck=false placeholder="Search a company, e.g. Railways&hellip;">
- <button>{{ icon('magnifying-glass') }}Search</button>
-</form>
-{#- Moves slowly on its own and stops under the pointer or keyboard focus, so
-    any logo can be read and clicked; with reduced motion it is a row you
-    scroll yourself. -#}
-<div class=lstrip aria-label="Companies with open tenders" role=region>
-<ul class=ltrack>{% for dup in (false, true) %}{% for name, n in buyers %}{{ logo_chip(name, n, dup) }}{% endfor %}{% endfor %}</ul>
-</div>
-<p class=morelink><a class="btn ghost" href="/buyers">View all {{ n_buyers|num }} companies{{ icon('arrow-right') }}</a></p>
 </div></section>
 
 <section class=sec id=compare><div class=wrap>
