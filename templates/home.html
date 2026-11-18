@@ -15,7 +15,11 @@
   <p class=hxlede>AI-powered platform to discover government tenders across India, analyse
   them and grow your business.</p>
   <p class=hxctas><a class="hbtn" href="/browse">Find Tenders{{ icon('arrow-right') }}</a>
-  <a class="hbtn ghost" href="{{ demo }}" target=_blank rel="noopener noreferrer">{{ icon('play-circle') }}Watch Demo</a></p>
+  {%- if demo_video %}
+  <a class="hbtn ghost" href="{{ demo_video }}" target=_blank rel="noopener noreferrer">{{ icon('play-circle') }}Watch Demo</a>
+  {%- else %}
+  <a class="hbtn ghost" href="{{ demo }}" target=_blank rel="noopener noreferrer">{{ icon('calendar') }}Book a Demo</a>
+  {%- endif %}</p>
  </div>
  <div class=hxart>
   {{ india_svg() }}
@@ -97,11 +101,12 @@
   {{ icon('magnifying-glass') }}<label class=sr for=bq>Search buyers</label>
   <input id=bq name=q autocomplete=off spellcheck=false placeholder="Search buyers...">
  </form>
- {#- A state here searches buyer names for it ("PWD Madhya Pradesh"). -#}
+ {#- Buyers with an open tender in that state (/buyers?state=). -#}
  <form class=xpick action="/buyers" method=get data-autogo>
-  {{ icon('funnel-simple') }}<label class=sr for=bpick>Buyers by state</label>
-  <select id=bpick name=q><option value="">All States</option>
+  {{ icon('funnel-simple') }}<label class=sr for=bpick>Buyers with tenders in a state</label>
+  <select id=bpick name=state><option value="">All States</option>
   {%- for s in states|sort %}<option>{{ s }}</option>{% endfor %}</select>
+  <noscript><button class="hbtn sm">Go</button></noscript>
  </form>
 </div>
 <div class=bxgrid>
@@ -114,7 +119,7 @@
   <div class=bxcard>
    <h3>Buyer Profile</h3>
    <div class=bxwho>{{ logo(b.name) }}<div><b id=bxname>{{ b.name }}</b>
-    <span>Total Tenders: <i id=bxopen>{{ b.open|num }}</i></span>
+    <span>Open Tenders: <i id=bxopen>{{ b.open|num }}</i></span>
     <span>Last Activity: <i id=bxlast>{{ ago(b.latest) }}</i></span></div></div>
   </div>
   <div class=bxcard>

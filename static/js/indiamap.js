@@ -22,8 +22,13 @@
     const shape = sec.querySelector('.indiamap [data-state="' + CSS.escape(name) + '"]');
     if (!shape || !tip || !box) return;
     const r = shape.getBoundingClientRect(), b = box.getBoundingClientRect();
-    tip.style.left = (r.left + r.width / 2 - b.left) + 'px';
-    tip.style.top = (r.top + r.height / 2 - b.top) + 'px';
+    // Kept wholly inside the map box, so a state at the edge (Arunachal,
+    // Gujarat) does not push the bubble out and the page sideways.
+    const w = tip.offsetWidth, h = tip.offsetHeight;
+    const x = Math.min(Math.max(r.left + r.width / 2 - b.left - w * 0.3, 0), Math.max(b.width - w, 0));
+    const y = Math.min(Math.max(r.top + r.height / 2 - b.top - h / 2, 0), Math.max(b.height - h, 0));
+    tip.style.left = x + 'px';
+    tip.style.top = y + 'px';
   }
   function mark(name, on) {
     for (const a of links) if (a.dataset.state === name) a.classList.toggle('lit', on);
@@ -41,8 +46,8 @@
     for (const ev of ['mouseenter', 'focus']) a.addEventListener(ev, () => mark(name, true));
     for (const ev of ['mouseleave', 'blur']) a.addEventListener(ev, () => mark(name, false));
   }
-  if (tip && tip.dataset.state) {
-    place(tip.dataset.state);
-    window.addEventListener('resize', () => place(tip.dataset.state));
+  if (tip) {
+    if (tip.dataset.state) place(tip.dataset.state);
+    window.addEventListener('resize', () => { if (tip.dataset.state && !tip.hidden) place(tip.dataset.state); });
   }
 })();

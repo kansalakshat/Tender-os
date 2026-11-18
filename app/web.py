@@ -453,27 +453,37 @@ ACTIVITY_WEEKS = 8
 def _buyer_cards(db: Session, today: date) -> list[dict]:
     """The home page's buyer directory: the busiest buyers with a logo, each
     with its open count, its latest tender and its tenders per week over the
-    last eight weeks (the bars in the profile panel)."""
+    last eight weeks (the bars in the profile panel).
+
+    The names come from the buyer list; the counts are counted again here, so
+    a card never keeps a stale count from that list's cache for ten minutes more.
+    """
     def compute(db):
-        top = _logo_buyers(db, today)[:HOME_BUYER_CARDS]
-        if not top:
+        names = [n for n, _c in _logo_buyers(db, today)[:HOME_BUYER_CARDS]]
+        if not names:
             return []
-        names = [n for n, _c in top]
-        start = today - timedelta(weeks=ACTIVITY_WEEKS)
-        weeks = {n: [0] * ACTIVITY_WEEKS for n in names}
+        is_open = or_(Tender.deadline.is_(None), Tender.deadline >= today)
+        live = Tender.duplicate_of.is_(None)
+        open_n = dict(db.execute(
+            select(Tender.organization, func.count())
+            .where(Tender.organization.in_(names), live, is_open)
+            .group_by(Tender.organization)).all())
         latest = dict(db.execute(
             select(Tender.organization, func.max(Tender.published_date))
-            .where(Tender.organization.in_(names), Tender.duplicate_of.is_(None))
+            .where(Tender.organization.in_(names), live)
             .group_by(Tender.organization)).all())
+        # Eight whole weeks ending today: 56 days, seven to a bar.
+        start = today - timedelta(days=7 * ACTIVITY_WEEKS - 1)
+        weeks = {n: [0] * ACTIVITY_WEEKS for n in names}
         for org, day, n in db.execute(
                 select(Tender.organization, Tender.published_date, func.count())
-                .where(Tender.organization.in_(names), Tender.duplicate_of.is_(None),
+                .where(Tender.organization.in_(names), live,
                        Tender.published_date >= start, Tender.published_date <= today)
                 .group_by(Tender.organization, Tender.published_date)):
-            i = min((day - start).days // 7, ACTIVITY_WEEKS - 1)
-            weeks[org][i] += n
-        return [{"name": n, "open": c, "latest": latest.get(n), "weeks": weeks[n]}
-                for n, c in top]
+            weeks[org][(day - start).days // 7] += n
+        cards = [{"name": n, "open": open_n.get(n, 0), "latest": latest.get(n),
+                  "weeks": weeks[n]} for n in names]
+        return sorted(cards, key=lambda c: -c["open"])
     return shared(db, ("home_buyer_cards", today), 600, compute)
 
 
@@ -615,6 +625,9 @@ def _logo_buyers(db: Session, today: date) -> list[tuple[str, int]]:
 DEMO_URL = os.environ.get("DEMO_URL") or "https://wa.me/918964909090?" + urlencode(
     {"text": "Hi, I would like to book a demo of Tenderleo."})
 _env.globals["demo"] = DEMO_URL
+# A demo video to watch, if there is one; without it the home page offers
+# "Book a Demo" instead of a "Watch Demo" that would open a chat.
+_env.globals["demo_video"] = os.environ.get("DEMO_VIDEO_URL", "")
 
 
 @router.get("/about", response_class=HTMLResponse)
@@ -1111,16 +1124,36 @@ def buyers_strip(db: Session = Depends(get_db)) -> JSONResponse:
 BUYERS_PAGE = 60
 
 
+def _state_buyers(db: Session, today: date, state: str) -> list[tuple[str, int]]:
+    """(buyer, open tenders in the state) for every buyer with one there, by
+    the same state rule as /browse?state=, busiest first."""
+    def compute(db):
+        portals = [s.id for s in sources(db).values() if PORTAL_STATE.get(s.name) == state]
+        rows = db.execute(
+            select(Tender.organization, func.count())
+            .where(Tender.organization.is_not(None), *_open_now(today),
+                   state_clause(state, portals, db.get_bind().dialect.name))
+            .group_by(Tender.organization)
+            .order_by(func.count().desc(), Tender.organization))
+        return [(n, c) for n, c in rows]
+    return shared(db, ("state_buyers", today, state), 600, compute)
+
+
 @router.get("/buyers", response_class=HTMLResponse)
-def buyers_page(q: str = "", page: int = 1, db: Session = Depends(get_db)) -> str:
-    """Every company with an open tender, as logo tiles, searchable by name.
-    Filtered in memory: the list is the one already cached for the strip."""
+def buyers_page(q: str = "", state: str = "", page: int = 1,
+                db: Session = Depends(get_db)) -> str:
+    """Every company with an open tender, as logo tiles, searchable by name
+    and narrowed to one state (buyers with an open tender there). An unknown
+    state is ignored rather than showing nothing."""
     q = q.strip()[:100]
-    every = _open_buyers(db, today_ist())
+    state = state if state in STATES else ""
+    today = today_ist()
+    every = _state_buyers(db, today, state) if state else _open_buyers(db, today)
     hits = [b for b in every if q.lower() in b[0].lower()] if q else every
     pages = max(1, -(-len(hits) // BUYERS_PAGE))
     page = min(max(page, 1), pages)
-    return render("buyers.html", title="Find tenders by company", q=q, page=page,
+    return render("buyers.html", title="Find tenders by company", q=q, state=state,
+                  states=STATES, page=page,
                   pages=pages, total=len(hits),
                   buyers=hits[(page - 1) * BUYERS_PAGE: page * BUYERS_PAGE])
 

@@ -17,7 +17,11 @@
       const list = document.querySelector('.' + btn.dataset.showmore);
       if (!list) return;
       e.preventDefault();
-      for (const li of list.querySelectorAll('li.more')) li.hidden = false;
+      const more = list.querySelectorAll('li.more');
+      for (const li of more) li.hidden = false;
+      // Focus goes to the first card shown, before the button it was on hides.
+      const first = more[0] && more[0].querySelector('a');
+      if (first) first.focus();
       btn.closest('p').hidden = true;
     });
   }
@@ -26,7 +30,7 @@
   const rows = document.querySelectorAll('.bxlist [data-buyer]');
   let data = [];
   try { data = JSON.parse(document.getElementById('buyers').dataset.buyers || '[]'); } catch (e) {}
-  const panel = document.querySelector('.bxpanel');
+  const panel = document.querySelector('.bxside');
   function show(i) {
     const b = data[i];
     if (!b || !panel) return;
