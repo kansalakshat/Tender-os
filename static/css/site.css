@@ -993,3 +993,9 @@ pre#err:empty{display:none}
 .b2pages button[aria-current=page]{background:var(--hb);border-color:var(--hb);color:#fff}
 :root[data-theme=dark] .b2pages button[aria-current=page]{color:#0E1520}
 .b2pages .i{width:1rem;height:1rem}
+/* An opened tender: a light-blue corner with blue double ticks, top left. */
+.b2title{position:relative;padding-left:1.6rem!important}
+.b2seen{position:absolute;top:0;left:0;width:2.6rem;height:2.6rem;line-height:0;pointer-events:none;
+  background:linear-gradient(135deg,color-mix(in srgb,var(--hb) 22%,var(--panel)) 50%,transparent 50%)}
+.b2seen .i{position:absolute;top:.25rem;left:.25rem;width:1rem;height:1rem;color:var(--hb)}
+@media (max-width:40rem){.b2table tr.seen{position:relative;overflow:hidden}.b2table tr.seen .b2title{position:static}}

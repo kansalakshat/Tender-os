@@ -113,14 +113,18 @@ function status(t){
   if(days === 'today') return '<span class="b2st hot">Closes today</span>';
   return '<span class="b2st on">Open</span>';
 }
-function row(t, words){
+function row(t, words, seen){
   const f = Object.fromEntries(t.facts || []);
+  const opened = seen.has(String(t.id));
   const value = f['Estimated value'], emd = f['EMD (bid security)'];
   const where = [t.city, t.state].filter(Boolean).join(', ');
   const days = left(t.deadline)[0];
   const url = '/t/' + esc(t.id);
-  return '<tr>'
-    + '<td class=b2title><a href="' + url + '">' + marked(t.title, words) + '</a>'
+  // A tender already opened on this device gets a small green tick.
+  return '<tr' + (opened ? ' class=seen' : '') + '>'
+    + '<td class=b2title>' + (opened ? '<span class=b2seen title="Opened before">' + ico('checks')
+      + '<span class=sr>Opened before. </span></span>' : '')
+    + '<a href="' + url + '">' + marked(t.title, words) + '</a>'
     +   '<small>' + (f.Source ? esc(f.Source) : '') + (t.external_ref ? ' &middot; ' + esc(t.external_ref) : '') + '</small></td>'
     + '<td class=b2buyer><span>' + esc(t.organization || 'Unnamed buyer') + '</span>'
     +   (where ? '<small>' + esc(where) + '</small>' : '') + '</td>'
@@ -181,7 +185,8 @@ function go(e,off){
         + Math.min(offset + LIMIT, d.total).toLocaleString('en-IN') + ' of <b>'
         + d.total.toLocaleString('en-IN') + '</b> tender' + (d.total === 1 ? '' : 's')
       : 'No tenders found';
-    rows.innerHTML = d.items.map(t => row(t, form.q.value)).join('')
+    const seen = seenIds();
+    rows.innerHTML = d.items.map(t => row(t, form.q.value, seen)).join('')
       || '<tr class=empty><td colspan=5>Nothing matched those filters. Try a shorter word, or '
          + 'remove a filter.</td></tr>';
     pages(d.total);

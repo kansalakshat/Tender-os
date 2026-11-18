@@ -9,6 +9,12 @@
   } catch (_) {}
 })();
 
+// Remember that this tender was opened, so lists can tick it (site.js).
+(function () {
+  var m = location.pathname.match(/^\/t\/(\d+)/);
+  if (m && typeof markSeen === 'function') markSeen(m[1]);
+})();
+
 // The match score (up to ~3s when its cache is cold) and the related lists come
 // after the notice itself, so the details never wait on them.
 fetch(document.getElementById('moreSlot').dataset.src, {credentials: 'same-origin'})

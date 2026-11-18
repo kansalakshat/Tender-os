@@ -9,13 +9,32 @@ function esc(s){return String(s??'').replace(/[<>&"']/g,
 // Time left, as the row labels it. Mirrors days_left() in web.py. Display only:
 // whether a tender still counts as open is decided by the server's clock.
 // Today's date in India as YYYY-MM-DD, whatever the visitor's own time zone.
+// Built from the named parts: format() is locale text, not guaranteed ISO.
 function todayIST(){
   try {
-    return new Intl.DateTimeFormat('en-CA', {timeZone: 'Asia/Kolkata', year: 'numeric',
-      month: '2-digit', day: '2-digit'}).format(new Date());
-  } catch (e) {
-    return new Date(Date.now() + 330 * 6e4).toISOString().slice(0, 10);   // UTC+5:30
-  }
+    const parts = new Intl.DateTimeFormat('en-US', {timeZone: 'Asia/Kolkata', year: 'numeric',
+      month: '2-digit', day: '2-digit'}).formatToParts(new Date());
+    const get = t => (parts.find(p => p.type === t) || {}).value;
+    const y = get('year'), m = get('month'), d = get('day');
+    if (y && m && d) return y + '-' + m + '-' + d;
+  } catch (e) {}
+  return new Date(Date.now() + 330 * 6e4).toISOString().slice(0, 10);   // UTC+5:30
+}
+
+// Tenders this browser has opened, newest last, so a list can tick them.
+// Kept on this device only (localStorage), never sent anywhere; capped so it
+// cannot grow without end.
+const SEEN_KEY = 'tos-seen', SEEN_MAX = 500;
+function seenIds(){
+  try { return new Set(JSON.parse(localStorage.getItem(SEEN_KEY) || '[]').map(String)); }
+  catch (e) { return new Set(); }
+}
+function markSeen(id){
+  try {
+    const list = JSON.parse(localStorage.getItem(SEEN_KEY) || '[]').map(String).filter(x => x !== String(id));
+    list.push(String(id));
+    localStorage.setItem(SEEN_KEY, JSON.stringify(list.slice(-SEEN_MAX)));
+  } catch (e) {}
 }
 function left(d){
   if(!d) return ['', 's0'];

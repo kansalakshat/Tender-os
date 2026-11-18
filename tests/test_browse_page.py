@@ -41,3 +41,23 @@ def test_browse_script_reads_every_field_it_sends(client):
     fields = re.search(r"const FIELDS = \[([^\]]+)\]", js).group(1)
     for name in re.findall(r"'(\w+)'", fields):
         assert f"name={name}" in html, name
+
+
+def test_every_icon_the_scripts_draw_is_on_the_page(client):
+    """ico(name) copies an icon out of the page's <template id=icons>; a name
+    missing there draws nothing (the page arrows and the "opened" tick)."""
+    html = client.get("/browse").text
+    root = Path(__file__).parent.parent / "static" / "js"
+    for script in ("browse.js", "site.js"):
+        for name in re.findall(r"ico\('([\w-]+)'\)", (root / script).read_text(encoding="utf-8")):
+            assert f"data-icon={name}>" in html, (script, name)
+
+
+def test_opened_tenders_are_remembered_and_ticked():
+    root = Path(__file__).parent.parent / "static" / "js"
+    site = (root / "site.js").read_text(encoding="utf-8")
+    assert "function markSeen(" in site and "function seenIds(" in site
+    assert "markSeen(m[1])" in (root / "tender.js").read_text(encoding="utf-8")
+    assert "seenIds()" in (root / "browse.js").read_text(encoding="utf-8")
+    # India's date is built from named parts, never parsed from locale text
+    assert "formatToParts" in site
