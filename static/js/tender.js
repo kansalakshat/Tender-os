@@ -103,7 +103,9 @@ fetch(document.getElementById('moreSlot').dataset.src, {credentials: 'same-origi
   var current = null;
   function slideBar(a) {
     bar.style.width = a.offsetWidth + 'px';
-    bar.style.transform = 'translateX(' + (a.offsetLeft - nav.scrollLeft) + 'px)';
+    // The bar sits inside the scrolling tab strip, so it scrolls with the
+    // tabs: offsetLeft alone keeps it under the chosen one.
+    bar.style.transform = 'translateX(' + a.offsetLeft + 'px)';
   }
   function show(name, focus) {
     var from = order.indexOf(current), to = order.indexOf(name);
@@ -126,10 +128,6 @@ fetch(document.getElementById('moreSlot').dataset.src, {credentials: 'same-origi
     current = name;
   }
   window.addEventListener('resize', function () {
-    var a = nav.querySelector('[aria-selected=true]');
-    if (a) slideBar(a);
-  });
-  nav.addEventListener('scroll', function () {
     var a = nav.querySelector('[aria-selected=true]');
     if (a) slideBar(a);
   });
