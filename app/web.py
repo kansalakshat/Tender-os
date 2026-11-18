@@ -41,7 +41,7 @@ from .db import get_db, shared
 from .districts import DISTRICTS
 from .eligibility import REGISTRATIONS, checklist, needs_check
 from .facts import links as tender_links, money, preview_facts, sources, tender_facts
-from .geo import PORTAL_STATE, place_of
+from .geo import PORTAL_STATE, place_of, state_clause
 from .matching import (
     SECTOR_LABELS,
     STATES,
@@ -245,6 +245,8 @@ _env.globals.update(
     tender_links=tender_links,
 )
 _env.filters["num"] = lambda n: f"{n:,}"
+# A big count, rounded down for a badge: 45,216 -> "45K+", 812 -> "812".
+_env.filters["kfmt"] = lambda n: f"{n // 1000}K+" if n >= 1000 else f"{n}"
 # For rendering a list of strict field keys as the words a bidder used.
 _env.filters["extract"] = lambda key, mapping: mapping.get(key, key)
 _env.filters["urlquote"] = quote
@@ -422,10 +424,76 @@ def _render_welcome(db: Session, today: date) -> str:
         "home.html", title="Tenderleo | AI-powered tender intelligence",
         n_open=f["n_open"], n_soon=f["n_soon"],
         n_sources=f["n_sources"], n_buyers=f["n_buyers"], last=f["last"],
-        buyers=_logo_buyers(db, today), states=STATES,
-        keywords=_keyword_counts(db, today), portals=_portal_counts(db, today),
+        states=STATES, state_counts=_state_counts(db, today),
+        portals=_portal_counts(db, today), buyer_cards=_buyer_cards(db, today),
         today=today,
     )
+
+
+def _state_counts(db: Session, today: date) -> dict[str, int]:
+    """{state: open tenders} for every state with any, by the same rule as
+    /browse?state= (its own portal's tenders, or naming it or a district).
+    One pass over the table for all of them, shared for ten minutes."""
+    def compute(db):
+        dialect = db.get_bind().dialect.name
+        names = {s.id: s.name for s in sources(db).values()}
+        cols = []
+        for st in STATES:
+            portals = [i for i, n in names.items() if PORTAL_STATE.get(n) == st]
+            cols.append(func.coalesce(func.sum(case((state_clause(st, portals, dialect), 1), else_=0)), 0))
+        row = db.execute(select(*cols).where(*_open_now(today))).one()
+        return {st: int(n) for st, n in zip(STATES, row) if n}
+    return shared(db, ("home_states", today), 600, compute)
+
+
+HOME_BUYER_CARDS = 5
+ACTIVITY_WEEKS = 8
+
+
+def _buyer_cards(db: Session, today: date) -> list[dict]:
+    """The home page's buyer directory: the busiest buyers with a logo, each
+    with its open count, its latest tender and its tenders per week over the
+    last eight weeks (the bars in the profile panel)."""
+    def compute(db):
+        top = _logo_buyers(db, today)[:HOME_BUYER_CARDS]
+        if not top:
+            return []
+        names = [n for n, _c in top]
+        start = today - timedelta(weeks=ACTIVITY_WEEKS)
+        weeks = {n: [0] * ACTIVITY_WEEKS for n in names}
+        latest = dict(db.execute(
+            select(Tender.organization, func.max(Tender.published_date))
+            .where(Tender.organization.in_(names), Tender.duplicate_of.is_(None))
+            .group_by(Tender.organization)).all())
+        for org, day, n in db.execute(
+                select(Tender.organization, Tender.published_date, func.count())
+                .where(Tender.organization.in_(names), Tender.duplicate_of.is_(None),
+                       Tender.published_date >= start, Tender.published_date <= today)
+                .group_by(Tender.organization, Tender.published_date)):
+            i = min((day - start).days // 7, ACTIVITY_WEEKS - 1)
+            weeks[org][i] += n
+        return [{"name": n, "open": c, "latest": latest.get(n), "weeks": weeks[n]}
+                for n, c in top]
+    return shared(db, ("home_buyer_cards", today), 600, compute)
+
+
+PORTAL_NOTES = {"CPPP": "Central Government", "GeM": "Government e-Marketplace",
+                "data.gov.in": "Open Government Data"}
+
+
+def portal_note(name: str) -> str:
+    """The line under a portal's name: who runs it."""
+    return PORTAL_NOTES.get(name) or (f"{PORTAL_STATE[name]} Government"
+                                      if name in PORTAL_STATE else "Official portal")
+
+
+def india_svg() -> Markup:
+    """The India map's shapes again, as one plain picture: the hero's
+    illustration. No links and hidden from screen readers -- the working map
+    is further down the page."""
+    paths = "".join(f'<path d="{d}"/>' for _box, d in _STATE_SHAPES.values())
+    return Markup(f'<svg class=hxindia viewBox="0 0 600 676" aria-hidden=true '
+                  f'focusable=false>{paths}</svg>')
 
 
 # Words people search for most, each a tile on the home page that opens
@@ -491,7 +559,8 @@ def portal_art(name: str) -> Markup:
     return Markup(f'<span class="logo big art t{tone}" aria-hidden=true>{art}</span>')
 
 
-_env.globals.update(keyword_art=keyword_art, portal_art=portal_art)
+_env.globals.update(keyword_art=keyword_art, portal_art=portal_art, india_svg=india_svg,
+                    portal_note=portal_note)
 
 
 def _open_now(today: date):

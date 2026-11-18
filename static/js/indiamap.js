@@ -1,14 +1,48 @@
-// The home page's India map and the list of states beside it. Both are plain
-// links to /browse?state=...; this only makes pointing at one light up the
-// other, so the reader can find a small state (Delhi, Goa) on the map by name.
+// The home page's India map and the "Top States" list beside it. Every state is
+// a plain link to /browse?state=...; this only adds the extras: each state is
+// shaded by its count, and pointing at one lights up its row (and the row its
+// shape), puts a bubble with its count over it and points "View State Details"
+// at it. The bubble starts on the busiest state.
 (function () {
-  const links = document.querySelectorAll('#states [data-state]');
+  const sec = document.getElementById('states');
+  if (!sec) return;
+  const links = sec.querySelectorAll('[data-state]:not(#sxtip)');
+  const tip = document.getElementById('sxtip');
+  const go = document.getElementById('sxgo');
+  const box = sec.querySelector('.sxmap');
+  let counts = {};
+  try { counts = JSON.parse(sec.dataset.counts || '{}'); } catch (e) {}
+  const most = Math.max(1, ...Object.values(counts));
+  for (const a of sec.querySelectorAll('.indiamap [data-state]')) {
+    const n = counts[a.dataset.state] || 0;
+    if (n) a.classList.add('c' + Math.min(4, Math.ceil(4 * n / most)));
+  }
+  // Over the middle of the state's shape, measured from the drawn map.
+  function place(name) {
+    const shape = sec.querySelector('.indiamap [data-state="' + CSS.escape(name) + '"]');
+    if (!shape || !tip || !box) return;
+    const r = shape.getBoundingClientRect(), b = box.getBoundingClientRect();
+    tip.style.left = (r.left + r.width / 2 - b.left) + 'px';
+    tip.style.top = (r.top + r.height / 2 - b.top) + 'px';
+  }
   function mark(name, on) {
     for (const a of links) if (a.dataset.state === name) a.classList.toggle('lit', on);
+    if (!on || !tip) return;
+    const n = counts[name] || 0;
+    tip.querySelector('b').textContent = name;
+    tip.querySelector('i').textContent = n.toLocaleString('en-IN') + (n === 1 ? ' Tender' : ' Tenders');
+    tip.hidden = false;
+    tip.dataset.state = name;
+    place(name);
+    if (go) go.href = '/browse?state=' + encodeURIComponent(name);
   }
   for (const a of links) {
     const name = a.dataset.state;
     for (const ev of ['mouseenter', 'focus']) a.addEventListener(ev, () => mark(name, true));
     for (const ev of ['mouseleave', 'blur']) a.addEventListener(ev, () => mark(name, false));
+  }
+  if (tip && tip.dataset.state) {
+    place(tip.dataset.state);
+    window.addEventListener('resize', () => place(tip.dataset.state));
   }
 })();

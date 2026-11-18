@@ -1,218 +1,132 @@
 {% extends "base.html" %}
-{% from "_macros.html" import logo_chip, strip_chip %}
-{#- The landing page. The hero is full-bleed, so it sits outside <main>. Every
-    figure on it is counted from the live corpus, not typed in. #}
-{% block hero %}<section class=hero><div class=wrap>
-<p class=eyebrow><span class=badge>AI-Powered Tender Intelligence</span>{{ n_sources }} official portals
-{%- if last %} &middot; last collected {{ last.strftime('%d %b %Y') }}{% endif %}</p>
-<div class=heroTop>
- <h1 class=long>Stop searching for tenders. Start finding <span class=grad-text>opportunities.</span></h1>
- <p class=bignum><b>{{ n_open|num }}</b><em>Open right now</em></p>
-</div>
-<div class=heroCopy>
- <div class=flow>
-  <p class=lede>Thousands of tenders. Multiple portals. Hundreds of pages. And somewhere
-  in all that noise could be your next big project.</p>
-  <p class=lede>Tenderleo uses AI to find the tenders that fit your business, understand
-  the fine print, check your eligibility, and help you get bid-ready, all in one place.</p>
+{% from "_macros.html" import logo %}
+{#- The landing page: the hero with its figures and four reasons, then India by
+    state, the portals and the buyers, each in its own panel. Every number is
+    counted from the live corpus, not typed in. #}
+{%- macro ago(d) -%}
+{%- if not d %}not stated{% else %}{% set n = (today - d).days %}
+{%- if n <= 0 %}today{% elif n == 1 %}1 day ago{% else %}{{ n }} days ago{% endif %}{% endif -%}
+{%- endmacro %}
+
+{% block hero %}<section class=hx><div class=wrap><div class="xpanel hxpanel">
+<div class=hxtop>
+ <div class=hxcopy>
+  <h1>Stop searching for tenders. Start finding <span>opportunities.</span></h1>
+  <p class=hxlede>AI-powered platform to discover government tenders across India, analyse
+  them and grow your business.</p>
+  <p class=hxctas><a class="hbtn" href="/browse">Find Tenders{{ icon('arrow-right') }}</a>
+  <a class="hbtn ghost" href="{{ demo }}" target=_blank rel="noopener noreferrer">{{ icon('play-circle') }}Watch Demo</a></p>
  </div>
- <div>
-  <p class=herotag>Less searching. Less confusion. More opportunities.</p>
-  <p class=ctas><a class=btn href="/browse">Find Your Next Opportunity{{ icon('arrow-right') }}</a>
-  <a class="btn ghost" href="{{ demo }}" target=_blank rel="noopener noreferrer">Book a Demo</a></p>
-  <ol class=flowline aria-label="How it works"><li>Discover</li><li>Analyse</li><li>Qualify</li><li>Prepare</li></ol>
-  <p class=hint>Answer eight questions once and get every new tender scored for you.
-  <a class=nowrap href="/signup">Create a free account{{ icon('arrow-up-right') }}</a></p>
+ <div class=hxart>
+  {{ india_svg() }}
+  <p class="hxbadge one">{{ icon('file-text') }}<span><b>{{ n_open|kfmt }}</b>Tenders</span></p>
+  <p class="hxbadge two">{{ icon('bank') }}<span><b>{{ state_counts|length }}</b>States</span></p>
  </div>
 </div>
-<dl class="stats big">
- <div><dt>Tenders tracked</dt><dd>{{ n_open|num }}</dd></div>
- <div><dt>Closing this week</dt><dd>{{ n_soon|num }}</dd></div>
- <div><dt>Buyers listed</dt><dd>{{ n_buyers|num }}</dd></div>
- <div><dt>Official portals</dt><dd>{{ n_sources }}</dd></div>
+<dl class=hxstats>
+ <div><dt>{{ icon('file-text') }}<span>Tenders Tracked</span></dt><dd>{{ n_open|num }}</dd></div>
+ <div><dt>{{ icon('calendar') }}<span>Closing This Week</span></dt><dd>{{ n_soon|num }}</dd></div>
+ <div><dt>{{ icon('buildings') }}<span>Buyers Listed</span></dt><dd>{{ n_buyers|num }}</dd></div>
+ <div><dt>{{ icon('bank') }}<span>Official Portals</span></dt><dd>{{ n_sources }}</dd></div>
 </dl>
-</div></section>{% endblock %}
+<h2 class=hxwhy>Why Choose Tenderleo?</h2>
+<ul class=hxfeat>
+ <li>{{ icon('magnifying-glass') }}<b>AI-Powered Search</b><span>Find the right tenders with smart AI.</span></li>
+ <li>{{ icon('shield-check') }}<b>Trusted &amp; Verified</b><span>Get accurate data from official sources.</span></li>
+ <li>{{ icon('lightning') }}<b>Real-Time Updates</b><span>Never miss an opportunity.</span></li>
+ <li>{{ icon('chart-bar') }}<b>Powerful Analytics</b><span>Make data-driven decisions.</span></li>
+</ul>
+</div></div></section>{% endblock %}
 
 {% block body %}
-{#- Right under the figures: India by state. A state on the map and its name in
-    the list beside it are both links to that state's open tenders, and
-    pointing at one lights up the other (static/js/indiamap.js). #}
-<section class=sec id=states><div class=wrap>
-<div class="secHead reveal">
- <h2>Find tenders by state</h2>
- <p class=kicker>Every state and union territory. Click one to see its tenders</p>
+{#- India by state. Pointing at a state on the map names it with its count in
+    a bubble over the map; the state and its row in "Top States" are links to
+    its tenders (static/js/indiamap.js). The picker opens a state's tenders. -#}
+{%- set top_states = state_counts|dictsort(by='value', reverse=true) -%}
+<section class="sec sx" id=states data-counts="{{ state_counts|tojson|forceescape }}"><div class=wrap><div class=xpanel>
+<div class=xhead>
+ <div><h2>Explore Tenders by State</h2>
+ <p>Discover government tenders across India</p></div>
+ <form class=xpick action="/browse" method=get data-autogo>
+  {{ icon('funnel-simple') }}<label class=sr for=stpick>Pick a state</label>
+  <select id=stpick name=state><option value="">All States</option>
+  {%- for s in states|sort %}<option>{{ s }}</option>{% endfor %}</select>
+  <noscript><button class="hbtn sm">Go</button></noscript>
+ </form>
 </div>
-<div class=mapwrap>
- <figure class=mapbox>
-  {% include "_india_map.html" %}
-  <figcaption class=mapcredit>Boundaries: <a href="https://github.com/datameet/maps" target=_blank rel="noopener noreferrer">DataMeet India</a>
-   (<a href="https://creativecommons.org/licenses/by/4.0/" target=_blank rel="noopener noreferrer">CC BY 4.0</a>)</figcaption>
- </figure>
- <ul class="stiles mapstates">{% for s in states|sort %}<li><a href="/browse?state={{ s|urlquote }}" data-state="{{ s }}">{{ icon('map-pin') }}<span>{{ s }}</span></a></li>{% endfor %}</ul>
+<div class=sxgrid>
+ <div class=sxmap>
+  <figure class=mapbox>
+   {% include "_india_map.html" %}
+   <figcaption class=mapcredit>Boundaries: <a href="https://github.com/datameet/maps" target=_blank rel="noopener noreferrer">DataMeet India</a>
+    (<a href="https://creativecommons.org/licenses/by/4.0/" target=_blank rel="noopener noreferrer">CC BY 4.0</a>)</figcaption>
+  </figure>
+  {%- set first = top_states[0][0] if top_states else '' %}
+  <p class=sxtip id=sxtip{% if not first %} hidden{% endif %} data-state="{{ first }}">{{ icon('bank') }}<span><b>{{ first }}</b><i>{{ (top_states[0][1] if first else 0)|num }} Tenders</i></span></p>
+  <p class=sxgo><a class=hbtn id=sxgo href="/browse{{ '?state=' ~ first|urlquote if first else '' }}">View State Details{{ icon('arrow-right') }}</a></p>
+ </div>
+ <div class=sxtop>
+  <h3>Top States {{ icon('dots-three') }}</h3>
+  <ol>{% for s, n in top_states[:5] %}<li><a href="/browse?state={{ s|urlquote }}" data-state="{{ s }}">{{ icon('user') }}<span>{{ s }}</span><b>{{ n|num }}</b></a></li>
+  {%- else %}<li class=muted>No open tenders yet.</li>{% endfor %}</ol>
+ </div>
 </div>
-</div></section>
+</div></div></section>
+
+{#- The portals tenders are collected from, busiest first. Six show; the
+    button shows the rest, or opens Browse when there is no rest. -#}
+{% if portals %}<section class="sec px" id=portals><div class=wrap><div class=xpanel>
+<div class=xhead><div><h2>Government Procurement Portals</h2>
+<p>Access tenders from all major government portals</p></div></div>
+<ul class=pxgrid>{% for id, name, n in portals %}<li{% if loop.index > 6 %} class=more hidden{% endif %}>
+ <a href="/browse?source_id={{ id }}">{{ portal_art(name) }}<b>{{ name }}</b>
+ <span>{{ portal_note(name) }}</span><em>Active</em><small>{{ n|num }} open tender{{ '' if n == 1 else 's' }}</small></a></li>{% endfor %}</ul>
+<p class=xmore><a href="/browse"{% if portals|length > 6 %} data-showmore=pxgrid{% endif %}>View All Portals{{ icon('arrow-right') }}</a></p>
+</div></div></section>{% endif %}
+
+{#- The busiest buyers. Choosing one in the list shows it in the profile
+    panel: its open tenders, its latest one and its tenders per week. -#}
+{% if buyer_cards %}
+{%- set ns = namespace(rows=[]) %}{% for b in buyer_cards %}{% set ns.rows = ns.rows + [{
+   'name': b.name, 'open': b.open|num, 'weeks': b.weeks, 'ago': ago(b.latest)|string}] %}{% endfor %}
+<section class="sec bx" id=buyers data-buyers="{{ ns.rows|tojson|forceescape }}"><div class=wrap><div class=xpanel>
+<div class=xhead><div><h2>Find Government Buyers</h2>
+<p>Explore departments and organisations</p></div></div>
+<div class=bxbar>
+ <form class=bxsearch action="/buyers" method=get>
+  {{ icon('magnifying-glass') }}<label class=sr for=bq>Search buyers</label>
+  <input id=bq name=q autocomplete=off spellcheck=false placeholder="Search buyers...">
+ </form>
+ {#- A state here searches buyer names for it ("PWD Madhya Pradesh"). -#}
+ <form class=xpick action="/buyers" method=get data-autogo>
+  {{ icon('funnel-simple') }}<label class=sr for=bpick>Buyers by state</label>
+  <select id=bpick name=q><option value="">All States</option>
+  {%- for s in states|sort %}<option>{{ s }}</option>{% endfor %}</select>
+ </form>
+</div>
+<div class=bxgrid>
+ <ul class=bxlist>{% for b in buyer_cards %}
+  <li{% if loop.first %} class=on{% endif %} data-buyer="{{ loop.index0 }}">{{ logo(b.name) }}
+   <div><b>{{ b.name }}</b><span>Latest tender {{ ago(b.latest) }}</span><span>{{ b.open|num }} tender{{ '' if b.open == 1 else 's' }}</span></div>
+   <a class="hbtn ghost sm" href="/buyer?name={{ b.name|urlquote }}">View Profile{{ icon('arrow-right') }}</a></li>{% endfor %}</ul>
+ {%- set b = buyer_cards[0] %}
+ <div class=bxside aria-live=polite>
+  <div class=bxcard>
+   <h3>Buyer Profile</h3>
+   <div class=bxwho>{{ logo(b.name) }}<div><b id=bxname>{{ b.name }}</b>
+    <span>Total Tenders: <i id=bxopen>{{ b.open|num }}</i></span>
+    <span>Last Activity: <i id=bxlast>{{ ago(b.latest) }}</i></span></div></div>
+  </div>
+  <div class=bxcard>
+   <h3>Tender Activity</h3>
+   {#- Heights in tenths of the busiest week, as classes: the page's style
+       policy allows no inline style attributes. -#}
+   <ol class=bxbars id=bxbars aria-label="Tenders published per week, last 8 weeks">{% set top = b.weeks|max or 1 %}{% for n in b.weeks %}<li class="h{{ (10 * n / top)|round|int }}" title="{{ n }} tenders"><span class=sr>{{ n }}</span></li>{% endfor %}</ol>
+   <p class=bxnote>Tenders published per week, last 8 weeks &middot; <a id=bxgo href="/buyer?name={{ b.name|urlquote }}">See all</a></p>
+  </div>
+ </div>
+</div>
+</div></div></section>{% endif %}
 <script defer src="{{ asset('js/indiamap.js') }}"></script>
-<section class=sec id=companies><div class=wrap>
-<div class="secHead reveal">
- <h2>Find tenders by company</h2>
- <p class=kicker>Pick a buyer, see every open tender it has</p>
-</div>
-<form class="search slim reveal" action="/buyers" method=get>
- <label class=sr for=bq>Search companies</label>
- <input id=bq name=q autocomplete=off spellcheck=false placeholder="Search a company, e.g. Railways&hellip;">
- <button>{{ icon('magnifying-glass') }}Search</button>
-</form>
-{#- Moves slowly on its own and stops under the pointer or keyboard focus, so
-    any logo can be read and clicked; with reduced motion it is a row you
-    scroll yourself. -#}
-<div class=lstrip aria-label="Companies with open tenders" role=region>
-<ul class=ltrack>{% for dup in (false, true) %}{% for name, n in buyers %}{{ logo_chip(name, n, dup) }}{% endfor %}{% endfor %}</ul>
-</div>
-<p class=morelink><a class="btn ghost" href="/buyers">View all {{ n_buyers|num }} companies{{ icon('arrow-right') }}</a></p>
-</div></section>
-
-{#- The same strip as the companies above, for search words and for portals.
-    A strip too short to fill the row stands still instead of looping. -#}
-{% if keywords %}<section class=sec id=keywords><div class=wrap>
-<div class="secHead reveal">
- <h2>Find tenders by keyword</h2>
- <p class=kicker>Pick a word, see every open tender that mentions it</p>
-</div>
-<form class="search slim reveal" action="/browse" method=get>
- <label class=sr for=kq>Search tenders</label>
- <input id=kq name=q autocomplete=off spellcheck=false placeholder="Search a keyword, e.g. CCTV, road repair&hellip;">
- <button>{{ icon('magnifying-glass') }}Search</button>
-</form>
-{% set loop_it = keywords|length >= 8 -%}
-<div class="lstrip{{ '' if loop_it else ' still' }}" aria-label="Keywords with open tenders" role=region>
-<ul class=ltrack>{% for dup in ((false, true) if loop_it else (false,)) %}{% for word, n in keywords %}{{ strip_chip('/browse?q=' ~ word|urlquote, keyword_art(word), word, n, dup) }}{% endfor %}{% endfor %}</ul>
-</div>
-<p class=morelink><a class="btn ghost" href="/browse">Browse all {{ n_open|num }} open tenders{{ icon('arrow-right') }}</a></p>
-</div></section>{% endif %}
-
-{% if portals %}<section class=sec id=portals><div class=wrap>
-<div class="secHead reveal">
- <h2>Find tenders by portal</h2>
- <p class=kicker>Pick a portal, see every open tender it lists</p>
-</div>
-{% set loop_it = portals|length >= 8 -%}
-<div class="lstrip{{ '' if loop_it else ' still' }}" aria-label="Portals with open tenders" role=region>
-<ul class=ltrack>{% for dup in ((false, true) if loop_it else (false,)) %}{% for id, name, n in portals %}{{ strip_chip('/browse?source_id=' ~ id, portal_art(name), name, n, dup) }}{% endfor %}{% endfor %}</ul>
-</div>
-<p class=morelink><a class="btn ghost" href="/browse">Browse tenders from all {{ n_sources }} portals{{ icon('arrow-right') }}</a></p>
-</div></section>{% endif %}
-
-<section class=sec id=how><div class=wrap>
-<div class="secHead reveal">
- <h2>How Tenderleo works</h2>
- <p class=kicker>From thousands of tenders to the right opportunities, automatically</p>
-</div>
-<p class="hint reveal">Tendering shouldn't mean spending hours searching portals, reading
-endless PDFs, and figuring out whether you qualify. Tenderleo simplifies the entire journey.</p>
-<ol class="capList steps">
- <li class=reveal>
-  <p class=capnum>01</p>
-  <div><h3>Discover</h3>
-  <p class=steptag>Find tenders that actually matter to your business.</p>
-  <p>Tenderleo scans and organizes tender opportunities from relevant sources, helping you
-  discover projects based on your business, industry, location, capabilities, and experience.</p>
-  <p>No more endless searching. No more missed opportunities.</p></div>
- </li>
- <li class=reveal>
-  <p class=capnum>02</p>
-  <div><h3>Analyse</h3>
-  <p class=steptag>Let AI read the tender for you.</p>
-  <p>Open a tender and Tenderleo breaks down the important information: scope of work,
-  eligibility criteria, deadlines, EMD, experience requirements, turnover, documents, and
-  other key conditions.</p>
-  <p>Complex tender documents become clear, actionable information.</p></div>
- </li>
- <li class=reveal>
-  <p class=capnum>03</p>
-  <div><h3>Qualify</h3>
-  <p class=steptag>Know whether you should bid, before you spend hours preparing.</p>
-  <p>Tenderleo compares the tender requirements with your business profile to help identify
-  whether you meet the key eligibility criteria. Get a clear picture of:</p>
-  <ul class=ticks><li>Eligibility</li><li>Missing documents</li><li>Experience requirements</li>
-   <li>Financial requirements</li><li>Critical tender conditions</li></ul>
-  <p>Bid smarter, not blindly.</p></div>
- </li>
- <li class=reveal>
-  <p class=capnum>04</p>
-  <div><h3>Prepare</h3>
-  <p class=steptag>Turn an opportunity into a bid-ready package.</p>
-  <p>Once you've decided to bid, Tenderleo helps organize the required information and
-  documents and keeps your bid workflow in one place.</p>
-  <p>Less paperwork. Fewer missed requirements. More time to focus on winning the project.</p></div>
- </li>
-</ol>
-<p class="flowline big reveal"><b>Discover. Analyse. Qualify. Prepare.</b> One intelligent workflow for the entire tender journey.</p>
-</div></section>
-
-<section class=sec id=compare><div class=wrap>
-<div class="secHead reveal">
- <h2>Why Tenderleo</h2>
- <p class=kicker>The old way, and the Tenderleo way</p>
-</div>
-<div class="vs reveal">
- <div class="vsart old" aria-hidden=true>
-  <svg viewBox="0 0 240 150"><g class=paper><rect x="40" y="34" width="70" height="90" rx="6" transform="rotate(-12 75 79)"/><rect x="70" y="26" width="70" height="90" rx="6" transform="rotate(6 105 71)"/><rect x="104" y="30" width="70" height="90" rx="6" transform="rotate(-4 139 75)"/></g>
-  <g class=lines><path d="M118 52h40M118 64h46M118 76h34M118 88h44M118 100h28"/></g>
-  <text x="196" y="44" class=q>?</text><text x="24" y="40" class=q>?</text><text x="204" y="122" class=q>!</text></svg>
-  <p>&#x1F613; Traditional Tendering</p>
- </div>
- <div class="vsart new" aria-hidden=true>
-  <svg viewBox="0 0 240 150"><rect class=card x="44" y="22" width="152" height="108" rx="10"/>
-  <rect class=bar x="58" y="38" width="62" height="8" rx="4"/>
-  <g class=okrow><circle cx="66" cy="66" r="7"/><path d="M62 66l3 3 6-6"/><rect x="80" y="62" width="96" height="8" rx="4"/></g>
-  <g class=okrow><circle cx="66" cy="88" r="7"/><path d="M62 88l3 3 6-6"/><rect x="80" y="84" width="80" height="8" rx="4"/></g>
-  <g class=okrow><circle cx="66" cy="110" r="7"/><path d="M62 110l3 3 6-6"/><rect x="80" y="106" width="90" height="8" rx="4"/></g>
-  <path class=bolt d="M206 18l-14 26h12l-8 22 22-30h-13l9-18z"/></svg>
-  <p>&#x26A1; Tenderleo</p>
- </div>
- <table class=vstable>
-  <thead><tr><th scope=col>Traditional tendering</th><th scope=col>Tenderleo</th></tr></thead>
-  <tbody>
-  {%- for old, new in [
-     ("Multiple portals to check", "One intelligent workflow"),
-     ("Relevant tenders are easy to miss", "Discover opportunities you might miss"),
-     ("Too many irrelevant tenders", "AI finds what fits your business"),
-     ("Hours reading lengthy PDFs", "Key requirements, instantly"),
-     ("Eligibility checked manually", "AI-powered eligibility check"),
-     ("Missing documents discovered late", "Know what's missing upfront"),
-     ("Deadlines easily overlooked", "Stay ahead of deadlines"),
-     ("“Should we bid?” is guesswork", "Smarter bid / no-bid decisions"),
-     ("More time searching, less time bidding", "Less searching. More bidding."),
-     ("Opportunities lost in the noise", "Opportunities surfaced before they're gone"),
-  ] %}
-  <tr><td>{{ icon('x') }}{{ old }}</td><td>{{ icon('check') }}{{ new }}</td></tr>
-  {%- endfor %}
-  </tbody>
- </table>
-</div>
-</div></section>
-
-<section class=sec id=ai><div class=wrap>
-<div class="aisplit reveal">
- <div>
-  <p class=badge>{{ icon('sparkle') }}New feature</p>
-  <h2>AI-powered tender analysis</h2>
-  <p class=lede>Our AI reads every tender document, hundreds of pages, and gives you a clear
-  breakdown of eligibility, scope, required documents, and risks in seconds.</p>
-  <p class=ctas><a class=btn href="/browse">See AI in Action{{ icon('arrow-right') }}</a>
-  <a class="btn ghost" href="{{ demo }}" target=_blank rel="noopener noreferrer">Book a Demo</a></p>
- </div>
- <div class=aipanel>
-  <p class=kicker>AI analysis preview</p>
-  <ul>
-   <li>{{ icon('file-text') }}<div><b>Submission checklist</b><span>Every document you need, with formats</span></div></li>
-   <li>{{ icon('target') }}<div><b>Scope of work</b><span>Key deliverables extracted instantly</span></div></li>
-   <li>{{ icon('shield-check') }}<div><b>Eligibility check</b><span>Know if you qualify before you bid</span></div></li>
-   <li>{{ icon('download') }}<div><b>Auto-extract document formats</b><span>Ready-to-use formats from the tender docs</span></div></li>
-   <li>{{ icon('check-circle') }}<div><b>Reduce technical rejection</b><span>Spot missing docs and compliance gaps early</span></div></li>
-   <li>{{ icon('buildings') }}<div><b>Authority contacts</b><span>Office, phone, email, ready to reach</span></div></li>
-   <li>{{ icon('sparkle') }}<div><b>Ask follow-ups</b><span>Ask anything about the tender docs</span></div></li>
-  </ul>
- </div>
-</div>
-</div></section>{% endblock %}
+<script defer src="{{ asset('js/home.js') }}"></script>
+{% endblock %}
