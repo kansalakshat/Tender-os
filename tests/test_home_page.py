@@ -14,8 +14,10 @@ TODAY = date(2026, 11, 18)
 
 
 @pytest.fixture
-def db_with_buyers(session_factory):
-    soon = date.today() + timedelta(days=9)
+def db_with_buyers(session_factory, monkeypatch):
+    # One clock for the rows and for the pages that read them.
+    monkeypatch.setattr(web, "today_ist", lambda: TODAY)
+    soon = TODAY + timedelta(days=9)
     with session_factory() as db:
         cppp = Source(name="CPPP", base_url="https://eprocure.gov.in", license="p",
                       robots_txt_allowed=True)
@@ -25,7 +27,9 @@ def db_with_buyers(session_factory):
             ("g", "District Office Gwalior", "Hiring of vehicles", soon, None),
             ("p", "PWD Division Jaipur Rajasthan", "Road repair", soon, None),
             # one closed tender: counted in activity, not in "open"
-            ("x", "Ministry of Railways", "Old works", date.today() - timedelta(days=3), TODAY),
+            ("x", "Ministry of Railways", "Old works", TODAY - timedelta(days=3), TODAY),
+            # a placeholder buyer is never listed, even under a state it names
+            ("n", "N/A", "Road repair in Gwalior", soon, None),
         ]
         # weekly buckets: today and six days back share the last bar; seven
         # days back is the bar before; 55 days back is the first bar; 56 is out
@@ -55,6 +59,7 @@ def test_buyers_page_filters_by_state(db_with_buyers):
         client = TestClient(app)
         mp = client.get("/buyers", params={"state": "Madhya Pradesh"}).text
         assert "District Office Gwalior" in mp and "PWD Division Jaipur" not in mp
+        assert ">N/A<" not in mp
         assert "in Madhya Pradesh" in mp and "<option selected>Madhya Pradesh</option>" in mp
         # an unknown state is ignored, not an empty page
         every = client.get("/buyers", params={"state": "Atlantis"}).text

@@ -1099,15 +1099,22 @@ def browse(db: Session = Depends(get_db)) -> str:
 # exactly the strings in tenders.organization, so a click is an exact match,
 # never a substring that pulls in a neighbouring office.
 
+# Placeholders some portals print in the buyer column; never a buyer.
+NO_BUYER = ("n/a", "na", "-", "--", "")
+
+
+def _named_buyer():
+    return (Tender.organization.is_not(None),
+            func.lower(Tender.organization).not_in(NO_BUYER))
+
+
 def _open_buyers(db: Session, today: date) -> list[tuple[str, int]]:
     """Every buyer with an open notice, busiest first, shared for ten minutes."""
     def compute(db):
         is_open = or_(Tender.deadline.is_(None), Tender.deadline >= today)
         return [tuple(r) for r in db.execute(
             select(Tender.organization, func.count())
-            .where(Tender.organization.is_not(None), Tender.duplicate_of.is_(None), is_open,
-                   # placeholders some portals print in the buyer column
-                   func.lower(Tender.organization).not_in(("n/a", "na", "-", "--", "")))
+            .where(*_named_buyer(), Tender.duplicate_of.is_(None), is_open)
             .group_by(Tender.organization)
             .order_by(func.count().desc(), Tender.organization)
         )]
@@ -1131,7 +1138,7 @@ def _state_buyers(db: Session, today: date, state: str) -> list[tuple[str, int]]
         portals = [s.id for s in sources(db).values() if PORTAL_STATE.get(s.name) == state]
         rows = db.execute(
             select(Tender.organization, func.count())
-            .where(Tender.organization.is_not(None), *_open_now(today),
+            .where(*_named_buyer(), *_open_now(today),
                    state_clause(state, portals, db.get_bind().dialect.name))
             .group_by(Tender.organization)
             .order_by(func.count().desc(), Tender.organization))
