@@ -217,7 +217,7 @@ def test_cppp_box_shows_only_for_tenders_on_the_14_day_list(client, session_fact
     assert f'<form method=post action="/t/{tid}/cppp" id=cpppForm hidden>' in html
     assert f'data-captcha="/t/{tid}/cppp/captcha"' in html
     assert any("cpppStart" in js for js in page_scripts(html))
-    assert '<a class="btn ghost" href="#cpppBox">' in html   # View on portal
+    assert '<a class="hbtn ghost" href="#cpppBox" data-tab-jump=documents>' in html   # View on portal
     for args in (("1",), (_TID, 15), (_TID, -1)):   # no row to pick, or not on the list
         _cppp_id(session_factory, *args)
         html = client.get(f"/t/{tid}").text
@@ -241,7 +241,7 @@ def test_view_on_portal_opens_the_portal_in_a_new_tab(client, session_factory, n
         db.commit()
         tid = t.id
     html = client.get(f"/t/{tid}").text
-    assert f'<a class="btn ghost" href="{expected}" target=_blank rel="noopener noreferrer">' in html
+    assert f'<a class="hbtn ghost" href="{expected}" target=_blank rel="noopener noreferrer">' in html
 
 
 def _kernel(monkeypatch, steps):

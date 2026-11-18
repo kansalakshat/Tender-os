@@ -110,7 +110,7 @@ def test_tender_page(client):
     tid = client.get("/tenders", params={"q": "Katrathal"}).json()["items"][0]["id"]
     html = client.get(f"/t/{tid}").text
     assert "Ready to fill this tender" in html and "https://wa.me/?text=" in html
-    assert 'href="/browse?state=Rajasthan"' in html          # the breadcrumb
+    assert 'href="/browse?state=Rajasthan"' in html          # the state, under the title
 
 
 def test_bid_document_needs_sign_in(client, session_factory):
