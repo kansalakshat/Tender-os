@@ -146,6 +146,7 @@ fetch(document.getElementById('moreSlot').dataset.src, {credentials: 'same-origi
     if (k < 0) return;
     var next = list[(k + (e.key === 'ArrowRight' ? 1 : list.length - 1)) % list.length];
     show(next.dataset.tab, true);
+    history.replaceState(null, '', '#' + next.dataset.tab);
   });
   // Links elsewhere on the page that point into another tab open it first.
   document.addEventListener('click', function (e) {
