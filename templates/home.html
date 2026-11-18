@@ -111,8 +111,11 @@
 </div>
 <div class=bxgrid>
  <ul class=bxlist>{% for b in buyer_cards %}
-  <li{% if loop.first %} class=on{% endif %} data-buyer="{{ loop.index0 }}">{{ logo(b.name) }}
-   <div><b>{{ b.name }}</b><span>Latest tender {{ ago(b.latest) }}</span><span>{{ b.open|num }} tender{{ '' if b.open == 1 else 's' }}</span></div>
+  <li{% if loop.first %} class=on{% endif %} data-buyer="{{ loop.index0 }}">
+   {#- Choosing a buyer is a button (it shows the buyer in the panel);
+       "View Profile" stays a separate link to its page. -#}
+   <button type=button class=bxpick aria-pressed="{{ 'true' if loop.first else 'false' }}" aria-controls=bxname>{{ logo(b.name) }}
+   <span class=bxtext><b>{{ b.name }}</b><span>Latest tender {{ ago(b.latest) }}</span><span>{{ b.open|num }} tender{{ '' if b.open == 1 else 's' }}</span></span></button>
    <a class="hbtn ghost sm" href="/buyer?name={{ b.name|urlquote }}">View Profile{{ icon('arrow-right') }}</a></li>{% endfor %}</ul>
  {%- set b = buyer_cards[0] %}
  <div class=bxside aria-live=polite>

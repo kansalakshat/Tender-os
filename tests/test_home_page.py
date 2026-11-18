@@ -69,6 +69,8 @@ def test_buyers_page_filters_by_state(db_with_buyers):
 
 
 def test_home_buyer_panel_and_demo_button(db_with_buyers, monkeypatch):
+    # DEMO_VIDEO_URL is read once at import; pin the template's copy instead.
+    monkeypatch.setitem(web._env.globals, "demo_video", "")
     app.dependency_overrides[get_db] = lambda: db_with_buyers()
     try:
         html = TestClient(app).get("/").text
@@ -78,6 +80,9 @@ def test_home_buyer_panel_and_demo_button(db_with_buyers, monkeypatch):
     js = (Path(__file__).parent.parent / "static" / "js" / "home.js").read_text(encoding="utf-8")
     assert "querySelector('.bxside')" in js and "class=bxside" in html
     assert "Open Tenders: <i id=bxopen>" in html
+    # choosing a buyer is a real button that says which one is chosen
+    assert html.count('class=bxpick aria-pressed="true"') == 1
+    assert html.count("class=bxpick") == html.count("data-buyer=")
     # the buyer picker sends a state, and works without JavaScript
     assert "<select id=bpick name=state>" in html
     assert html.count("<noscript><button") == 2

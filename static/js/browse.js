@@ -50,15 +50,17 @@ function params(){
 // filters, so it folds away behind a "Filters" button instead. "More" over
 // the results opens it too, at the full category list.
 const ftoggle = document.getElementById('ftoggle');
+const more = document.getElementById('b2more');
 function openFilters(focus){
-  const open = !form.classList.contains('open') || focus;
-  form.classList.toggle('open', !!open);
-  ftoggle.setAttribute('aria-expanded', String(!!open));
+  const open = !form.classList.contains('open') || !!focus;
+  form.classList.toggle('open', open);
+  // Both buttons open the same panel, so both say whether it is open.
+  for(const b of [ftoggle, more]) b.setAttribute('aria-expanded', String(open));
   if(open) form.scrollIntoView({block: 'start'});
   if(focus) focus.focus();
 }
 ftoggle.addEventListener('click', () => openFilters());
-document.getElementById('b2more').addEventListener('click', () => openFilters(form.sector));
+more.addEventListener('click', () => openFilters(form.sector));
 
 // ---- quick categories ---------------------------------------------------------
 const cats = document.querySelectorAll('[data-sector]');
@@ -106,7 +108,7 @@ document.getElementById('fchips').addEventListener('click', e => {
 // date with days left, the value (or the EMD when only that is stated), and
 // whether it is still open.
 function status(t){
-  const [days, rank] = left(t.deadline);
+  const days = left(t.deadline)[0];
   if(days === 'closed') return '<span class="b2st off">Closed</span>';
   if(days === 'today') return '<span class="b2st hot">Closes today</span>';
   return '<span class="b2st on">Open</span>';

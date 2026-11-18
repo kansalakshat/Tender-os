@@ -875,12 +875,14 @@ pre#err:empty{display:none}
 .bxgrid{display:grid;gap:1.25rem}
 @media (min-width:56rem){.bxgrid{grid-template-columns:minmax(0,1.45fr) minmax(0,1fr)}}
 .bxlist{margin:0;padding:0;list-style:none;border:1px solid var(--hline);border-radius:16px;background:var(--panel);overflow:hidden}
-.bxlist li{display:flex;align-items:center;gap:.9rem;padding:.9rem 1rem;cursor:pointer}
+.bxlist li{display:flex;align-items:center;gap:.9rem;padding:.9rem 1rem}
 .bxlist li+li{border-top:1px solid var(--hline)}
 .bxlist li:hover,.bxlist li.on{background:var(--hb-soft)}
-.bxlist li div{display:grid;flex:1;min-width:0;line-height:1.35}
+.bxpick{display:flex;flex:1;align-items:center;gap:.9rem;min-width:0;padding:0;border:0;background:none;color:inherit;text-align:left;font:inherit;cursor:pointer}
+.bxpick:focus-visible{outline:2px solid var(--hb);outline-offset:4px;border-radius:8px}
+.bxtext{display:grid;flex:1;min-width:0;line-height:1.35}
 .bxlist li b{color:var(--hnavy);font-size:.95rem}
-.bxlist li span{color:var(--muted);font-size:.8rem}
+.bxtext>span{color:var(--muted);font-size:.8rem}
 .bxlist .logo,.bxwho .logo{width:3rem;height:3rem;background:#fff;border:1px solid var(--hline);border-radius:12px}
 .bxlist .hbtn.ghost{border-color:var(--hb)}
 .bxside{display:grid;gap:1rem;align-content:start}

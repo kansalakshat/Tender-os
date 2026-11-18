@@ -34,7 +34,11 @@
   function show(i) {
     const b = data[i];
     if (!b || !panel) return;
-    for (const r of rows) r.classList.toggle('on', r.dataset.buyer === String(i));
+    for (const r of rows) {
+      const on = r.dataset.buyer === String(i);
+      r.classList.toggle('on', on);
+      r.querySelector('.bxpick').setAttribute('aria-pressed', String(on));
+    }
     const logo = rows[i].querySelector('.logo');
     const old = panel.querySelector('.bxwho .logo');
     if (logo && old) old.replaceWith(logo.cloneNode(true));
@@ -52,10 +56,6 @@
     document.getElementById('bxgo').href = '/buyer?name=' + encodeURIComponent(b.name);
   }
   rows.forEach((r, i) => {
-    r.tabIndex = 0;
-    r.addEventListener('click', (e) => { if (!e.target.closest('a')) show(i); });
-    r.addEventListener('keydown', (e) => {
-      if ((e.key === 'Enter' || e.key === ' ') && e.target === r) { e.preventDefault(); show(i); }
-    });
+    r.querySelector('.bxpick').addEventListener('click', () => show(i));
   });
 })();
