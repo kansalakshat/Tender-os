@@ -632,8 +632,15 @@ _env.globals["demo_video"] = os.environ.get("DEMO_VIDEO_URL", "")
 
 
 @router.get("/about", response_class=HTMLResponse)
-def about() -> str:
-    return render("about.html", title="About Tenderleo")
+def about(db: Session = Depends(get_db)) -> str:
+    """The About page. Its figures are the home page's, counted the same way
+    (and shared from the same minute-long cache), never typed in."""
+    f = _figures(db, today_ist())
+    n_state = sum(1 for s in sources(db).values() if s.name in PORTAL_STATE)
+    return render("about.html", title="About Tenderleo", n_open=f["n_open"],
+                  n_buyers=f["n_buyers"], n_sources=f["n_sources"],
+                  last=ist(f["last"]).date() if f["last"] else None,
+                  n_state_portals=n_state)
 
 
 # ---- the questionnaire, asked once ----------------------------------------

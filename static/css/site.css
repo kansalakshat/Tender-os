@@ -1291,3 +1291,90 @@ html:not(.pfjs) #step-review,html:not(.pfjs) #pfback,html:not(.pfjs) #pfnext,htm
    passing beneath it rather than being cut by a line. */
 .top{box-shadow:0 1px 0 var(--stone),0 6px 16px rgba(11,27,63,.06)}
 :root[data-theme=dark] .top{box-shadow:0 1px 0 var(--stone),0 6px 16px rgba(0,0,0,.35)}
+
+/* ---- About page ---------------------------------------------------------
+   One column of panels in the home page's look: the hero with live figures,
+   problem and answer, the four steps, who it is for, the sources, the vision,
+   questions, and a closing call to action. */
+.ab{padding-top:1.5rem}
+.abflow{display:flex;flex-direction:column;gap:1.5rem}
+.abtag{display:inline-block;margin:0 0 .9rem;padding:.3rem .75rem;border-radius:999px;background:var(--hb-soft);
+  color:var(--hb);font:700 .85rem/1.2 var(--sans)}
+.abhero{display:flex;flex-wrap:wrap;gap:2.5rem;align-items:center;
+  background:linear-gradient(135deg,var(--panel) 0%,var(--panel) 50%,color-mix(in srgb,var(--hb) 7%,var(--panel)) 100%)}
+.abcopy{flex:999 1 30rem;min-width:0}
+.abhero h1{margin:0 0 1.1rem;font-size:clamp(2.1rem,4.4vw,3.25rem);line-height:1.1;font-weight:800;letter-spacing:-.02em}
+.abhero h1 span{color:var(--hb)}
+.ablede{margin:0 0 1.75rem;max-width:35rem;font-size:1.15rem;line-height:1.6;color:var(--muted)}
+.abctas{display:flex;flex-wrap:wrap;gap:.75rem;margin:0}
+.abstats{flex:1 1 22rem;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.9rem;margin:0}
+.abstats>div{display:flex;flex-direction:column-reverse;gap:.25rem;padding:1.2rem;border:1px solid var(--hline);
+  border-radius:16px;background:var(--panel)}
+.abstats dd{margin:0;font:800 2rem/1.1 var(--sans);color:var(--hnavy)}
+.abstats dt{color:var(--muted);font-size:.9rem}
+.absec h2{margin:0 0 .35rem;font-size:clamp(1.5rem,2.6vw,2rem);font-weight:800}
+.absub{margin:0 0 1.75rem;color:var(--muted);font-size:1.05rem}
+.abprob,.abwho,.absrc{list-style:none;margin:0;padding:0;display:grid;gap:1.1rem}
+.abprob{grid-template-columns:repeat(auto-fit,minmax(15rem,1fr))}
+.abprob li{display:flex;flex-direction:column;gap:.85rem;padding:1.35rem;border:1px solid var(--hline);border-radius:16px}
+.abprob p{margin:0;color:var(--muted);line-height:1.55}
+.abprob .abpain{display:flex;gap:.6rem;align-items:center;color:#B42318;font-weight:700}
+.abprob .abfix{display:flex;gap:.6rem;align-items:flex-start;padding-top:.85rem;border-top:1px solid var(--hline);
+  color:var(--hnavy);font-weight:600}
+.abprob .i{width:1.3rem;height:1.3rem;flex:none}
+.abprob .abfix .i{color:var(--hgreen)}
+:root[data-theme=dark] .abprob .abpain{color:#FCA5A5}
+.absteps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(13rem,1fr));gap:1.25rem;
+  counter-reset:none}
+.absteps li{display:flex;flex-direction:column;gap:.6rem;position:relative}
+.abnum{display:grid;place-items:center;width:3rem;height:3rem;border-radius:50%;background:var(--hb);color:#fff;
+  font:800 1.1rem/1 var(--sans)}
+:root[data-theme=dark] .abnum{color:#0E1520}
+.absteps h3{margin:0;font-size:1.2rem}
+.absteps p{margin:0;color:var(--muted);line-height:1.55}
+.abflowline{margin:1.75rem 0 0;color:var(--muted)}
+.abflowline b{color:var(--hnavy);margin-right:.35rem}
+.abwho{grid-template-columns:repeat(auto-fit,minmax(13rem,1fr))}
+.abwho a{display:flex;flex-direction:column;gap:.6rem;height:100%;box-sizing:border-box;padding:1.35rem;
+  border:1px solid var(--hline);border-radius:16px;color:var(--hnavy);text-decoration:none;
+  transition:border-color .15s,box-shadow .15s,transform .15s}
+.abwho a:hover{border-color:var(--hb);box-shadow:0 10px 24px rgba(26,95,224,.12)}
+.abwho b{font-size:1.1rem}
+.abwho a>span:not(.abico):not(.abgo){color:var(--muted);line-height:1.5}
+.abgo{display:inline-flex;align-items:center;gap:.35rem;margin-top:auto;color:var(--hb);font-weight:600}
+.abgo .i{width:1rem;height:1rem}
+.abico{display:grid;place-items:center;flex:none;width:3rem;height:3rem;border-radius:12px;background:var(--hb-soft);color:var(--hb)}
+.abico .i{width:1.6rem;height:1.6rem}
+.abhead{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:1rem;margin-bottom:1.6rem}
+.abhead .absub{margin:0}
+.ablive{margin:0;padding:.45rem .9rem;border-radius:999px;background:color-mix(in srgb,var(--hgreen) 14%,var(--panel));
+  color:var(--hgreen);font-weight:700;font-size:.9rem}
+.ablive::before{content:"\25CF";margin-right:.4rem}
+.absrc{grid-template-columns:repeat(auto-fit,minmax(15rem,1fr))}
+.absrc li{display:flex;gap:.9rem;align-items:center;padding:1.2rem;border:1px solid var(--hline);border-radius:14px}
+.absrc p{margin:.15rem 0 0;color:var(--muted);font-size:.9rem}
+.abnote{margin:1.1rem 0 0;color:var(--faint);font-size:.9rem}
+.abvision{padding:clamp(1.75rem,4vw,3.25rem);border-radius:20px;background:#0B1B3F;color:#fff}
+.abvision .abtag{background:rgba(156,194,255,.16);color:#9CC2FF;letter-spacing:.04em;text-transform:uppercase}
+.abvision p:last-child{margin:0;max-width:56rem;font:700 clamp(1.35rem,2.6vw,1.9rem)/1.35 var(--sans)}
+:root[data-theme=dark] .abvision{background:#1D2A3A;border:1px solid var(--hline)}
+.abfaq{display:flex;flex-direction:column;gap:.75rem}
+.abfaq details{border:1px solid var(--hline);border-radius:14px;padding:1.1rem 1.35rem}
+.abfaq summary{display:flex;justify-content:space-between;align-items:center;gap:1rem;cursor:pointer;list-style:none;
+  font-weight:700;font-size:1.05rem;color:var(--hnavy)}
+.abfaq summary::-webkit-details-marker{display:none}
+.abfaq summary .i{width:1.2rem;height:1.2rem;flex:none;color:var(--muted);transition:transform .2s}
+.abfaq details[open] summary .i{transform:rotate(180deg)}
+.abfaq details p{margin:.75rem 0 0;color:var(--muted);line-height:1.6}
+.abcta{display:flex;flex-wrap:wrap;gap:1.5rem;align-items:center;justify-content:space-between;
+  padding:clamp(1.75rem,4vw,3rem);border-radius:20px;background:var(--hb);color:#fff}
+.abcta>div{flex:1 1 26rem}
+.abcta h2{margin:0 0 .5rem;color:#fff;font-size:clamp(1.5rem,2.6vw,2rem);font-weight:800}
+.abcta p{margin:0;color:#DCE8FD;font-size:1.05rem}
+.abbtn{display:inline-flex;align-items:center;min-height:2.6rem;padding:.7rem 1.35rem;border-radius:12px;background:#fff;
+  color:#1A5FE0;font-weight:700;text-decoration:none;border:1px solid #fff}
+.abbtn:hover{background:#EAF1FD;color:#134BB8}
+.abbtn.ghost{background:transparent;color:#fff;border-color:#9CC2FF}
+.abbtn.ghost:hover{background:rgba(255,255,255,.12);color:#fff}
+:root[data-theme=dark] .abcta{background:#1A3A6B}
+@media (prefers-reduced-motion:no-preference){.abwho a:hover{transform:translateY(-2px)}}
