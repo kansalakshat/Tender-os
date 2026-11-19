@@ -32,9 +32,9 @@
     panel.className = 'xdroppanel';
     panel.hidden = true;
     const id = (pick.id || 'pick') + '-list';
-    panel.innerHTML = '<input type=search autocomplete=off spellcheck=false placeholder="Search states..." aria-label="Search states" aria-controls="' + id + '">'
+    panel.innerHTML = '<input type=search role=combobox aria-expanded=true aria-autocomplete=list autocomplete=off spellcheck=false placeholder="Search states..." aria-label="Search states" aria-controls="' + id + '">'
       + '<ul role=listbox id="' + id + '">' + Array.from(pick.options).map((o, i) =>
-        '<li role=option data-i="' + i + '" aria-selected="' + (o.selected ? 'true' : 'false') + '">'
+        '<li role=option id="' + id + '-' + i + '" data-i="' + i + '" aria-selected="' + (o.selected ? 'true' : 'false') + '">'
         + '<span>' + esc(o.value || o.text) + '</span>' + (o.dataset.n ? '<b>' + esc(o.dataset.n) + '</b>' : '') + '</li>').join('')
       + '</ul><p class=none hidden>No state matches that.</p>';
     wrap.append(btn, panel);
@@ -48,7 +48,15 @@
       const vis = visible();
       act = Math.max(0, Math.min(k, vis.length - 1));
       items.forEach(li => li.classList.remove('act'));
-      if (vis[act]) { vis[act].classList.add('act'); vis[act].scrollIntoView({block: 'nearest'}); }
+      // Focus stays in the search box; aria-activedescendant tells screen
+      // readers which option the arrows are on.
+      if (vis[act]) {
+        vis[act].classList.add('act');
+        vis[act].scrollIntoView({block: 'nearest'});
+        box.setAttribute('aria-activedescendant', vis[act].id);
+      } else {
+        box.removeAttribute('aria-activedescendant');
+      }
     }
     function open(on) {
       panel.hidden = !on;
