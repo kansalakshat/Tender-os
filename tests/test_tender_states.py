@@ -108,9 +108,48 @@ def test_home_counts_come_from_the_column(session_factory, monkeypatch):
 def test_fill_states_fills_only_missing_open_rows(session_factory, monkeypatch):
     db = _rows(session_factory, monkeypatch)
     assert geo.fill_states(db, only_open_on=TODAY) == 1
-    by = {t.external_ref: t.states for t in db.execute(select(Tender)).scalars()}
+    by = dict(db.execute(select(Tender.external_ref, Tender.states)).all())
     assert by == {"s": "|Rajasthan|", "g": "|Goa|", "n": "|Rajasthan|", "c": None}
     assert geo.fill_states(db, only_open_on=TODAY) == 0      # nothing left to do
+
+
+def test_refresh_fixes_rows_an_older_fetcher_changed(session_factory, monkeypatch):
+    """An older fetcher rewrites a row's text but not its states; a NULL-only
+    fill never looks at it again. refresh=True recomputes every row."""
+    db = _rows(session_factory, monkeypatch)
+    geo.fill_states(db, only_open_on=TODAY)
+    t = db.execute(select(Tender).where(Tender.external_ref == "s")).scalar_one()
+    t.title = "Road in Gwalior"                 # what an old fetcher would write
+    db.commit()
+    assert geo.fill_states(db, only_open_on=TODAY) == 0                    # NULL-only: misses it
+    assert geo.fill_states(db, only_open_on=TODAY, refresh=True) == 2      # it, and "g" (texts say none)
+    by = dict(db.execute(select(Tender.external_ref, Tender.states)).all())   # from the database
+    assert by["s"] == "|Madhya Pradesh|" and by["g"] == "|" and by["n"] == "|Rajasthan|"
+    assert geo.fill_states(db, only_open_on=TODAY, refresh=True) == 0      # nothing left to fix
+
+
+def test_a_save_between_read_and_write_is_not_overwritten(session_factory, monkeypatch):
+    """Backfill reads a row, then enrichment saves new states and moves
+    last_updated_at before backfill writes: backfill must leave it alone."""
+    from datetime import datetime
+    db = _rows(session_factory, monkeypatch)
+    t = db.execute(select(Tender).where(Tender.external_ref == "n")).scalar_one()
+    seen = t.last_updated_at
+    t.states, t.last_updated_at = "|Madhya Pradesh|", datetime(2030, 1, 1)   # enrichment wins the race
+    db.commit()
+    assert geo._store_states(db, [(t.id, "|Rajasthan|", seen)], only_null=True) == 0
+    assert geo._store_states(db, [(t.id, "|Rajasthan|", seen)], only_null=False) == 0
+    db.refresh(t)
+    assert t.states == "|Madhya Pradesh|"
+    # read as it still is: written
+    assert geo._store_states(db, [(t.id, "|Rajasthan|", t.last_updated_at)], only_null=False) == 1
+
+
+def test_enrichment_reads_the_cached_source_name_not_a_select_per_document():
+    import inspect
+    from app import enrich
+    src = inspect.getsource(enrich.enrich_one)
+    assert "db.get(Source" not in src and "source_name(tender) or None" in src
 
 
 def test_migration_0015_adds_and_fills_the_column():

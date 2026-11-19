@@ -29,6 +29,7 @@ from . import activity
 from .bidpdf import parse_bid_pdf
 from .compliance import assert_not_blocked, scrub_personal, user_agent
 from .db import SessionLocal
+from .facts import source_name
 from .geo import states_of
 from .models import Source, Tender, today_ist, utcnow
 
@@ -189,8 +190,8 @@ def enrich_one(db: Session, tender: Tender, client: httpx.Client) -> bool:
     tender.raw_payload = scrub_personal(payload)
     # The document can name a different buyer, department or office than the
     # listing did, so the states those texts name are worked out again.
-    src = db.get(Source, tender.source_id)
-    states = states_of(tender, src.name if src else None)
+    # facts.source_name reads the shared sources map: no SELECT per document.
+    states = states_of(tender, source_name(tender) or None)
     if tender.states != states:
         tender.states = states
         changed = True

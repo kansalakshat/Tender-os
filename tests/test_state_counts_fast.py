@@ -21,6 +21,18 @@ def test_regressions_from_review():
     assert geo.states_named("Lakhimpur Kheri") == {"Assam", "Uttar Pradesh"} == ref("Lakhimpur Kheri")
 
 
+def test_unicode_letters_the_regex_folds_agree():
+    # re.IGNORECASE treats these as i, s and k; the stored states must too
+    for text in ("Delhı", "DELHİ", "İndore office", "Bhopal, Madhya Pradeſh", "\u212aota"):
+        assert set(geo.states_named(text)) == ref(text) and ref(text), text
+    swaps = (("i", "ı"), ("i", "İ"), ("s", "ſ"), ("k", "\u212a"))
+    for name in geo._PLACE:
+        for a, b in swaps:
+            if a in name:
+                text = name.replace(a, b) + " office"
+                assert set(geo.states_named(text)) == ref(text), text
+
+
 def test_every_place_name_agrees_with_the_per_state_search():
     for name in geo._PLACE:
         for text in (name, f"Supply at {name.upper()} office", f"{name.title()}, works"):
