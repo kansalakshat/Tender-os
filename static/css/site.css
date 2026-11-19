@@ -1280,3 +1280,14 @@ html:not(.pfjs) #step-review,html:not(.pfjs) #pfback,html:not(.pfjs) #pfnext,htm
 .xdroppanel li[aria-selected=true]{font-weight:700;color:var(--hb)}
 .xdroppanel li[hidden]{display:none}
 .xdroppanel .none{padding:.5rem .65rem;color:var(--muted);font-size:.85rem}
+
+/* Native dropdown lists in the dark theme. A select with a see-through
+   background (the browse filters) left Windows drawing its list white with
+   the light text on it; every select and its options get the panel colour. */
+:root[data-theme=dark] select{background-color:var(--panel);color:var(--ink)}
+:root[data-theme=dark] select option,:root[data-theme=dark] select optgroup{background-color:var(--panel);color:var(--ink)}
+.b2f select{background-color:var(--panel)}
+/* The top bar casts a soft shadow, so the page scrolling under it reads as
+   passing beneath it rather than being cut by a line. */
+.top{box-shadow:0 1px 0 var(--stone),0 6px 16px rgba(11,27,63,.06)}
+:root[data-theme=dark] .top{box-shadow:0 1px 0 var(--stone),0 6px 16px rgba(0,0,0,.35)}
