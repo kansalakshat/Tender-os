@@ -41,7 +41,7 @@ from .db import get_db, shared
 from .districts import DISTRICTS
 from .eligibility import REGISTRATIONS, checklist, needs_check
 from .facts import links as tender_links, money, preview_facts, sources, tender_facts
-from .geo import PORTAL_STATE, place_of
+from .geo import PORTAL_STATE, place_of, state_clause
 from .matching import (
     SECTOR_LABELS,
     STATES,
@@ -245,6 +245,8 @@ _env.globals.update(
     tender_links=tender_links,
 )
 _env.filters["num"] = lambda n: f"{n:,}"
+# A big count, rounded down for a badge: 45,216 -> "45K+", 812 -> "812".
+_env.filters["kfmt"] = lambda n: f"{n // 1000}K+" if n >= 1000 else f"{n}"
 # For rendering a list of strict field keys as the words a bidder used.
 _env.filters["extract"] = lambda key, mapping: mapping.get(key, key)
 _env.filters["urlquote"] = quote
@@ -422,10 +424,86 @@ def _render_welcome(db: Session, today: date) -> str:
         "home.html", title="Tenderleo | AI-powered tender intelligence",
         n_open=f["n_open"], n_soon=f["n_soon"],
         n_sources=f["n_sources"], n_buyers=f["n_buyers"], last=f["last"],
-        buyers=_logo_buyers(db, today), states=STATES,
-        keywords=_keyword_counts(db, today), portals=_portal_counts(db, today),
+        states=STATES, state_counts=_state_counts(db, today),
+        portals=_portal_counts(db, today), buyer_cards=_buyer_cards(db, today),
         today=today,
     )
+
+
+def _state_counts(db: Session, today: date) -> dict[str, int]:
+    """{state: open tenders} for every state with any, by the same rule as
+    /browse?state= (its own portal's tenders, or naming it or a district).
+    One pass over the table for all of them, shared for ten minutes."""
+    def compute(db):
+        dialect = db.get_bind().dialect.name
+        names = {s.id: s.name for s in sources(db).values()}
+        cols = []
+        for st in STATES:
+            portals = [i for i, n in names.items() if PORTAL_STATE.get(n) == st]
+            cols.append(func.coalesce(func.sum(case((state_clause(st, portals, dialect), 1), else_=0)), 0))
+        row = db.execute(select(*cols).where(*_open_now(today))).one()
+        return {st: int(n) for st, n in zip(STATES, row) if n}
+    return shared(db, ("home_states", today), 600, compute)
+
+
+HOME_BUYER_CARDS = 5
+ACTIVITY_WEEKS = 8
+
+
+def _buyer_cards(db: Session, today: date) -> list[dict]:
+    """The home page's buyer directory: the busiest buyers with a logo, each
+    with its open count, its latest tender and its tenders per week over the
+    last eight weeks (the bars in the profile panel).
+
+    The names come from the buyer list; the counts are counted again here, so
+    a card never keeps a stale count from that list's cache for ten minutes more.
+    """
+    def compute(db):
+        names = [n for n, _c in _logo_buyers(db, today)[:HOME_BUYER_CARDS]]
+        if not names:
+            return []
+        is_open = or_(Tender.deadline.is_(None), Tender.deadline >= today)
+        live = Tender.duplicate_of.is_(None)
+        open_n = dict(db.execute(
+            select(Tender.organization, func.count())
+            .where(Tender.organization.in_(names), live, is_open)
+            .group_by(Tender.organization)).all())
+        latest = dict(db.execute(
+            select(Tender.organization, func.max(Tender.published_date))
+            .where(Tender.organization.in_(names), live)
+            .group_by(Tender.organization)).all())
+        # Eight whole weeks ending today: 56 days, seven to a bar.
+        start = today - timedelta(days=7 * ACTIVITY_WEEKS - 1)
+        weeks = {n: [0] * ACTIVITY_WEEKS for n in names}
+        for org, day, n in db.execute(
+                select(Tender.organization, Tender.published_date, func.count())
+                .where(Tender.organization.in_(names), live,
+                       Tender.published_date >= start, Tender.published_date <= today)
+                .group_by(Tender.organization, Tender.published_date)):
+            weeks[org][(day - start).days // 7] += n
+        cards = [{"name": n, "open": open_n.get(n, 0), "latest": latest.get(n),
+                  "weeks": weeks[n]} for n in names]
+        return sorted(cards, key=lambda c: -c["open"])
+    return shared(db, ("home_buyer_cards", today), 600, compute)
+
+
+PORTAL_NOTES = {"CPPP": "Central Government", "GeM": "Government e-Marketplace",
+                "data.gov.in": "Open Government Data"}
+
+
+def portal_note(name: str) -> str:
+    """The line under a portal's name: who runs it."""
+    return PORTAL_NOTES.get(name) or (f"{PORTAL_STATE[name]} Government"
+                                      if name in PORTAL_STATE else "Official portal")
+
+
+def india_svg() -> Markup:
+    """The India map's shapes again, as one plain picture: the hero's
+    illustration. No links and hidden from screen readers -- the working map
+    is further down the page."""
+    paths = "".join(f'<path d="{d}"/>' for _box, d in _STATE_SHAPES.values())
+    return Markup(f'<svg class=hxindia viewBox="0 0 600 676" aria-hidden=true '
+                  f'focusable=false>{paths}</svg>')
 
 
 # Words people search for most, each a tile on the home page that opens
@@ -491,7 +569,8 @@ def portal_art(name: str) -> Markup:
     return Markup(f'<span class="logo big art t{tone}" aria-hidden=true>{art}</span>')
 
 
-_env.globals.update(keyword_art=keyword_art, portal_art=portal_art)
+_env.globals.update(keyword_art=keyword_art, portal_art=portal_art, india_svg=india_svg,
+                    portal_note=portal_note)
 
 
 def _open_now(today: date):
@@ -546,6 +625,9 @@ def _logo_buyers(db: Session, today: date) -> list[tuple[str, int]]:
 DEMO_URL = os.environ.get("DEMO_URL") or "https://wa.me/918964909090?" + urlencode(
     {"text": "Hi, I would like to book a demo of Tenderleo."})
 _env.globals["demo"] = DEMO_URL
+# A demo video to watch, if there is one; without it the home page offers
+# "Book a Demo" instead of a "Watch Demo" that would open a chat.
+_env.globals["demo_video"] = os.environ.get("DEMO_VIDEO_URL", "")
 
 
 @router.get("/about", response_class=HTMLResponse)
@@ -1017,15 +1099,22 @@ def browse(db: Session = Depends(get_db)) -> str:
 # exactly the strings in tenders.organization, so a click is an exact match,
 # never a substring that pulls in a neighbouring office.
 
+# Placeholders some portals print in the buyer column; never a buyer.
+NO_BUYER = ("n/a", "na", "-", "--", "")
+
+
+def _named_buyer():
+    return (Tender.organization.is_not(None),
+            func.lower(Tender.organization).not_in(NO_BUYER))
+
+
 def _open_buyers(db: Session, today: date) -> list[tuple[str, int]]:
     """Every buyer with an open notice, busiest first, shared for ten minutes."""
     def compute(db):
         is_open = or_(Tender.deadline.is_(None), Tender.deadline >= today)
         return [tuple(r) for r in db.execute(
             select(Tender.organization, func.count())
-            .where(Tender.organization.is_not(None), Tender.duplicate_of.is_(None), is_open,
-                   # placeholders some portals print in the buyer column
-                   func.lower(Tender.organization).not_in(("n/a", "na", "-", "--", "")))
+            .where(*_named_buyer(), Tender.duplicate_of.is_(None), is_open)
             .group_by(Tender.organization)
             .order_by(func.count().desc(), Tender.organization)
         )]
@@ -1042,16 +1131,36 @@ def buyers_strip(db: Session = Depends(get_db)) -> JSONResponse:
 BUYERS_PAGE = 60
 
 
+def _state_buyers(db: Session, today: date, state: str) -> list[tuple[str, int]]:
+    """(buyer, open tenders in the state) for every buyer with one there, by
+    the same state rule as /browse?state=, busiest first."""
+    def compute(db):
+        portals = [s.id for s in sources(db).values() if PORTAL_STATE.get(s.name) == state]
+        rows = db.execute(
+            select(Tender.organization, func.count())
+            .where(*_named_buyer(), *_open_now(today),
+                   state_clause(state, portals, db.get_bind().dialect.name))
+            .group_by(Tender.organization)
+            .order_by(func.count().desc(), Tender.organization))
+        return [(n, c) for n, c in rows]
+    return shared(db, ("state_buyers", today, state), 600, compute)
+
+
 @router.get("/buyers", response_class=HTMLResponse)
-def buyers_page(q: str = "", page: int = 1, db: Session = Depends(get_db)) -> str:
-    """Every company with an open tender, as logo tiles, searchable by name.
-    Filtered in memory: the list is the one already cached for the strip."""
+def buyers_page(q: str = "", state: str = "", page: int = 1,
+                db: Session = Depends(get_db)) -> str:
+    """Every company with an open tender, as logo tiles, searchable by name
+    and narrowed to one state (buyers with an open tender there). An unknown
+    state is ignored rather than showing nothing."""
     q = q.strip()[:100]
-    every = _open_buyers(db, today_ist())
+    state = state if state in STATES else ""
+    today = today_ist()
+    every = _state_buyers(db, today, state) if state else _open_buyers(db, today)
     hits = [b for b in every if q.lower() in b[0].lower()] if q else every
     pages = max(1, -(-len(hits) // BUYERS_PAGE))
     page = min(max(page, 1), pages)
-    return render("buyers.html", title="Find tenders by company", q=q, page=page,
+    return render("buyers.html", title="Find tenders by company", q=q, state=state,
+                  states=STATES, page=page,
                   pages=pages, total=len(hits),
                   buyers=hits[(page - 1) * BUYERS_PAGE: page * BUYERS_PAGE])
 

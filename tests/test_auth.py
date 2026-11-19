@@ -292,13 +292,13 @@ def test_home_is_reachable_and_personal_once_you_have_an_account(client):
     assert "Matches for you" in home.text
     assert "The buyers behind your matches" in home.text
     # the signed-out pitch is gone
-    assert "Create a free account" not in home.text
+    assert "Why Choose Tenderleo?" not in home.text
 
 
 def test_home_is_still_the_generic_pitch_when_signed_out(client):
     home = client.get("/")
     assert home.status_code == 200
-    assert "Create a free account" in home.text
+    assert "Why Choose Tenderleo?" in home.text
     assert "Signed in as" not in home.text
 
 

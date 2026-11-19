@@ -72,36 +72,38 @@ def test_new_pages_render_without_em_dashes(client, path):
 
 
 def test_home_has_the_new_sections(client):
+    """The hero, then India by state, the portals and the buyers, in that
+    order; How Tenderleo works moved to the About page."""
     html = client.get("/").text
-    for text in ("Stop searching for tenders", "How Tenderleo works", "Find tenders by company",
-                 "Find tenders by state", "Why Tenderleo", "AI-powered tender analysis",
-                 "/browse?state=Rajasthan"):
+    for text in ("Stop searching for tenders", "Why Choose Tenderleo?",
+                 "Tenders Tracked", "Closing This Week", "Buyers Listed", "Official Portals"):
         assert text in html, text
+    sections = re.findall(r'<section class="sec \w+" id=(\w+)', html)
+    assert sections == ["states", "portals", "buyers"]
     assert "Closing soonest" not in html
+    assert 'id=how' in client.get("/about").text
 
 
-def test_home_finds_tenders_by_keyword_and_by_portal(client):
-    """Two strips after the companies: search words and portals, each tile
-    with its count of open tenders and a link that gives exactly those."""
+def test_home_counts_states_portals_and_buyers(client):
+    """Every number on the three sections is counted, and every row links to
+    exactly those tenders."""
     html = client.get("/").text
-    sections = re.findall(r"<section class=sec id=(\w+)", html)
-    assert sections.index("companies") + 1 == sections.index("keywords")
-    assert sections.index("keywords") + 1 == sections.index("portals")
-    assert sections.index("portals") + 1 == sections.index("how")
-    # "Construction" and "Hiring" are each in one title; a word in none is left out
-    assert "<span class=cname>Construction</span><span class=ccount>1 open</span>" in html
-    assert 'href="/browse?q=Hiring"' in html and "/browse?q=CCTV" not in html
-    assert len(refs(client, q="Construction")) == 1
-    # three open tenders on CPPP, one on the Rajasthan portal, busiest first
-    portals = html[html.index("id=portals"):html.index("id=how")]
-    assert portals.index("cname>CPPP<") < portals.index("cname>Rajasthan eProcurement<")
-    assert "<span class=cname>CPPP</span><span class=ccount>3 open</span>" in portals
-    assert re.search(r'href="/browse\?source_id=\d+"', portals)
-    # each tile has a picture: a glyph for a word or a national portal, the
-    # state's outline for a state's own portal
-    keywords = html[html.index("id=keywords"):html.index("id=portals")]
-    assert keywords.count("logo big art") >= 2 and "<svg" in keywords
-    assert portals.count("logo big art") == 2 and 'class="i shape"' in portals
+    states = html[html.index("id=states"):html.index("id=portals")]
+    # counted by the same rule as Browse: one by name, one from its own portal
+    assert 'href="/browse?state=Rajasthan" data-state="Rajasthan">' in states
+    assert "<span>Rajasthan</span><b>2</b>" in states
+    assert len(refs(client, state="Rajasthan")) == 2
+    assert "data-counts=" in states
+    # portals busiest first, each with who runs it and its open count
+    portals = html[html.index("id=portals"):html.index("id=buyers")]
+    assert portals.index("<b>CPPP</b>") < portals.index("<b>Rajasthan eProcurement</b>")
+    assert "Central Government" in portals and "Rajasthan Government" in portals
+    assert "<em>Active</em><small>3 open tenders</small>" in portals
+    # buyers: a list, the first one in the profile panel, eight weekly bars
+    buyers = html[html.index("id=buyers"):]
+    assert 'data-buyer="0"' in buyers and 'id=bxname>' in buyers
+    assert buyers.count('title="') >= 8 and "/buyer?name=" in buyers
+
 
 
 def test_tender_page(client):
