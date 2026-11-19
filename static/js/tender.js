@@ -156,12 +156,18 @@ fetch(document.getElementById('moreSlot').dataset.src, {credentials: 'same-origi
     if (!name) return;
     show(name);
     var target = document.getElementById(a.getAttribute('href').slice(1));
-    if (target) { e.preventDefault(); target.scrollIntoView({block: 'start'}); }
+    if (target) {
+      e.preventDefault();
+      // The address keeps the part shown, so a reload or a shared link opens
+      // it; a new history entry, so Back returns to the tab it came from.
+      history.pushState(null, '', a.getAttribute('href'));
+      target.scrollIntoView({block: 'start'});
+    }
   });
-  window.addEventListener('hashchange', function () {
-    var name = tabFor(location.hash);
-    if (name) show(name);
-  });
+  // Back and Forward between those entries: show the tab the address names.
+  function fromAddress() { show(tabFor(location.hash) || 'overview'); }
+  window.addEventListener('hashchange', fromAddress);
+  window.addEventListener('popstate', fromAddress);
   show(tabFor(location.hash) || 'overview');
 })();
 

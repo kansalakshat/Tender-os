@@ -252,6 +252,7 @@ _env.filters["extract"] = lambda key, mapping: mapping.get(key, key)
 _env.filters["urlquote"] = quote
 _env.filters["ist"] = lambda dt: ist(dt).strftime("%d %b %H:%M IST")
 # A card's dates, the way shortDate() in site.js writes them: "23 Oct 2026".
+_env.globals["timedelta_days"] = lambda n: timedelta(days=n)
 _env.filters["short_date"] = lambda d: f"{d.day} {d:%b %Y}" if d else ""
 
 
@@ -1404,12 +1405,57 @@ def clean_query(query: str) -> str:
     return urlencode([(k, got[k][0][:100]) for k in SEARCH_KEYS if got.get(k)])
 
 
+DASH_RANGES = (7, 30, 90)
+
+
+def _per_day(pairs, start: date, days: int) -> list[int]:
+    """Counts per day from (date, n) pairs, oldest first, for `days` days."""
+    out = [0] * days
+    for day, n in pairs:
+        if day is not None and 0 <= (day - start).days < days:
+            out[(day - start).days] += n
+    return out
+
+
+def _weekly(daily: list[int]) -> list[int]:
+    """Seven days to a point, for the long range: 90 daily points are noise."""
+    return [sum(daily[i:i + 7]) for i in range(0, len(daily), 7)]
+
+
+def _published_per_day(db: Session, start: date, today: date) -> list[tuple[date, int]]:
+    """Every tender published per day since `start`: the chart's "Total" line.
+    The same for everyone, so shared for ten minutes."""
+    def compute(db):
+        return [tuple(r) for r in db.execute(
+            select(Tender.published_date, func.count())
+            .where(Tender.duplicate_of.is_(None), Tender.published_date >= start,
+                   Tender.published_date <= today)
+            .group_by(Tender.published_date))]
+    return shared(db, ("published_per_day", start, today), 600, compute)
+
+
+def _change(now: int, before: int) -> tuple[str, str]:
+    """The small badge under a figure: (text, "up" | "down" | "flat")."""
+    if not before:
+        return (f"+{now} new" if now else "No change", "up" if now else "flat")
+    pct = round(100 * (now - before) / before)
+    return (f"{'+' if pct >= 0 else ''}{pct}%", "up" if pct > 0 else "down" if pct < 0 else "flat")
+
+
 @router.get("/dashboard", response_class=HTMLResponse)
-def dashboard(db: Session = Depends(get_db), user: User | None = Depends(current_user)):
+def dashboard(db: Session = Depends(get_db), user: User | None = Depends(current_user),
+              days: int = 30):
+    """One person's own page: four figures with how they moved over the chosen
+    range, tenders published against tenders matched, the deadlines coming
+    up, then the searches, bids and saves themselves."""
     if user is None:
         return RedirectResponse("/login?next=/dashboard", status_code=303)
+    days = days if days in DASH_RANGES else 30
+    today = today_ist()
+    start = today - timedelta(days=days - 1)
+    prev_start = start - timedelta(days=days)
     rows = db.execute(
-        select(Tender, WishlistItem.participating)
+        select(Tender, WishlistItem.participating, WishlistItem.created_at)
         .join(WishlistItem, WishlistItem.tender_id == Tender.id)
         .where(WishlistItem.user_id == user.id)
         .order_by(Tender.deadline.asc().nulls_last(), WishlistItem.created_at.desc())
@@ -1419,10 +1465,49 @@ def dashboard(db: Session = Depends(get_db), user: User | None = Depends(current
         .where(SavedSearch.user_id == user.id)
         .order_by(SavedSearch.created_at.desc())
     ).all()
+    company = _profile_of(db, user)
+
+    def added_in(since: date, until: date, bidding: bool) -> int:
+        return sum(1 for _t, p, at in rows if bool(p) == bidding and at is not None
+                   # created_at is naive UTC; the period is India's dates
+                   and since <= ist(at).date() <= until)
+
+    # Matches: the company's open matches, and how many of them were
+    # published in this range against the range before it.
+    matched_total, matched_days, matched_prev = 0, [0] * days, 0
+    if company is not None:
+        d = match_digest(db, company, strict=strict_set(company))
+        matched_total = d.total
+        ids = [tid for _s, _r, tid in d.scored]
+        pub = []
+        for i in range(0, len(ids), 500):          # SQLite caps an IN list's size
+            pub += db.execute(select(Tender.published_date, func.count())
+                              .where(Tender.id.in_(ids[i:i + 500]), Tender.published_date >= prev_start)
+                              .group_by(Tender.published_date)).all()
+        matched_days = _per_day(pub, start, days)
+        matched_prev = sum(_per_day(pub, prev_start, days))
+    total_days = _per_day(_published_per_day(db, start, today), start, days)
+    if days > 30:
+        total_days, matched_days = _weekly(total_days), _weekly(matched_days)
+
+    open_rows = [(t, p) for t, p, _at in rows if t.deadline is None or t.deadline >= today]
+    upcoming = [(t, p) for t, p in open_rows if t.deadline is not None]
+    soon = [x for x in upcoming if (x[0].deadline - today).days <= 7]
+    stats = [
+        ("Matched Tenders", "target", matched_total,
+         _change(sum(matched_days), matched_prev) if company else ("Set up your profile", "flat")),
+        ("Saved Tenders", "heart", sum(1 for _t, p, _a in rows if not p),
+         _change(added_in(start, today, False), added_in(prev_start, start - timedelta(days=1), False))),
+        ("Bids in Progress", "check-circle", sum(1 for _t, p, _a in rows if p),
+         _change(added_in(start, today, True), added_in(prev_start, start - timedelta(days=1), True))),
+        ("Upcoming Deadlines", "calendar", len(soon), (f"{len(upcoming)} still open", "flat")),
+    ]
     return render("dashboard.html", title="Your dashboard", email=user.email,
-                  company=_profile_of(db, user),
-                  bidding=[t for t, p in rows if p], saved=[t for t, p in rows if not p],
-                  searches=searches, today=today_ist())
+                  company=company, days=days, ranges=DASH_RANGES, stats=stats,
+                  trend_total=total_days, trend_matched=matched_days, trend_start=start,
+                  trend_step=7 if days > 30 else 1, upcoming=upcoming[:5],
+                  bidding=[t for t, p, _a in rows if p], saved=[t for t, p, _a in rows if not p],
+                  searches=searches, today=today)
 
 
 @router.post("/searches")

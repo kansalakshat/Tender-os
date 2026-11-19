@@ -1,14 +1,63 @@
 {% extends "base.html" %}
 {% from "_macros.html" import row %}
-{#- One person's own page: bids in progress, saved tenders, saved searches. #}
-{% block content %}<p class=kicker>{{ company.name if company else email }}</p>
-<h1>Your dashboard</h1>
-<p class=lede>Tenders you are bidding on, tenders you saved, and the searches you run again.</p>
-<dl class="stats dash">
- <div><dt>Bidding on</dt><dd>{{ bidding|length|num }}</dd></div>
- <div><dt>Saved</dt><dd>{{ saved|length|num }}</dd></div>
- <div><dt>Saved searches</dt><dd>{{ searches|length|num }}</dd></div>
+{#- One person's own page, drawn to the Tenderleo showcase design: four
+    figures with how they moved over the chosen range, tenders published
+    against tenders matched, the deadlines coming up, then the searches, bids
+    and saves themselves. -#}
+{%- set n = trend_total|length -%}
+{#- The top of the scale: the busiest point rounded up to a multiple of four,
+    so the five gridlines carry whole, different numbers. -#}
+{%- set top = (trend_total + trend_matched)|max -%}
+{%- set peak = [((top + 3) // 4) * 4, 4]|max -%}
+{%- macro x(i) %}{{ (40 + i * 550 / ([n - 1, 1]|max))|round(1) }}{% endmacro -%}
+{%- macro y(v) %}{{ (180 - 160 * v / peak)|round(1) }}{% endmacro -%}
+{% block content %}
+<div class=dxhead>
+ <div><h1>Dashboard</h1>
+ <p>Track your progress and manage your tender journey{% if company %}, {{ company.name }}{% endif %}.</p></div>
+ <form class=xpick method=get data-autogo>{{ icon('calendar') }}<label class=sr for=drange>Range</label>
+  <select id=drange name=days>{% for r in ranges %}<option value="{{ r }}"{% if r == days %} selected{% endif %}>Last {{ r }} Days</option>{% endfor %}</select>
+  <noscript><button class="hbtn sm">Go</button></noscript></form>
+</div>
+
+<dl class=dxstats>
+{%- for label, ic, value, (change, way) in stats %}
+ <div><dt>{{ icon(ic) }}<span>{{ label }}</span></dt><dd>{{ value|num }}</dd>
+ <dd class="dxchg {{ way }}">{{ '&uarr; '|safe if way == 'up' else '&darr; '|safe if way == 'down' else '' }}{{ change }}
+  {%- if change[:1] in '+-' or change[-1:] == '%' %}<span> in the last {{ days }} days</span>{% endif %}</dd></div>
+{%- endfor %}
 </dl>
+
+<div class=dxgrid>
+ <section class="dxcard dxtrend">
+  <h2>Tender Opportunities Trend
+   <span class=dxlegend><i class=tot></i>Total<i class=mat></i>Matched</span></h2>
+  <p class=hint>Tenders published per {{ 'week' if trend_step == 7 else 'day' }}, against those that match your profile{% if not company %} (set up your profile to see matches){% endif %}.</p>
+  <svg viewBox="0 0 600 210" role=img aria-label="Tenders published per {{ 'week' if trend_step == 7 else 'day' }}: {{ trend_total|join(', ') }}. Matched: {{ trend_matched|join(', ') }}.">
+   {%- for k in range(5) %}{% set v = (peak * k / 4)|round|int %}
+   <line class=grid x1="40" x2="590" y1="{{ y(peak * k / 4) }}" y2="{{ y(peak * k / 4) }}"/>
+   <text class=ax x="32" y="{{ y(peak * k / 4)|float + 4 }}" text-anchor=end>{{ v|num }}</text>{% endfor %}
+   <polygon class=area points="40,180 {% for v in trend_total %}{{ x(loop.index0) }},{{ y(v) }} {% endfor %}{{ x(n - 1) }},180"/>
+   <polyline class=tot points="{% for v in trend_total %}{{ x(loop.index0) }},{{ y(v) }} {% endfor %}"/>
+   <polyline class=mat points="{% for v in trend_matched %}{{ x(loop.index0) }},{{ y(v) }} {% endfor %}"/>
+   {%- for v in trend_total %}<circle class=dot cx="{{ x(loop.index0) }}" cy="{{ y(v) }}" r="3"><title>{{ v }} published</title></circle>{% endfor %}
+   {#- About five dates along the bottom, evenly spaced; the last one only
+       always, with the one before it dropped if they would crowd. -#}
+   {%- set step = [(n - 1) // 4, 1]|max %}
+   {%- for i in range(n) if i == n - 1 or (i % step == 0 and n - 1 - i > step // 2) %}
+   {%- set d = trend_start + timedelta_days(i * trend_step) %}
+   <text class=ax x="{{ x(i) }}" y="202" text-anchor={{ 'start' if i == 0 else 'end' if i == n - 1 else 'middle' }}>{{ d.day }} {{ d.strftime('%b') }}</text>{% endfor %}
+  </svg>
+ </section>
+ <section class="dxcard dxdue">
+  <h2>Upcoming Deadlines <a href="#saved">View All{{ icon('arrow-right') }}</a></h2>
+  {%- if upcoming %}<ul>{% for t, bidding in upcoming %}{% set d = (t.deadline - today).days %}
+   <li class="{{ 'hot' if d <= 3 else 'warm' if d <= 10 else '' }}"><a href="/t/{{ t.id }}"><b>{{ t.title }}</b>
+    <span>{{ t.deadline|short_date }}{% if bidding %} &middot; bidding{% endif %}</span></a>
+    <em>{{ 'today' if d == 0 else d ~ 'd' }}</em></li>{% endfor %}</ul>
+  {%- else %}<p class=hint>Save a tender or mark one ready to fill, and its closing date shows here.</p>{% endif %}
+ </section>
+</div>
 
 <section class=dashsec id=searches><h2>Saved searches</h2>
 {%- if searches %}
@@ -41,4 +90,4 @@ track it here.</p></div>
 {%- endif %}
 </section>
 <p class=hint>Soonest closing first. <a href="/matches">See tenders matched to your profile</a>.</p>
-<script defer src="{{ asset('js/dashboard.js') }}"></script>{% endblock %}
+<script defer src="{{ asset('js/dashboard.js') }}"></script><script defer src="{{ asset('js/home.js') }}"></script>{% endblock %}
