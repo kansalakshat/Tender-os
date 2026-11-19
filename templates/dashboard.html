@@ -20,6 +20,10 @@
   <noscript><button class="hbtn sm">Go</button></noscript></form>
 </div>
 
+{%- if profile_pct is not none and profile_pct < 100 %}
+<p class=dxnudge>{{ icon('sparkle') }}<span>Your company profile is <b>{{ profile_pct }}%</b> complete. More answers give better matches.</span>
+ <a class="hbtn sm" href="/profile">Complete Profile{{ icon('arrow-right') }}</a></p>
+{%- endif %}
 <dl class=dxstats>
 {%- for label, ic, value, (change, way) in stats %}
  <div><dt>{{ icon(ic) }}<span>{{ label }}</span></dt><dd>{{ value|num }}</dd>
@@ -50,7 +54,7 @@
   </svg>
  </section>
  <section class="dxcard dxdue">
-  <h2>Upcoming Deadlines <a href="#saved">View All{{ icon('arrow-right') }}</a></h2>
+  <h2>Upcoming Deadlines <a href="#bidding">View All{{ icon('arrow-right') }}</a></h2>
   {%- if upcoming %}<ul>{% for t, bidding in upcoming %}{% set d = (t.deadline - today).days %}
    <li class="{{ 'hot' if d <= 3 else 'warm' if d <= 10 else '' }}"><a href="/t/{{ t.id }}"><b>{{ t.title }}</b>
     <span>{{ t.deadline|short_date }}{% if bidding %} &middot; bidding{% endif %}</span></a>
@@ -71,6 +75,8 @@ you use most and press <b>Save current search</b>.</p></div>
 {%- endif %}
 </section>
 
+{#- "View All" lands here: bidding first, then saved, which together are
+    every tender in "Upcoming Deadlines". -#}
 <section class=dashsec id=bidding><h2>Tenders you are bidding on</h2>
 {%- if bidding %}<ol class=rows>
 {%- for t in bidding %}{% set gutter, rank = days_left(t.deadline, today) %}{{ row(gutter, rank, t) }}{% endfor %}

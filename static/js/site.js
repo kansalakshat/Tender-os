@@ -204,7 +204,7 @@ fetch('/me').then(r=>r.json()).then(d=>{
     +     '<span class=menumail>'+esc(d.user.email)+'</span>'+warn+'</p>'
     +   '<a href="/dashboard">'+ico('stack-simple')+'My dashboard</a>'
     +   '<a href="/matches">'+ico('target')+'My matches</a>'
-    +   '<a href="/profile">'+ico('sliders-horizontal')+'Edit answers</a>'
+    +   '<a href="/profile">'+ico('sliders-horizontal')+'Company profile</a>'
     +   '<button type=button data-action=signout>'+ico('sign-out')+'Sign out</button>'
     + '</div>'
     + '</div>';

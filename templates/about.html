@@ -1,91 +1,122 @@
 {% extends "base.html" %}
-{% block content %}<p class=kicker>About Tenderleo</p>
-<h1>Great opportunities shouldn&rsquo;t be lost in a PDF.</h1>
-<div class=prose>
-<p class=lede>Every day, thousands of government tenders are published. Some are worth
-lakhs. Some are worth crores. And many of them are a perfect fit for businesses that never
-even discover them.</p>
+{#- About: what Tenderleo is, the problem it answers, how it works, who it is
+    for, where the data comes from, the vision, questions, and a way in. Every
+    figure in the hero is counted from the corpus (app/web.py about()). -#}
+{% block body %}
+<section class="sec ab"><div class="wrap abflow">
 
-<h2>Why?</h2>
-<p>Because finding the right tender is difficult. Understanding hundreds of pages is
-exhausting. Checking eligibility takes time. And preparing the right documents can turn a
-promising opportunity into a missed deadline.</p>
-<p>We think it shouldn't be this hard. That&rsquo;s why we built Tenderleo.</p>
-<p>Tenderleo is an AI-powered tender intelligence platform built to help businesses
-discover, understand, and act on the opportunities that matter to them.</p>
-<p>Instead of spending hours jumping between portals, downloading PDFs, searching for
-eligibility criteria, and figuring out which documents are required, Tenderleo brings the
-process together in one intelligent workflow.</p>
-<ul class="ticks big"><li>Find the right opportunities.</li><li>Know whether you qualify.</li>
- <li>Understand what&rsquo;s required.</li><li>Prepare faster.</li></ul>
-
-<h2>Built for the businesses behind India&rsquo;s growth</h2>
-<p class=steptag>Contractors. Manufacturers. Service providers. MSMEs.</p>
-<p>These businesses already have the experience, capabilities, and people to execute large
-projects. What they often don't have is the time and resources to constantly monitor
-thousands of tenders and decode complicated bidding requirements.</p>
-<p>Tenderleo bridges that gap. We use AI to reduce the complexity between &ldquo;A tender
-was published&rdquo; and &ldquo;We are ready to bid.&rdquo;</p>
-
-<h2>Our vision</h2>
-<p>We envision a world where businesses don't miss opportunities because they couldn't find
-them, didn't understand them, or couldn't manage the paperwork in time.</p>
-<p>Where a small business can discover the same opportunities as a large enterprise.</p>
-<p>Where tendering becomes less about navigating complexity, and more about competing on
-capability.</p>
-<p>Because the next big opportunity for your business could already be out there.
-<b>Tenderleo helps you find it.</b></p>
-<p class=ctas><a class=btn href="/browse">Find Your Next Opportunity{{ icon('arrow-right') }}</a>
- <a class="btn ghost" href="{{ demo }}" target=_blank rel="noopener noreferrer">Book a Demo</a>
- <a class="btn ghost" href="#how">How Tenderleo works</a></p>
+<div class="xpanel abhero">
+ <div class=abcopy>
+  <p class=abtag>About Tenderleo</p>
+  <h1>Great opportunities shouldn&rsquo;t be lost in a <span>PDF.</span></h1>
+  <p class=ablede>Thousands of government tenders are published across India every day.
+  Tenderleo finds the ones that fit your business, explains them in plain words, and
+  tells you whether you qualify.</p>
+  <p class=abctas><a class=hbtn href="/browse">Find your next opportunity{{ icon('arrow-right') }}</a>
+  <a class="hbtn ghost" href="{{ demo }}" target=_blank rel="noopener noreferrer">{{ icon('calendar') }}Book a demo</a></p>
+ </div>
+ <dl class=abstats>
+  <div><dt>Open tenders right now</dt><dd>{{ n_open|num }}</dd></div>
+  <div><dt>Government buyers</dt><dd>{{ n_buyers|num }}</dd></div>
+  <div><dt>Official portals</dt><dd>{{ n_sources|num }}</dd></div>
+  <div><dt>{% if last %}Last collected {{ last|short_date }}{% else %}Fresh tenders, collected daily{% endif %}</dt><dd>Daily</dd></div>
+ </dl>
 </div>
 
-{#- Moved here from the home page, which now shows the product itself. -#}
-<div id=how class=abouthow>
-<div class="secHead reveal">
+<div class="xpanel absec">
+ <h2>The problem, and our answer</h2>
+ <p class=absub>Bidding should be about what you can build, not how long you can search.</p>
+ <ul class=abprob>
+  <li><p class=abpain>{{ icon('clock-countdown') }}Hours on many portals</p>
+   <p>Every state and department posts on its own website, each with its own login and search.</p>
+   <p class=abfix>{{ icon('check') }}One search across every official portal.</p></li>
+  <li><p class=abpain>{{ icon('file-text') }}80-page PDFs</p>
+   <p>Value, EMD, deadlines and eligibility are buried deep inside long tender documents.</p>
+   <p class=abfix>{{ icon('check') }}The key facts on one clear page.</p></li>
+  <li><p class=abpain>{{ icon('calendar') }}Missed deadlines</p>
+   <p>The right tender is often found too late to prepare the paperwork in time.</p>
+   <p class=abfix>{{ icon('check') }}Matches ranked for you, closing dates tracked.</p></li>
+ </ul>
+</div>
+
+<div class="xpanel absec" id=how>
  <h2>How Tenderleo works</h2>
- <p class=kicker>From thousands of tenders to the right opportunities, automatically</p>
+ <p class=absub>From thousands of tenders to the right opportunities, in four steps.</p>
+ <ol class=absteps>
+  <li><span class=abnum>01</span><h3>Discover</h3>
+   <p>Tenders from every official portal, matched to your sectors, places and buyers.</p></li>
+  <li><span class=abnum>02</span><h3>Analyse</h3>
+   <p>Scope, value, EMD and dates pulled out of the notice, in plain words.</p></li>
+  <li><span class=abnum>03</span><h3>Qualify</h3>
+   <p>Your turnover, experience and registrations checked against what tenders ask for.</p></li>
+  <li><span class=abnum>04</span><h3>Prepare</h3>
+   <p>Mark a tender ready to fill: it joins your dashboard with its document checklist.</p></li>
+ </ol>
+ <p class=abflowline><b>Discover. Analyse. Qualify. Prepare.</b> One workflow for the whole tender journey.</p>
 </div>
-<p class="hint reveal">Tendering shouldn't mean spending hours searching portals, reading
-endless PDFs, and figuring out whether you qualify. Tenderleo simplifies the entire journey.</p>
-<ol class="capList steps">
- <li class=reveal>
-  <p class=capnum>01</p>
-  <div><h3>Discover</h3>
-  <p class=steptag>Find tenders that actually matter to your business.</p>
-  <p>Tenderleo scans and organizes tender opportunities from relevant sources, helping you
-  discover projects based on your business, industry, location, capabilities, and experience.</p>
-  <p>No more endless searching. No more missed opportunities.</p></div>
- </li>
- <li class=reveal>
-  <p class=capnum>02</p>
-  <div><h3>Analyse</h3>
-  <p class=steptag>Let AI read the tender for you.</p>
-  <p>Open a tender and Tenderleo breaks down the important information: scope of work,
-  eligibility criteria, deadlines, EMD, experience requirements, turnover, documents, and
-  other key conditions.</p>
-  <p>Complex tender documents become clear, actionable information.</p></div>
- </li>
- <li class=reveal>
-  <p class=capnum>03</p>
-  <div><h3>Qualify</h3>
-  <p class=steptag>Know whether you should bid, before you spend hours preparing.</p>
-  <p>Tenderleo compares the tender requirements with your business profile to help identify
-  whether you meet the key eligibility criteria. Get a clear picture of:</p>
-  <ul class=ticks><li>Eligibility</li><li>Missing documents</li><li>Experience requirements</li>
-   <li>Financial requirements</li><li>Critical tender conditions</li></ul>
-  <p>Bid smarter, not blindly.</p></div>
- </li>
- <li class=reveal>
-  <p class=capnum>04</p>
-  <div><h3>Prepare</h3>
-  <p class=steptag>Turn an opportunity into a bid-ready package.</p>
-  <p>Once you've decided to bid, mark the tender as ready to fill and it joins your
-  dashboard. Its page lists the documents to submit and links to the tender's own bid
-  documents.</p>
-  <p>Less paperwork. Fewer missed requirements. More time to focus on winning the project.</p></div>
- </li>
-</ol>
-<p class="flowline big reveal"><b>Discover. Analyse. Qualify. Prepare.</b> One intelligent workflow for the entire tender journey.</p>
+
+<div class="xpanel absec">
+ <h2>Built for the businesses behind India&rsquo;s growth</h2>
+ <p class=absub>For anyone who bids for government work and has no team to watch every portal.</p>
+ <ul class=abwho>
+  <li><a href="/browse?sector=civil_construction"><span class=abico>{{ icon('hard-hat-duotone') }}</span>
+   <b>Contractors</b><span>Civil works, roads, buildings and repairs.</span><span class=abgo>See tenders{{ icon('arrow-right') }}</span></a></li>
+  <li><a href="/browse?sector=industrial_supply"><span class=abico>{{ icon('plugs-duotone') }}</span>
+   <b>Manufacturers</b><span>Equipment, cables, transformers and supplies.</span><span class=abgo>See tenders{{ icon('arrow-right') }}</span></a></li>
+  <li><a href="/browse?sector=manpower_security"><span class=abico>{{ icon('wrench-duotone') }}</span>
+   <b>Service providers</b><span>Manpower, security, cleaning, hiring and AMC.</span><span class=abgo>See tenders{{ icon('arrow-right') }}</span></a></li>
+  <li><a href="/browse"><span class=abico>{{ icon('storefront-duotone') }}</span>
+   <b>MSMEs</b><span>Udyam firms, often exempt from paying EMD.</span><span class=abgo>See tenders{{ icon('arrow-right') }}</span></a></li>
+ </ul>
 </div>
+
+<div class="xpanel absec">
+ <div class=abhead>
+  <div><h2>Where the data comes from</h2>
+  <p class=absub>Only official government portals. Every tender links back to its source.</p></div>
+  {%- if last %}<p class=ablive>Last collected {{ last|short_date }}</p>{% endif %}
+ </div>
+ <ul class=absrc>
+  <li><span class=abico>{{ icon('storefront-duotone') }}</span><div><b>GeM</b><p>Government e-Marketplace</p></div></li>
+  <li><span class=abico>{{ icon('bank-duotone') }}</span><div><b>CPPP</b><p>Central Public Procurement Portal</p></div></li>
+  <li><span class=abico>{{ icon('map-pin') }}</span><div><b>State portals</b><p>{{ n_state_portals }} state eProcurement sites</p></div></li>
+ </ul>
+ <p class=abnote>We keep the notice and the portal&rsquo;s licence, never your bid documents.
+ <a href="/sources">Sources and licences</a></p>
+</div>
+
+<div class=abvision>
+ <p class=abtag>Our vision</p>
+ <p>Every business, however small, should compete on what it can do, not on how many hours
+ it can spend searching portals.</p>
+</div>
+
+<div class="xpanel absec">
+ <h2>Questions people ask</h2>
+ <div class=abfaq>
+  <details open><summary>Is Tenderleo free?{{ icon('caret-down') }}</summary>
+   <p>Browsing every tender is free, with no account. A free account adds ranked matches,
+   saved tenders and bid tracking.</p></details>
+  <details><summary>Where does the data come from?{{ icon('caret-down') }}</summary>
+   <p>Only from official portals such as GeM, CPPP and the state eProcurement sites. Every
+   tender links to its source.</p></details>
+  <details><summary>How often is it updated?{{ icon('caret-down') }}</summary>
+   <p>New tenders are collected every day, and a tender stays on the open list through its closing date and leaves the day after.</p></details>
+  <details><summary>Do you submit bids for me?{{ icon('caret-down') }}</summary>
+   <p>No. You bid on the official portal yourself. Tenderleo helps you find the right
+   tenders and prepare for them.</p></details>
+  <details><summary>Is my company&rsquo;s data safe?{{ icon('caret-down') }}</summary>
+   <p>Your answers are used only to rank tenders for you, and are never shared. You can
+   edit them any time.</p></details>
+ </div>
+</div>
+
+<div class=abcta id=start>
+ <div><h2>Find your next tender today</h2>
+ <p>A free account takes two minutes. Your matches are ranked every day.</p></div>
+ <p class=abctas><a class="abbtn" href="/signup">Create free account</a>
+ <a class="abbtn ghost" href="{{ demo }}" target=_blank rel="noopener noreferrer">Book a demo</a></p>
+</div>
+
+</div></section>
 {% endblock %}

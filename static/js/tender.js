@@ -84,6 +84,7 @@ fetch(document.getElementById('moreSlot').dataset.src, {credentials: 'same-origi
   }
   for (var j = 0; j < panels.length; j++) {
     panels[j].setAttribute('role', 'tabpanel');
+    panels[j].tabIndex = 0;          // a panel with nothing focusable can still be reached
     panels[j].setAttribute('aria-labelledby', 'tab-' + panels[j].dataset.panel);
   }
   // The tab a #part belongs to: the panel that holds that element.
@@ -161,6 +162,10 @@ fetch(document.getElementById('moreSlot').dataset.src, {credentials: 'same-origi
       // The address keeps the part shown, so a reload or a shared link opens
       // it; a new history entry, so Back returns to the tab it came from.
       history.pushState(null, '', a.getAttribute('href'));
+      // Focus goes where the link points, as a normal jump would, so the next
+      // Tab continues from there and not from the link.
+      if (target.tabIndex < 0 && !target.hasAttribute('tabindex')) target.tabIndex = -1;
+      target.focus({preventScroll: true});
       target.scrollIntoView({block: 'start'});
     }
   });

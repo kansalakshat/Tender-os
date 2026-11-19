@@ -632,8 +632,15 @@ _env.globals["demo_video"] = os.environ.get("DEMO_VIDEO_URL", "")
 
 
 @router.get("/about", response_class=HTMLResponse)
-def about() -> str:
-    return render("about.html", title="About Tenderleo")
+def about(db: Session = Depends(get_db)) -> str:
+    """The About page. Its figures are the home page's, counted the same way
+    (and shared from the same minute-long cache), never typed in."""
+    f = _figures(db, today_ist())
+    n_state = sum(1 for s in sources(db).values() if s.name in PORTAL_STATE)
+    return render("about.html", title="About Tenderleo", n_open=f["n_open"],
+                  n_buyers=f["n_buyers"], n_sources=f["n_sources"],
+                  last=ist(f["last"]).date() if f["last"] else None,
+                  n_state_portals=n_state)
 
 
 # ---- the questionnaire, asked once ----------------------------------------
@@ -1503,7 +1510,8 @@ def dashboard(db: Session = Depends(get_db), user: User | None = Depends(current
         ("Upcoming Deadlines", "calendar", len(soon), (f"{len(upcoming)} still open", "flat")),
     ]
     return render("dashboard.html", title="Your dashboard", email=user.email,
-                  company=company, days=days, ranges=DASH_RANGES, stats=stats,
+                  company=company, days=days,
+                  profile_pct=profile_complete(company) if company else 0, ranges=DASH_RANGES, stats=stats,
                   trend_total=total_days, trend_matched=matched_days, trend_start=start,
                   trend_step=7 if days > 30 else 1, upcoming=upcoming[:5],
                   bidding=[t for t, p, _a in rows if p], saved=[t for t, p, _a in rows if not p],

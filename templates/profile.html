@@ -1,17 +1,41 @@
 {% extends "base.html" %}
-{#- Edit the answers given at signup. Signed out, this is the no-account preview. #}
-{% block content %}<h1>{{ heading }}</h1>
-<p class=lede id=savehint>{{ hint }}</p>
-<p class=hint>Questions labelled <span class=req>Required</span> must be answered. Everything else is optional.</p>
-<form id=f>
-{% include "_profile_fields.html" %}
-<fieldset><legend>Contact</legend>
-<label class=f><span>Contact email</span>
-   <input name=contact_email type=email autocomplete=email spellcheck=false></label>
-</fieldset>
-<p class=actions><button>Save and show my matches</button></p>
-</form>
-<pre id=err role=alert></pre>
-<div id=preview></div>
+{#- Edit the answers given at signup (signed out, the no-account preview), drawn
+    to the Tenderleo showcase design: the steps down the left, the questions of
+    one step at a time on the right under a progress bar, Back and Next, and a
+    review before saving. The steps are run by profile-steps.js; without it
+    every question shows on one page with the save button at the end. #}
+{%- set steps = [('basic', 'Basic Details'), ('business', 'Business Info'), ('experience', 'Experience'),
+                 ('documents', 'Documents'), ('review', 'Review & Submit')] -%}
+{% block body %}<section class="sec px2"><div class=wrap><div class="xpanel pfx">
+<nav class=pfsteps aria-label="Profile steps" data-steps>
+ <ol>{% for key, label in steps %}<li><a href="#step-{{ key }}" data-step-link="{{ key }}">
+  <span class=pfdot aria-hidden=true>{{ icon('check') }}<i>{{ loop.index }}</i></span>{{ label }}</a></li>{% endfor %}</ol>
+</nav>
+<div class=pfmain>
+ <h1>{{ heading }}</h1>
+ <p class=lede id=savehint>{{ hint }} Fill in your profile to get better matches.</p>
+ <div class=pfbar><div class=pftrack><span id=pfill class=p0></span></div><b id=pfpct>0%</b></div>
+ <p class=hint>Questions labelled <span class=req>Required</span> must be answered. Everything else is optional.</p>
+ <form id=f>
+  {% include "_profile_fields.html" %}
+  <fieldset data-step=basic><legend>Contact</legend>
+  <label class=f><span>Contact email</span>
+     <input name=contact_email type=email autocomplete=email spellcheck=false></label>
+  </fieldset>
+  <fieldset data-step=review id=step-review><legend>Review your answers</legend>
+   <p class=fhint>Check everything before saving. Use a step on the left to change an answer.</p>
+   <dl class=pfreview id=pfreview><div><dt>Answers</dt><dd>Shown here once the steps are filled in.</dd></div></dl>
+  </fieldset>
+  <pre id=err role=alert></pre>
+  <p class="actions pfnav">
+   <button type=button class="hbtn ghost" id=pfback hidden>{{ icon('arrow-left') }}Back</button>
+   <button type=button class=hbtn id=pfnext hidden>Next{{ icon('arrow-right') }}</button>
+   <button class=hbtn id=pfsave>Save and show my matches</button>
+  </p>
+ </form>
+ <div id=preview></div>
+</div>
+</div></div></section>
 <script defer src="{{ asset('js/profile-form.js') }}"></script>
-<script defer src="{{ asset('js/profile.js') }}"></script>{% endblock %}
+<script defer src="{{ asset('js/profile.js') }}"></script>
+<script defer src="{{ asset('js/profile-steps.js') }}"></script>{% endblock %}

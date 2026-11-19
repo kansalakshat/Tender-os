@@ -7,13 +7,18 @@
     checkbox lists rather than <select multiple>: a native multi-select needs
     Ctrl-click to add a second value, which is the single most common way people
     lose answers on a form like this. -#}
-<fieldset><legend>What you do</legend>
+{#- data-step puts each fieldset in a step of the profile page's stepper
+    (profile-steps.js); signup shows them all, one after another. -#}
+<fieldset data-step=basic id=step-basic><legend>Your company</legend>
 
 <div class=f>
  <div class=fhead><label for=f_name>Company name <span class=req>Required</span></label>
   <button type=button class=clearbtn data-action=clear data-clear=name>Clear</button></div>
  <input id=f_name name=name required autocomplete=organization>
 </div>
+</fieldset>
+
+<fieldset data-step=business id=step-business><legend>What you do</legend>
 
 <div class=f>
  <div class=fhead><span class=flabel>Sectors you work in <span class=req>Required</span></span>
@@ -34,7 +39,7 @@
 </div>
 </fieldset>
 
-<fieldset><legend>Where you work</legend>
+<fieldset data-step=basic><legend>Where you work</legend>
 
 <div class=f>
  <div class=fhead><span class=flabel>States and UTs</span>
@@ -63,7 +68,7 @@
 </div>
 </fieldset>
 
-<fieldset><legend>Who you want to work with</legend>
+<fieldset data-step=business><legend>Who you want to work with</legend>
 
 <div class=f>
  <div class=fhead><span class=flabel>Buyers you want</span>
@@ -89,7 +94,7 @@
 </div>
 </fieldset>
 
-<fieldset><legend>What to rule out</legend>
+<fieldset data-step=business><legend>What to rule out</legend>
 
 <div class=f>
  <div class=fhead><label for=f_xkw>Never show tenders whose title contains</label>
@@ -114,7 +119,7 @@
 </div>
 </fieldset>
 
-<fieldset><legend>Eligibility</legend>
+<fieldset data-step=experience id=step-experience><legend>Eligibility</legend>
 <p class=fhint>Optional. Tenders often ask for past work, turnover and
    registrations. Each tender page checks your answers against its typical
    criteria. Nothing is hidden because of them.</p>
@@ -152,6 +157,11 @@
  decided. Udyam and DPIIT holders are usually exempt.</p>
 </div>
 
+</fieldset>
+
+<fieldset data-step=documents id=step-documents><legend>Registrations and certificates</legend>
+<p class=fhint>Tenders often ask for these, and some (Udyam, DPIIT) waive the
+   EMD. Tick the ones you hold.</p>
 <div class=f>
  <div class=fhead><span class=flabel>Registrations you hold</span>
   <button type=button class=clearbtn data-action=clear data-clear=registrations>Clear</button></div>

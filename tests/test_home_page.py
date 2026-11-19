@@ -85,6 +85,9 @@ def test_home_buyer_panel_and_demo_button(db_with_buyers, monkeypatch):
     assert html.count("class=bxpick") == html.count("data-buyer=")
     # the buyer picker sends a state, and works without JavaScript
     assert "<select id=bpick name=state>" in html
+    # only states with open tenders are offered, each with its count
+    picker = html[html.index("<select id=bpick"):html.index("</select>", html.index("<select id=bpick"))]
+    assert 'value="Madhya Pradesh" data-n="2"' in picker and "Goa" not in picker
     assert html.count("<noscript><button") == 2
     # no video configured: the hero offers to book a demo, not to watch one
     hero = html[html.index("class=hxctas"):html.index("class=hxart")]
