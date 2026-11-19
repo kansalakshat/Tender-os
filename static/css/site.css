@@ -999,3 +999,122 @@ pre#err:empty{display:none}
   background:linear-gradient(135deg,color-mix(in srgb,var(--hb) 22%,var(--panel)) 50%,transparent 50%)}
 .b2seen .i{position:absolute;top:.25rem;left:.25rem;width:1rem;height:1rem;color:var(--hb)}
 @media (max-width:40rem){.b2table tr.seen{position:relative;overflow:hidden}.b2table tr.seen .b2title{position:static}}
+
+/* ---- Tender page (tender.html), drawn to the showcase design ---------------
+   Header panel (title, days-left card, three figures, actions, tabs), then one
+   panel per tab. The tabs are run by tender.js; without it every panel shows. */
+.tx{padding-top:1.5rem}
+.tx .xpanel+.xpanel,.tx #moreSlot{margin-top:1.25rem}
+.tx [data-panel],.tx [id]{scroll-margin-top:7rem}
+.txback{margin:0 0 .9rem}
+.txback a{display:inline-flex;align-items:center;gap:.4rem;color:var(--hb);font-weight:600;text-decoration:none;font-size:.95rem}
+.txback .i{width:1.1rem;height:1.1rem}
+.txtop{display:grid;gap:1.25rem;align-items:start}
+@media (min-width:56rem){.txtop{grid-template-columns:minmax(0,1fr) 15rem}}
+.txtitle{margin:0;font-size:clamp(1.5rem,1.05rem + 1.6vw,2.2rem);line-height:1.25;font-weight:800;color:var(--hnavy)}
+.txwho{display:flex;flex-wrap:wrap;gap:.5rem 1.4rem;margin:.75rem 0 0;color:var(--muted);font-size:.95rem}
+.txwho span{display:inline-flex;align-items:center;gap:.4rem}
+.txwho .i{width:1.4rem;height:1.4rem;padding:.2rem;border-radius:6px;background:var(--hb-soft);color:var(--hb)}
+.txwho a{color:var(--hnavy);font-weight:600;text-decoration:none}
+.txwho a:hover{color:var(--hb);text-decoration:underline}
+.txdue{display:flex;align-items:center;gap:.9rem;padding:1rem 1.1rem;border-radius:16px;background:var(--hb-soft)}
+.txdue>.i{flex:none;width:3rem;height:3rem;padding:.6rem;border-radius:50%;background:var(--horange-soft);color:var(--horange)}
+.txdue p{display:grid;margin:0;line-height:1.25}
+.txdue b{font-size:1.35rem;color:var(--hnavy)}
+.txdue span{font-size:.9rem;color:var(--hnavy)}
+.txdue small{margin-top:.25rem;font-size:.78rem;color:var(--muted)}
+.txdue.hot{background:var(--horange-soft)}
+.txdue.shut{background:var(--bone)}
+.txdue.shut>.i{background:var(--panel);color:var(--muted)}
+.txstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(13rem,1fr));gap:1rem;margin:1.5rem 0 0}
+.txstats>div{display:flex;align-items:center;gap:.8rem;padding:1rem 1.1rem;border:1px solid var(--hline);border-radius:14px;background:var(--panel)}
+.txstats .i{flex:none;width:2.6rem;height:2.6rem;padding:.55rem;border-radius:50%;background:var(--hb-soft);color:var(--hb)}
+.txstats>div:nth-child(2) .i{background:color-mix(in srgb,#8B5CF6 15%,var(--panel));color:#7C3AED}
+.txstats>div:nth-child(3) .i{background:color-mix(in srgb,var(--hgreen) 15%,var(--panel));color:var(--hgreen)}
+:root[data-theme=dark] .txstats>div:nth-child(2) .i{color:#C4B5FD}
+.txstats p{display:grid;margin:0;line-height:1.3}
+.txstats b{font-size:1.2rem;font-weight:800;color:var(--hnavy)}
+.txstats span{font-size:.82rem;color:var(--muted)}
+.txacts{display:flex;flex-wrap:wrap;gap:.5rem;margin:1.25rem 0 0}
+.txacts .heart{min-height:2.6rem;border-radius:10px}
+.txtabs{display:flex;gap:.25rem;overflow-x:auto;margin:1.5rem 0 -.25rem;border-bottom:1px solid var(--hline)}
+.txtabs a{flex:none;padding:.75rem 1.25rem;border-bottom:3px solid transparent;color:var(--hnavy);font-weight:700;text-decoration:none;font-size:.98rem}
+.txtabs a:hover{color:var(--hb)}
+.txtabs{position:relative}
+.txtabs a{transition:color .2s,background .2s}
+.txtabs a[aria-selected=true]{color:var(--hb);background:var(--hb-soft);border-radius:10px 10px 0 0}
+/* Without the script the chosen tab keeps its own underline; with it, one bar
+   slides from tab to tab (tender.js). */
+.txtabs:not(:has(.txbar)) a[aria-selected=true]{border-bottom-color:var(--hb)}
+.txbar{position:absolute;left:0;bottom:0;height:3px;width:0;border-radius:3px;background:var(--hb);
+  transition:transform .35s cubic-bezier(.4,0,.2,1),width .35s cubic-bezier(.4,0,.2,1)}
+/* The slide only for visitors who have not asked for reduced motion (the
+   bar's transition is already switched off for them, near the top). */
+@media (prefers-reduced-motion:no-preference){
+ .txpanel.slide-r{animation:txin-r .4s cubic-bezier(.4,0,.2,1)}
+ .txpanel.slide-l{animation:txin-l .4s cubic-bezier(.4,0,.2,1)}
+}
+@keyframes txin-r{from{opacity:0;transform:translateX(48px)}to{opacity:1;transform:none}}
+@keyframes txin-l{from{opacity:0;transform:translateX(-48px)}to{opacity:1;transform:none}}
+.tx{overflow-x:clip}
+.txpanel[hidden]{display:none}
+.txpanel h2{display:flex;align-items:center;gap:.5rem;margin:0 0 1rem;font-size:1.3rem}
+.txpanel h2 .i{color:var(--hb)}
+.txover{display:grid;gap:1.25rem;align-items:start}
+@media (min-width:56rem){.txover{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr)}}
+.txtable{margin:0;border:1px solid var(--hline);border-radius:14px;overflow:hidden}
+.txtable>div{display:grid;grid-template-columns:minmax(8rem,12rem) minmax(0,1fr);gap:1rem;padding:.7rem 1rem;font-size:.92rem}
+.txtable>div+div{border-top:1px solid var(--hline)}
+.txtable dt{color:var(--muted)}
+.txtable dd{margin:0;color:var(--hnavy);font-weight:500;overflow-wrap:anywhere}
+.txart{display:block;width:100%;height:auto;border-radius:16px}
+.txart .sky{fill:#DBEAFE}.txart .cloud{fill:#fff}.txart .lawn{fill:#BFDBFE}
+.txart .roof,.txart .wall{fill:#F8FAFC;stroke:#94A3B8;stroke-width:1.2}
+.txart .dome{fill:#E2E8F0;stroke:#94A3B8;stroke-width:1.2}.txart .flag{fill:none;stroke:#1A5FE0;stroke-width:2}
+.txart .col rect{fill:#fff;stroke:#94A3B8;stroke-width:1.2}.txart .step{fill:#CBD5E1}
+:root[data-theme=dark] .txart .sky{fill:#1D2A3A}:root[data-theme=dark] .txart .cloud{fill:#2E3A4C}:root[data-theme=dark] .txart .lawn{fill:#24344A}
+.txgrid2{display:grid;gap:1.25rem;margin:1.25rem 0 0}
+@media (min-width:56rem){.txgrid2{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.txcard{padding:1.1rem 1.25rem;border:1px solid var(--hline);border-radius:16px;background:var(--panel)}
+.txcard+.txcard,.txgrid2+.txcard{margin-top:1.25rem}
+.txgrid2 .txcard+.txcard{margin-top:0}
+.txcard h3{display:flex;align-items:center;gap:.5rem;margin:0 0 .8rem;font-size:1.05rem;color:var(--hnavy)}
+.txcard h3 .i{color:var(--hb)}
+.txpanel .elig,.txpanel #documents{margin:0}
+
+.aixhead{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:start;gap:1rem;margin:0 0 1.25rem}
+.aixhead h2{margin:0}
+.aixhead p{margin:.25rem 0 0;color:var(--muted)}
+.aixgrid{display:grid;gap:1rem}
+@media (min-width:56rem){.aixgrid{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);align-items:start}}
+.aixgrid .txcard{margin:0}
+.aielig ul,.airisk ul{margin:0;padding:0;list-style:none}
+.aielig li{display:flex;align-items:center;gap:.6rem;padding:.35rem 0;font-size:.93rem;color:var(--hnavy)}
+.aielig li .i{flex:none;width:1.3rem;height:1.3rem}
+.aielig li.ok .i{color:var(--hgreen)}
+.aielig li.check .i{color:var(--horange)}
+.aiscore{text-align:center}
+.aiscore h4{margin:.6rem 0 .25rem;font-size:.95rem;color:var(--hnavy)}
+.aiscore .tags{justify-content:center}
+.ring{--p:0;display:grid;place-items:center;width:7.5rem;height:7.5rem;margin:.25rem auto 0;border-radius:50%;
+  background:radial-gradient(closest-side,var(--panel) 78%,transparent 79% 100%),conic-gradient(var(--hgreen) calc(var(--p)*1%),var(--hline) 0)}
+.ring b{font-size:1.6rem;font-weight:800;color:var(--hnavy)}
+.ring.p0{--p:0}.ring.p5{--p:5}.ring.p10{--p:10}.ring.p15{--p:15}.ring.p20{--p:20}.ring.p25{--p:25}.ring.p30{--p:30}.ring.p35{--p:35}.ring.p40{--p:40}.ring.p45{--p:45}.ring.p50{--p:50}.ring.p55{--p:55}.ring.p60{--p:60}.ring.p65{--p:65}.ring.p70{--p:70}.ring.p75{--p:75}.ring.p80{--p:80}.ring.p85{--p:85}.ring.p90{--p:90}.ring.p95{--p:95}.ring.p100{--p:100}
+.aiscope p{margin:0;color:var(--muted);font-size:.93rem;line-height:1.55}
+.risklevel{display:flex;align-items:center;gap:.5rem;margin:0 0 .6rem}
+.risklevel .i{width:1.8rem;height:1.8rem;padding:.35rem;border-radius:50%}
+.risklevel.low .i{background:color-mix(in srgb,var(--hgreen) 15%,var(--panel));color:var(--hgreen)}
+.risklevel.moderate .i{background:var(--horange-soft);color:var(--horange)}
+.risklevel.high .i{background:var(--danger-soft);color:var(--danger)}
+.airisk li{display:grid;padding:.3rem 0;font-size:.88rem}
+.airisk li b{color:var(--hnavy)}
+.airisk li span{color:var(--muted);font-size:.8rem}
+.airisk .hint,.aiscore .hint{font-size:.8rem}
+.aifees p{margin:0;color:var(--muted)}
+.aifees b{color:var(--hnavy)}
+.aigo{display:flex;justify-content:end;align-items:end;margin:0}
+@media print{
+ .site-header,header,footer,.txtabs,.txacts,.readyrow,#moreSlot,.signpop,[data-action=print]{display:none!important}
+ .txpanel[hidden]{display:block!important}
+ .xpanel{box-shadow:none;border:0}
+}
