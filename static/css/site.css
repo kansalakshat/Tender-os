@@ -1168,3 +1168,49 @@ pre#err:empty{display:none}
 .mxwhy li .i{flex:none;width:1.4rem;height:1.4rem;color:var(--hgreen)}
 .mxwhy li span{display:grid;color:var(--hnavy);font-size:.92rem}
 .mxwhy li small{color:var(--muted);font-size:.78rem}
+
+/* ---- Dashboard (dashboard.html), drawn to the showcase design -------------- */
+.dxhead{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:start;gap:1rem;margin:0 0 1.25rem}
+.dxhead h1{margin:0;font-size:clamp(1.6rem,1.1rem + 1.4vw,2.2rem);font-weight:800;color:var(--hnavy)}
+.dxhead p{margin:.25rem 0 0;color:var(--muted)}
+.dxstats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem;margin:0 0 1.25rem}
+@media (min-width:56rem){.dxstats{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.dxstats>div{display:grid;gap:.15rem;padding:1rem 1.1rem;border:1px solid var(--hline);border-radius:16px;background:var(--panel);box-shadow:0 8px 24px rgba(26,95,224,.05)}
+.dxstats dt{display:flex;align-items:center;gap:.6rem;font-size:.85rem;font-weight:600;color:var(--hnavy)}
+.dxstats dt .i{flex:none;width:2.3rem;height:2.3rem;padding:.5rem;border-radius:10px;background:var(--hb-soft);color:var(--hb)}
+.dxstats>div:nth-child(2) dt .i{background:color-mix(in srgb,var(--hgreen) 15%,var(--panel));color:var(--hgreen)}
+.dxstats>div:nth-child(3) dt .i{background:color-mix(in srgb,#8B5CF6 15%,var(--panel));color:#7C3AED}
+.dxstats>div:nth-child(4) dt .i{background:var(--danger-soft);color:var(--danger)}
+:root[data-theme=dark] .dxstats>div:nth-child(3) dt .i{color:#C4B5FD}
+.dxstats dd{margin:0}
+.dxstats dd:not(.dxchg){margin-top:.4rem;font-size:1.9rem;font-weight:800;line-height:1.1;color:var(--hnavy)}
+.dxchg{font-size:.8rem;font-weight:700}
+.dxchg span{font-weight:400;color:var(--faint)}
+.dxchg.up{color:var(--hgreen)}.dxchg.down{color:var(--danger)}.dxchg.flat{color:var(--muted)}
+.dxgrid{display:grid;gap:1.25rem;align-items:start;margin:0 0 2rem}
+@media (min-width:56rem){.dxgrid{grid-template-columns:minmax(0,1.8fr) minmax(0,1fr)}}
+.dxcard{padding:1.1rem 1.25rem;border:1px solid var(--hline);border-radius:16px;background:var(--panel);box-shadow:0 8px 24px rgba(26,95,224,.05)}
+.dxcard h2{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.5rem;margin:0 0 .3rem;font-size:1.05rem;color:var(--hnavy)}
+.dxcard .hint{margin:0 0 .6rem;font-size:.8rem}
+.dxlegend{display:flex;align-items:center;gap:.35rem;font-size:.8rem;font-weight:500;color:var(--muted)}
+.dxlegend i{display:inline-block;width:.6rem;height:.6rem;margin-left:.5rem;border-radius:50%}
+.dxlegend .tot{background:var(--hb)}.dxlegend .mat{background:var(--hgreen)}
+.dxtrend svg{display:block;width:100%;height:auto}
+.dxtrend .grid{stroke:var(--hline);stroke-width:1}
+.dxtrend .ax{fill:var(--faint);font-size:11px;font-family:var(--sans)}
+.dxtrend .area{fill:color-mix(in srgb,var(--hb) 10%,transparent)}
+.dxtrend polyline{fill:none;stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}
+.dxtrend polyline.tot{stroke:var(--hb)}
+.dxtrend polyline.mat{stroke:var(--hgreen);stroke-dasharray:5 4}
+.dxtrend .dot{fill:var(--panel);stroke:var(--hb);stroke-width:2}
+.dxdue h2 a{display:inline-flex;align-items:center;gap:.25rem;font-size:.82rem;font-weight:600;color:var(--hb);text-decoration:none}
+.dxdue h2 a .i{width:.9rem;height:.9rem}
+.dxdue ul{margin:.5rem 0 0;padding:0;list-style:none}
+.dxdue li{display:flex;align-items:center;gap:.75rem;margin:0 0 .6rem;padding:.6rem .75rem;border-left:4px solid var(--hline);border-radius:0;background:color-mix(in srgb,var(--hb) 4%,var(--panel))}
+.dxdue li.hot{border-left-color:var(--danger)}.dxdue li.warm{border-left-color:var(--horange)}
+.dxdue li a{display:grid;flex:1;min-width:0;color:var(--hnavy);text-decoration:none}
+.dxdue li b{font-size:.88rem;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+.dxdue li a:hover b{color:var(--hb);text-decoration:underline}
+.dxdue li span{font-size:.78rem;color:var(--muted)}
+.dxdue em{flex:none;padding:.15rem .5rem;border-radius:6px;font-style:normal;font-size:.75rem;font-weight:800;background:var(--horange-soft);color:var(--horange)}
+.dxdue li.hot em{background:var(--danger-soft);color:var(--danger)}
