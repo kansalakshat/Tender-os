@@ -1,85 +1,84 @@
 {% extends "base.html" %}
-{% from "_macros.html" import skeleton_row %}
 {#- Read-only view of the whole corpus. Filtering happens in GET /tenders; this
-    page is the form around it, not a second query path. A short title and the
-    search box on top; the filters down the left, the results on the right.
-    The page runs wider than the reading pages (data-wide), since a results
-    list uses the room and a long column of prose does not. #}
+    page is the form around it, not a second query path. Drawn to the
+    Tenderleo showcase design: "Advanced Filters" down the left; the search
+    box, quick categories and sort on the right over a table of results with
+    numbered pages. The page runs wider than the reading pages (data-wide). #}
 {% block htmlattrs %} data-wide{% endblock %}
-{% block body %}<section class="sec bpage"><div class=wrap>
-<div class=bwrap>
- <div class=bhead>
-  <h1>All tenders</h1>
-  <p class=btotal id=total aria-live=polite></p>
- </div>
- {#- These controls sit outside the form on the page but belong to it
-     (form=f), so the search box and the sort travel with the filters. #}
- <div class="search bsearch" role=search>
-  <label class=sr for=q>Work / keyword</label>
-  <input id=q name=q form=f autocomplete=off spellcheck=false
-         placeholder="Search by work, buyer or tender ID, e.g. CCTV, road repair">
-  <button form=f>{{ icon('magnifying-glass') }}Search</button>
- </div>
-<form id=f class=fside data-districts='{{ districts|tojson }}'>
- <p class=fsidehead>{{ icon('sliders-horizontal') }}Filters <a href="/browse" class=fclear>Clear all</a></p>
- <fieldset class=fquick>
-  <legend>Closing</legend>
-  {#- The value lives in a hidden field so it travels with the form like the
-      selects do; the buttons only set it. #}
-  <input type=hidden name=closing value="">
-  <div class=fquickbtns>
-   <button type=button data-closing="" aria-pressed=true>Any time</button>
-   <button type=button data-closing=today aria-pressed=false>Today</button>
-   <button type=button data-closing=7 aria-pressed=false>Next 7 days</button>
-   <button type=button data-closing=30 aria-pressed=false>Next 30 days</button>
-  </div>
- </fieldset>
- <label class=f><span>Company</span>
-   <input name=organization autocomplete=off spellcheck=false placeholder="e.g. Railways&hellip;"></label>
- <label class=f><span>State</span>
-   <select name=state><option value="">All states</option>
-   {%- for s in states %}<option>{{ s }}</option>{% endfor -%}
-   </select></label>
- <label class=f><span>City / district</span>
-   <select name=city disabled><option value="">Pick a state first</option></select></label>
- <label class=f><span>Category</span>
-   <select name=sector><option value="">All categories</option>
-   {%- for key, label in sectors %}<option value="{{ key }}">{{ label }}</option>{% endfor -%}
-   </select></label>
- <label class=f><span>Portal</span>
-   <select name=source_id><option value="">All portals</option>
-   {%- for s in sources %}<option value="{{ s.id }}">{{ s.name }}</option>{% endfor -%}
-   </select></label>
- <p class=chk><label><input type=checkbox name=open_only checked> Only tenders still open</label></p>
- <div class=savesearch>
-  <label class=f><span>Save this search</span>
-   <input id=sname maxlength=80 autocomplete=off placeholder="Name it, e.g. Civil works Rajasthan"></label>
-  <button type=button class=ghost id=savesearch>Save current search</button>
+{% block body %}<section class="sec bpage bx2"><div class=wrap>
+<h1 class=sr>Browse tenders</h1>
+<div class=b2grid>
+<form id=f class=b2side data-districts='{{ districts|tojson }}'>
+ <p class=b2sidehead><b>Advanced Filters</b> <a href="/browse" class=fclear>Clear All</a></p>
+ <label class=b2f><span>Keyword Search</span>
+  <span class=b2in>{{ icon('magnifying-glass') }}<input id=kq autocomplete=off spellcheck=false placeholder="Search tenders..."></span></label>
+ <label class=b2f><span>State</span>
+  <select name=state><option value="">All States</option>
+  {%- for s in states %}<option>{{ s }}</option>{% endfor -%}
+  </select></label>
+ <label class=b2f><span>District</span>
+  <select name=city disabled><option value="">All Districts</option></select></label>
+ <label class=b2f><span>Category</span>
+  <select name=sector><option value="">All Categories</option>
+  {%- for key, label in sectors %}<option value="{{ key }}">{{ label }}</option>{% endfor -%}
+  </select></label>
+ <label class=b2f><span>Portal</span>
+  <select name=source_id><option value="">All Portals</option>
+  {%- for s in sources %}<option value="{{ s.id }}">{{ s.name }}</option>{% endfor -%}
+  </select></label>
+ <label class=b2f><span>Deadline</span>
+  <select name=closing><option value="">Any Time</option><option value=today>Closing today</option>
+  <option value=7>Next 7 days</option><option value=30>Next 30 days</option></select></label>
+ <label class=b2f><span>Company</span>
+  <input name=organization autocomplete=off spellcheck=false placeholder="e.g. Railways&hellip;"></label>
+ <p class=b2chk><label><input type=checkbox name=open_only checked> Only tenders still open</label></p>
+ <button class=b2apply>Apply Filters</button>
+ <details class=b2save>
+  <summary>Save this search</summary>
+  <label class=b2f><span>Name</span>
+   <input id=sname maxlength=80 autocomplete=off placeholder="e.g. Civil works Rajasthan"></label>
+  <button type=button class="hbtn ghost sm" id=savesearch>Save current search</button>
   <p class=hint id=savemsg role=status></p>
- </div>
+ </details>
 </form>
-<div class=bresults>
- <div class=factive id=factive hidden>
-  <ul class=fchips id=fchips aria-label="Filters in use"></ul>
+
+<div class=b2main>
+ {#- The big search box: the same "q" the API takes. The sidebar's keyword
+     box mirrors it (browse.js), so either one can be used. -#}
+ <div class=b2search role=search>
+  <span class=b2in>{{ icon('magnifying-glass') }}<label class=sr for=q>Search tenders</label>
+  <input id=q name=q form=f autocomplete=off spellcheck=false placeholder="Search tenders..."></span>
+  <button form=f class=hbtn>Search</button>
  </div>
- <div class=bbar>
-  <p class=count id=count>Loading tenders&hellip;</p>
-  {#- Only on a narrow screen, where the sidebar folds away above the results. #}
-  <button type=button class="ghost sm" id=ftoggle aria-expanded=false aria-controls=f>{{ icon('sliders-horizontal') }}Filters</button>
-  <label class=bsort><span>Sort</span>
+ <div class=b2tools>
+  <ul class=b2cats aria-label="Quick categories">
+   <li><button type=button data-sector="" aria-pressed=true>All</button></li>
+   {%- for key, label in quick_sectors %}<li><button type=button data-sector="{{ key }}" aria-pressed=false>{{ label }}</button></li>{% endfor %}
+   <li><button type=button id=b2more aria-expanded=false aria-controls=f>More{{ icon('caret-down') }}</button></li>
+  </ul>
+  <label class=b2sort><span>Sort by:</span>
    <select name=sort form=f>
+     <option value=published_date>Latest</option>
      <option value=deadline>Closing soonest</option>
-     <option value=published_date>Newest published</option>
      <option value=first_seen_at>Newest collected</option>
    </select></label>
  </div>
- <ol class=rows id=rows>
-  {{ skeleton_row("row sk") }}
-  {{ skeleton_row("row sk") }}
-  {{ skeleton_row("row sk") }}
- </ol>
- <p class=pager><button class=ghost id=prev>{{ icon('caret-left') }}Previous</button>
-    <button class=ghost id=next>Next{{ icon('caret-right') }}</button></p>
+ <div class=factive id=factive hidden>
+  <ul class=fchips id=fchips aria-label="Filters in use"></ul>
+ </div>
+ <div class=b2bar>
+  <p class=b2count id=count aria-live=polite>Loading tenders&hellip;</p>
+  {#- Only on a narrow screen, where the filters fold away. -#}
+  <button type=button class="hbtn ghost sm" id=ftoggle aria-expanded=false aria-controls=f>{{ icon('sliders-horizontal') }}Filters</button>
+ </div>
+ <div class=b2table>
+  <table>
+   <thead><tr><th scope=col>Tender Title</th><th scope=col>Buyer</th><th scope=col>Closing Date</th>
+   <th scope=col>Value</th><th scope=col>Status</th></tr></thead>
+   <tbody id=rows>{% for _ in range(5) %}<tr class=sk><td><span></span></td><td><span></span></td><td><span></span></td><td><span></span></td><td><span></span></td></tr>{% endfor %}</tbody>
+  </table>
+ </div>
+ <nav class=b2pages id=pages aria-label="Pages"></nav>
  <pre id=err role=alert></pre>
 </div>
 </div>

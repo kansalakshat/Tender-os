@@ -1090,7 +1090,15 @@ def browse(db: Session = Depends(get_db)) -> str:
         "browse.html", title="Browse tenders",
         sources=db.execute(select(Source.id, Source.name).order_by(Source.name)).all(),
         states=STATES, sectors=sorted(SECTOR_LABELS.items(), key=lambda kv: kv[1]),
+        quick_sectors=BROWSE_QUICK_SECTORS,
         districts={st: sorted(ds) for st, ds in DISTRICTS.items()}))
+
+
+# The category buttons over the results: short names for the busiest sectors.
+# "More" opens the full Category list in the filters.
+BROWSE_QUICK_SECTORS = (("civil_construction", "Construction"), ("it_services", "IT"),
+                        ("medical_pharma", "Health"), ("electrical_power", "Power"),
+                        ("manpower_security", "Manpower"))
 
 
 # ---- buyers ----------------------------------------------------------------
