@@ -31,3 +31,39 @@ def test_tabs_slide_but_not_for_reduced_motion():
     slide = css[css.index("@media (prefers-reduced-motion:no-preference){\n .txpanel"):]
     assert ".txpanel.slide-r{animation:txin-r" in slide.split("}\n}")[0]
     assert ".txbar{" in css
+
+
+def test_cancelled_tender_shows_cancelled_not_a_countdown(session_factory, monkeypatch):
+    from datetime import date, timedelta
+    from fastapi.testclient import TestClient
+    from app.api import app, get_db
+    from app.models import Source, Tender
+    today = date(2026, 11, 18)
+    monkeypatch.setattr(web, "today_ist", lambda: today)
+    with session_factory() as db:
+        src = Source(name="CPPP", base_url="https://eprocure.gov.in", license="p", robots_txt_allowed=True)
+        db.add(src); db.flush()
+        for ref, status in (("x", "cancelled"), ("y", "open")):
+            db.add(Tender(source_id=src.id, external_ref=ref, source_url="u" + ref, title="Road " + ref,
+                          organization="PWD", deadline=today + timedelta(days=12), status=status))
+        db.commit()
+        ids = {t.external_ref: t.id for t in db.query(Tender)}
+    app.dependency_overrides[get_db] = lambda: session_factory()
+    try:
+        c = TestClient(app)
+        gone = c.get(f"/t/{ids['x']}").text
+        due = gone[gone.index('<div class="txdue'):]
+        due = due[:due.index("</div>")]
+        assert "txdue shut" in due and "<b>Cancelled</b>" in due
+        assert "Days" not in due and "<span>Left</span>" not in due
+        live = c.get(f"/t/{ids['y']}").text
+        assert "<b>12 Days</b><span>Left</span>" in live
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_profile_steps_focus_the_step_and_recount_after_other_listeners():
+    js = (Path(__file__).parent.parent / "static" / "js" / "profile-steps.js").read_text(encoding="utf-8")
+    assert "first.tabIndex = -1;" in js and "first.focus({preventScroll: true});" in js
+    assert "if (e.type === 'prefilled' && current === 'review') review();" in js
+    assert "form.addEventListener(ev, recount)" in js

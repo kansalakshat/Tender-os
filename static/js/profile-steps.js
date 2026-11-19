@@ -81,8 +81,14 @@
     if (step === 'review') review();
     document.getElementById('err').textContent = '';
     if (focus) {
+      // Focus moves into the step shown, so the next Tab reaches its first
+      // question rather than skipping past it from the Next button.
       const first = form.querySelector('fieldset[data-step="' + step + '"]:not([hidden]) legend');
-      if (first) first.scrollIntoView({block: 'nearest'});
+      if (first) {
+        first.tabIndex = -1;
+        first.focus({preventScroll: true});
+        first.scrollIntoView({block: 'nearest'});
+      }
       nav.scrollIntoView({block: 'nearest'});
     }
   }
@@ -138,7 +144,18 @@
       next.click();
     }
   });
-  for (const ev of ['input', 'change', 'prefilled']) form.addEventListener(ev, progress);
+  // Counted again once every other listener has run: unticking the last state
+  // makes site.js clear its districts (syncDistricts) after this listener, with
+  // no event of its own. A prefill that lands while Review is open redraws it,
+  // so what is shown is what Save sends.
+  function recount(e) {
+    progress();
+    setTimeout(() => {
+      progress();
+      if (e.type === 'prefilled' && current === 'review') review();
+    }, 0);
+  }
+  for (const ev of ['input', 'change', 'prefilled']) form.addEventListener(ev, recount);
   // A Clear button empties a question without an input event: count after it.
   form.addEventListener('click', e => {
     if (e.target.closest('[data-action=clear]')) setTimeout(progress, 0);

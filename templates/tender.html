@@ -9,6 +9,8 @@
     fills the slots and runs the tabs. #}
 {%- set fx = {} %}{% for label, value, _m in facts %}{% set _ = fx.update({label: value}) %}{% endfor -%}
 {%- set closed = days_label == 'closed' -%}
+{#- A cancelled notice counts nothing down, whatever its deadline says (as on Browse). -#}
+{%- set cancelled = t.status == 'cancelled' -%}
 {%- set value = fx.get('Estimated value', '') -%}
 {%- set has_value = value and not value.startswith('not ') -%}
 {%- set emd = fx.get('EMD (bid security)') -%}
@@ -39,11 +41,11 @@
     {%- if city or state %}<span>{{ icon('map-pin') }}{% if city %}{{ city }}{{ ', ' if state }}{% endif %}{% if state %}<a href="/browse?state={{ state|urlquote }}">{{ state }}</a>{% endif %}</span>{% endif %}
    </p>
   </div>
-  <div class="txdue{{ ' shut' if closed else ' hot' if n_days is not none and n_days <= 3 else '' }}">
+  <div class="txdue{{ ' shut' if closed or cancelled else ' hot' if n_days is not none and n_days <= 3 else '' }}">
    {{ icon('calendar') }}
-   <p><b>{% if closed %}Closed{% elif n_days == 0 %}Closes today{% elif n_days is not none %}{{ n_days }} Day{{ '' if n_days == 1 else 's' }}{% else %}Date not stated{% endif %}</b>
-   {%- if n_days and not closed %}<span>Left</span>{% endif %}
-   {%- if fx.get('Bids close') %}<small>{{ 'Closed on' if closed else 'Closes on' }} {{ fx.get('Bids close') }}</small>{% endif %}</p>
+   <p><b>{% if cancelled %}Cancelled{% elif closed %}Closed{% elif n_days == 0 %}Closes today{% elif n_days is not none %}{{ n_days }} Day{{ '' if n_days == 1 else 's' }}{% else %}Date not stated{% endif %}</b>
+   {%- if n_days and not closed and not cancelled %}<span>Left</span>{% endif %}
+   {%- if fx.get('Bids close') %}<small>{{ 'Was due' if cancelled else 'Closed on' if closed else 'Closes on' }} {{ fx.get('Bids close') }}</small>{% endif %}</p>
   </div>
  </div>
  <div class=txstats>
