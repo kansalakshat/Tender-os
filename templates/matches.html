@@ -1,19 +1,58 @@
 {% extends "base.html" %}
-{% from "_macros.html" import row %}
-{% block content %}<h1>Matches for {{ company.name }}</h1>
-<p class=lede>{{ total|num }} open tenders match your answers
-{%- if total > shown|length %}, first {{ shown|length }} shown. {% else %}. {% endif -%}
-<a href="/profile">Edit answers</a></p>
+{#- A company's matches, drawn to the Tenderleo showcase design: the heading
+    with the sort, "Profile Complete" and the match trend side by side, then
+    the matches with "Why These Match?" beside them. -#}
+{%- set n = trend|length -%}
+{%- set peak = trend|max or 1 -%}
+{%- macro pt(i, v) %}{{ (8 + i * 284 / (n - 1))|round(1) }},{{ (92 - 80 * v / peak)|round(1) }}{% endmacro -%}
+
+{% block body %}<section class="sec mx"><div class=wrap><div class=xpanel>
+<div class=mxhead>
+ <div><h1>{{ icon('star') }}Your AI-Matched Tender Opportunities</h1>
+ <p>Personalized recommendations for {{ company.name }}, based on your business profile.
+ {{ total|num }} open tender{{ '' if total == 1 else 's' }} match{{ 'es' if total == 1 else '' }}{% if total > shown|length %}, best {{ shown|length }} shown{% endif %}.</p></div>
+ {%- if shown %}
+ <form class=mxsort method=get data-autogo>
+  {%- if tight %}<input type=hidden name=filters value="{{ 'off' if relaxed else 'on' }}">{% endif %}
+  <label class=xpick>{{ icon('funnel-simple') }}<span class=sr>Sort by</span>
+   <select name=sort>{% for key, label in sorts %}<option value="{{ key }}"{% if key == sort %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
+  <button name=order value=asc class="hbtn sm{{ '' if order == 'asc' else ' ghost' }}" aria-pressed="{{ 'true' if order == 'asc' else 'false' }}" title="Ascending">&uarr;<span class=sr>Ascending</span></button>
+  <button name=order value=desc class="hbtn sm{{ '' if order == 'desc' else ' ghost' }}" aria-pressed="{{ 'true' if order == 'desc' else 'false' }}" title="Descending">&darr;<span class=sr>Descending</span></button>
+ </form>
+ {%- endif %}
+</div>
+
+<div class=mxtop>
+ <div class="mxcard mxprof">
+  <div class="ring p{{ (profile_pct / 5)|round|int * 5 }}"><b>{{ profile_pct }}%</b></div>
+  <div><h2>Profile {{ 'Complete' if profile_pct == 100 else 'Completeness' }}</h2>
+  <p>{{ 'Every answer is in. Edit them any time.' if profile_pct == 100 else 'Add more details to get better matches.' }}</p>
+  <a class="hbtn sm" href="/profile">{{ 'Edit Profile' if profile_pct == 100 else 'Complete Profile' }}</a></div>
+ </div>
+ <div class="mxcard mxtrend">
+  <h2>Match Trend <span class=mxbadge>{{ top }}%</span></h2>
+  <p class=hint>New matches published per day, last {{ n }} days &middot; top score {{ top }}%</p>
+  {#- Stretched to the card's width; the strokes keep their thickness. -#}
+  <svg viewBox="0 0 300 100" preserveAspectRatio=none role=img aria-label="New matches per day over the last {{ n }} days: {{ trend|join(', ') }}">
+   <line class=grid x1="0" y1="12" x2="300" y2="12"/><line class=grid x1="0" y1="52" x2="300" y2="52"/><line class=grid x1="0" y1="92" x2="300" y2="92"/>
+   <polygon class=area points="8,92 {% for v in trend %}{{ pt(loop.index0, v) }} {% endfor %}292,92"/>
+   <polyline class=line points="{% for v in trend %}{{ pt(loop.index0, v) }} {% endfor %}"/>
+  </svg>
+  {%- if not trend|sum %}<p class=hint>No new matching tenders were published in these {{ n }} days.</p>{% endif %}
+  <p class=mxaxis><span>{{ n }} days ago</span><span>Today</span></p>
+ </div>
+</div>
+
 {%- if tight %}
 {#- Outside the "has rows" block on purpose: strict can narrow a profile to
     zero matches, and that is precisely the moment the reader needs the way
     back. Carries the sort so switching mode does not silently reorder. -#}
-<form class=modebar method=get>
+<form class="modebar mxmode" method=get>
  <input type=hidden name=sort value="{{ sort }}">
  <input type=hidden name=order value="{{ order }}">
  <span class=toggle>
-  <button name=filters value=on class="{{ 'ghost' if relaxed else '' }}" aria-pressed="{{ 'false' if relaxed else 'true' }}">Only my {{ tight | map('extract', strict_labels) | join(', ') }}</button>
-  <button name=filters value=off class="{{ '' if relaxed else 'ghost' }}" aria-pressed="{{ 'true' if relaxed else 'false' }}">Everything, ranked</button>
+  <button name=filters value=on class="hbtn sm{{ ' ghost' if relaxed else '' }}" aria-pressed="{{ 'false' if relaxed else 'true' }}">Only my {{ tight | map('extract', strict_labels) | join(', ') }}</button>
+  <button name=filters value=off class="hbtn sm{{ '' if relaxed else ' ghost' }}" aria-pressed="{{ 'true' if relaxed else 'false' }}">Everything, ranked</button>
  </span>
  <span class=modenote>
   {%- if relaxed %}Everything is shown; these answers only raise the score. {{ other_total|num }} match them exactly.
@@ -21,26 +60,41 @@
  </span>
 </form>
 {%- endif %}
-{%- if shown %}
-<form class=sortbar method=get>
- <label class=f><span>Sort by</span>
-  <select name=sort>{% for key, label in sorts %}<option value="{{ key }}"{% if key == sort %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
- <button name=order value=asc class="{{ '' if order == 'asc' else 'ghost' }}" aria-pressed="{{ 'true' if order == 'asc' else 'false' }}">Ascending &uarr;</button>
- <button name=order value=desc class="{{ '' if order == 'desc' else 'ghost' }}" aria-pressed="{{ 'true' if order == 'desc' else 'false' }}">Descending &darr;</button>
-</form>
-<p class=hint>Tenders missing the value you sort by go to the end.{% if sort == 'distance' %} Distance: your districts first, then your states, then tenders that name neither.{% endif %}</p>
-{%- endif %}
-{%- if shown %}<ol class=rows>
-{%- for t, score, reasons, check in shown -%}
-{{ row(score|string, rank_class(score, top), t, reasons + (["check eligibility"] if check else []), summary=true) }}
-{%- endfor -%}
-</ol>
-{%- else %}<div class=empty>
-{%- if tight and not relaxed %}
- <p>Nothing matches your {{ tight | map('extract', strict_labels) | join(' and ') }} exactly.
- <a href="?filters=off&amp;sort={{ sort }}&amp;order={{ order }}">Show everything, ranked</a>
-. Your answers still decide the order.</p>
-{%- else %}
- <p>No open tenders match this profile yet. Broaden the sectors, drop a state, or lower the preparation days on your <a href="/profile">answers</a>.</p>
-{%- endif %}
-</div>{% endif %}{% endblock %}
+
+<div class=mxgrid>
+ <div class="mxcard mxlist">
+  <h2>Top Matches <a href="/profile">Edit answers{{ icon('arrow-right') }}</a></h2>
+  {%- if shown %}
+  {%- if sort != 'score' %}<p class=hint>Tenders missing the value you sort by go to the end.{% if sort == 'distance' %} Distance: your districts first, then your states, then tenders that name neither.{% endif %}</p>{% endif %}
+  <ol>
+  {%- for t, score, reasons, check in shown %}
+   {%- set where = place_of(t) %}
+   <li>
+    <b class="mxscore {{ 'hi' if score >= 70 else 'mid' if score >= 40 else 'lo' }}">{{ score }}%</b>
+    <div class=mxt><a href="/t/{{ t.id }}">{{ t.title }}</a>
+     <span>{{ t.organization or 'Unnamed buyer' }}{% if where[0] %} &middot; {{ [where[1], where[0]]|select|join(', ') }}{% endif %}</span>
+     {%- if reasons or check %}<small>{{ (reasons + (['check eligibility'] if check else []))|join(' · ') }}</small>{% endif %}</div>
+    <a class=mxwa href="/t/{{ t.id }}" data-share="{{ t.id }}" data-title="{{ t.title }}" aria-label="Share on WhatsApp">{{ icon('share') }}</a>
+    <a class="hbtn ghost sm" href="/t/{{ t.id }}">View Tender{{ icon('arrow-right') }}</a>
+   </li>
+  {%- endfor %}
+  </ol>
+  {%- else %}<div class=empty>
+  {%- if tight and not relaxed %}
+   <p>Nothing matches your {{ tight | map('extract', strict_labels) | join(' and ') }} exactly.
+   <a href="?filters=off&amp;sort={{ sort }}&amp;order={{ order }}">Show everything, ranked</a>
+  . Your answers still decide the order.</p>
+  {%- else %}
+   <p>No open tenders match this profile yet. Broaden the sectors, drop a state, or lower the preparation days on your <a href="/profile">answers</a>.</p>
+  {%- endif %}
+  </div>{% endif %}
+ </div>
+ <div class="mxcard mxwhy">
+  <h2>Why These Match?</h2>
+  <ul>{% for label, k in why %}<li>{{ icon('check-circle') }}<span>{{ label }}<small>{{ k }} of the tenders listed</small></span></li>
+  {%- else %}<li class=muted><span>Matches appear here with the reasons they were picked.</span></li>{% endfor %}</ul>
+ </div>
+</div>
+</div></div></section>
+<script defer src="{{ asset('js/home.js') }}"></script>
+{% endblock %}

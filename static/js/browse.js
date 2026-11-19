@@ -238,3 +238,7 @@ form.addEventListener('change', e => {
 });
 form.sort.addEventListener('change', () => go(null, 0));
 go(null, seed());
+// Coming back with the Back button can restore this page from the browser's
+// cache without running it again; redraw so tenders opened meanwhile get
+// their tick.
+window.addEventListener('pageshow', e => { if(e.persisted) go(null, offset); });

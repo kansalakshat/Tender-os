@@ -766,6 +766,57 @@ def sort_matches(db: Session, company: Company, scored, key: str, order: str):
     return [item for _v, item in have] + [item for v, item in keyed if v is None]
 
 
+# The answers that make matches better, for "Profile Complete": each one
+# filled in counts the same.
+PROFILE_PARTS = (
+    lambda c: c.sectors, lambda c: c.keywords, lambda c: c.states or c.districts,
+    lambda c: c.buyers, lambda c: c.max_project_value is not None,
+    lambda c: c.years_in_business is not None, lambda c: c.annual_turnover is not None,
+    lambda c: c.largest_similar_work is not None, lambda c: c.bid_capacity is not None,
+    lambda c: c.emd_budget is not None, lambda c: c.registrations,
+)
+
+
+def profile_complete(company) -> int:
+    """How much of the questionnaire is answered, 0-100."""
+    done = sum(1 for part in PROFILE_PARTS if part(company))
+    return round(100 * done / len(PROFILE_PARTS))
+
+
+TREND_DAYS = 14
+
+
+def _match_trend(db: Session, ids: list[int], today: date) -> list[int]:
+    """New matches per day: how many of this company's matching tenders were
+    published on each of the last fourteen days, oldest first."""
+    days = [0] * TREND_DAYS
+    start = today - timedelta(days=TREND_DAYS - 1)
+    for i in range(0, len(ids), 500):          # SQLite caps an IN list's size
+        for day in db.scalars(select(Tender.published_date).where(
+                Tender.id.in_(ids[i:i + 500]), Tender.published_date >= start,
+                Tender.published_date <= today)):
+            days[(day - start).days] += 1
+    return days
+
+
+# What each kind of reason means to the reader, for "Why These Match?".
+WHY_LABELS = {"sector": "Your business category matches", "keywords": "Your keywords are in the title",
+              "location": "Preferred location", "buyer": "A buyer you follow"}
+
+
+def _why_matched(shown) -> list[tuple[str, int]]:
+    """(what matched, how many of the listed tenders it matched), commonest
+    first, from the reasons the scorer gave each one."""
+    seen: dict[str, int] = {}
+    for _t, _s, reasons, _c in shown:
+        kinds = {r.split(":", 1)[0] for r in reasons if ":" in r}
+        for k in kinds & WHY_LABELS.keys():
+            seen[k] = seen.get(k, 0) + 1
+    # Ties keep WHY_LABELS' order: a set's order changes from run to run.
+    rank = list(WHY_LABELS)
+    return [(WHY_LABELS[k], seen[k]) for k in sorted(seen, key=lambda k: (-seen[k], rank.index(k)))]
+
+
 @router.get("/c/{company_id}", response_class=HTMLResponse)
 def results(
     company_id: int,
@@ -815,6 +866,9 @@ def results(
     ]
     return render("matches.html", title="Matches", company=company, total=d.total,
                   shown=shown, top=max((sc for sc, _r, _t in scored), default=0),
+                  profile_pct=profile_complete(company),
+                  trend=_match_trend(db, [tid for _s, _r, tid in d.scored], today_ist()),
+                  why=_why_matched(shown),
                   sorts=[(k, v[0]) for k, v in MATCH_SORTS.items()],
                   sort=sort, order=order,
                   saved_strict=sorted(saved_strict), relaxed=relaxed,
