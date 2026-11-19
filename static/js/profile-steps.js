@@ -38,6 +38,7 @@
     .map(b => b.closest('label').querySelector('span').textContent.trim());
   const inr = v => v ? 'Rs ' + Number(v).toLocaleString('en-IN') : '';
   function review() {
+    const strictNames = {sectors: 'Sectors', keywords: 'Keywords', location: 'Places', buyers: 'Buyers'};
     const rows = [
       ['Company name', val('name'), 'basic'],
       ['States and districts', checkedLabels('states').concat(checkedLabels('districts')).join(', '), 'basic'],
@@ -47,6 +48,9 @@
       ['Buyers you want', checkedLabels('buyers').join(', '), 'business'],
       ['Buyers to never show', checkedLabels('exclude_buyers').join(', '), 'business'],
       ['Never show titles with', val('exclude_keywords'), 'business'],
+      ['Max project value', inr(val('max_project_value')), 'business'],
+      ['Only show matches on', Array.from(form.querySelectorAll('input[name="strict"]:checked'))
+        .map(b => strictNames[b.value] || b.value).join(', '), 'business'],
       ['Days to prepare a bid', val('min_lead_days'), 'business'],
       ['Years in business', val('years_in_business'), 'experience'],
       ['Annual turnover', inr(val('annual_turnover')), 'experience'],
@@ -89,16 +93,31 @@
     if (step === 'business' && !ticked('sectors')) return 'Pick at least one sector you work in.';
     return '';
   }
+  // The first answer the browser itself rejects on a step (a malformed email,
+  // a number out of range): it must be fixed there, before the step hides it.
+  function invalidIn(step) {
+    for (const fs of form.querySelectorAll('fieldset[data-step="' + step + '"]'))
+      for (const el of fs.elements) if (el.willValidate && !el.checkValidity()) return el;
+    return null;
+  }
   function go(step) {
     const from = ORDER.indexOf(current), to = ORDER.indexOf(step);
     // Going forward checks every step on the way; going back never blocks.
     for (let k = from; k < to; k++) {
       const p = problem(ORDER[k]);
       if (p) { show(ORDER[k], true); showErr(p); return; }
+      const bad = invalidIn(ORDER[k]);
+      if (bad) { show(ORDER[k], true); bad.reportValidity(); return; }
       done.add(ORDER[k]);
     }
     show(step, true);
   }
+  // Saving checks every answer; one the browser rejects opens its step so
+  // the reader can see the message and fix it.
+  form.addEventListener('invalid', e => {
+    const fs = e.target.closest('fieldset[data-step]');
+    if (fs && fs.hidden) { show(fs.dataset.step); e.target.focus(); }
+  }, true);
   next.addEventListener('click', () => go(ORDER[ORDER.indexOf(current) + 1]));
   back.addEventListener('click', () => show(ORDER[ORDER.indexOf(current) - 1], true));
   nav.addEventListener('click', e => {

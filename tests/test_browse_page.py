@@ -61,3 +61,9 @@ def test_opened_tenders_are_remembered_and_ticked():
     assert "seenIds()" in (root / "browse.js").read_text(encoding="utf-8")
     # India's date is built from named parts, never parsed from locale text
     assert "formatToParts" in site
+
+
+def test_cancelled_tenders_never_read_open():
+    js = (Path(__file__).parent.parent / "static" / "js" / "browse.js").read_text(encoding="utf-8")
+    status = js[js.index("function status(t)"):js.index("function row(")]
+    assert status.index("'cancelled'") < status.index("left(t.deadline)")

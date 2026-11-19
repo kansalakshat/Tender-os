@@ -108,6 +108,8 @@ document.getElementById('fchips').addEventListener('click', e => {
 // date with days left, the value (or the EMD when only that is stated), and
 // whether it is still open.
 function status(t){
+  // A cancelled notice is never "Open", whatever its deadline says.
+  if(t.status === 'cancelled') return '<span class="b2st off">Cancelled</span>';
   const days = left(t.deadline)[0];
   if(days === 'closed') return '<span class="b2st off">Closed</span>';
   if(days === 'today') return '<span class="b2st hot">Closes today</span>';
@@ -150,11 +152,22 @@ function pages(total){
   let h = cur > 1 ? btn(cur - 1, ico('caret-left'), 'Previous page') : '';
   for(let p = a; p <= b; p++) h += btn(p, String(p), 'Page ' + p, p === cur);
   if(cur < n) h += btn(cur + 1, ico('arrow-right'), 'Next page');
+  // Redrawing removes the button a keyboard user just pressed; if focus was
+  // on it (and has not moved on while the page loaded), put it on the new
+  // current page instead of dropping it to the top of the document.
+  const had = nav.contains(document.activeElement) || pageFocus;
   nav.innerHTML = h;
+  if(had && (document.activeElement === document.body || nav.contains(document.activeElement) || !document.activeElement)){
+    const cur = nav.querySelector('[aria-current=page]');
+    if(cur) cur.focus({preventScroll: true});
+  }
+  pageFocus = false;
 }
+let pageFocus = false;   // a page button was pressed and its request is out
 document.getElementById('pages').addEventListener('click', e => {
   const b = e.target.closest('button[data-page]');
   if(!b) return;
+  pageFocus = document.activeElement === b;
   go(null, (parseInt(b.dataset.page, 10) - 1) * LIMIT);
   document.querySelector('.b2main').scrollIntoView({block: 'start'});
 });

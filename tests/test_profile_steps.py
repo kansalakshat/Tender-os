@@ -44,3 +44,14 @@ def test_the_bar_counts_the_same_answers_as_the_server():
 def test_signup_still_asks_everything_on_one_page(client):
     html = client.get("/signup").text
     assert 'name=registrations' in html and "data-step-link" not in html
+
+
+def test_review_lists_every_answer_and_steps_check_the_browser_rules():
+    js = (ROOT / "static" / "js" / "profile-steps.js").read_text(encoding="utf-8")
+    review = js[js.index("const rows = ["):js.index("];", js.index("const rows = ["))]
+    for name in ("name", "contact_email", "keywords", "exclude_keywords", "max_project_value",
+                 "min_lead_days", "years_in_business", "annual_turnover", "largest_similar_work",
+                 "bid_capacity", "emd_budget", "registrations", "strict", "sectors", "buyers",
+                 "exclude_buyers", "states", "districts"):
+        assert name in review, name
+    assert "checkValidity()" in js and "reportValidity()" in js
