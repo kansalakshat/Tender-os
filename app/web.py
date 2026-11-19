@@ -1503,7 +1503,8 @@ def dashboard(db: Session = Depends(get_db), user: User | None = Depends(current
         ("Upcoming Deadlines", "calendar", len(soon), (f"{len(upcoming)} still open", "flat")),
     ]
     return render("dashboard.html", title="Your dashboard", email=user.email,
-                  company=company, days=days, ranges=DASH_RANGES, stats=stats,
+                  company=company, days=days,
+                  profile_pct=profile_complete(company) if company else 0, ranges=DASH_RANGES, stats=stats,
                   trend_total=total_days, trend_matched=matched_days, trend_start=start,
                   trend_step=7 if days > 30 else 1, upcoming=upcoming[:5],
                   bidding=[t for t, p, _a in rows if p], saved=[t for t, p, _a in rows if not p],

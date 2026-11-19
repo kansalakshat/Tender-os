@@ -19,6 +19,8 @@ fetch('/me').then(r=>r.json()).then(d=>{
     f.querySelectorAll('input[name="'+n+'"]').forEach(b=>{ b.checked = want.has(b.value); });
   });
   syncDistricts();
+  // The steps' progress bar and review read the answers: tell them they are in.
+  f.dispatchEvent(new Event('prefilled'));
 });
 
 let signedIn = false;
@@ -43,7 +45,8 @@ function renderPreview(matches){
 
 function go(e){
   e.preventDefault();
-  const btn = e.target.querySelector('button');
+  // The submit button, not the first button in the form (a Clear button).
+  const btn = e.target.querySelector('button:not([type=button])');
   const body = collectProfile(e.target);
   const missing = missingRequired(body);
   if(missing) return showErr(missing);

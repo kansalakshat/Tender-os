@@ -20,6 +20,10 @@
   <noscript><button class="hbtn sm">Go</button></noscript></form>
 </div>
 
+{%- if profile_pct is not none and profile_pct < 100 %}
+<p class=dxnudge>{{ icon('sparkle') }}<span>Your company profile is <b>{{ profile_pct }}%</b> complete. More answers give better matches.</span>
+ <a class="hbtn sm" href="/profile">Complete Profile{{ icon('arrow-right') }}</a></p>
+{%- endif %}
 <dl class=dxstats>
 {%- for label, ic, value, (change, way) in stats %}
  <div><dt>{{ icon(ic) }}<span>{{ label }}</span></dt><dd>{{ value|num }}</dd>

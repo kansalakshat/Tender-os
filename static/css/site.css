@@ -1214,3 +1214,51 @@ pre#err:empty{display:none}
 .dxdue li span{font-size:.78rem;color:var(--muted)}
 .dxdue em{flex:none;padding:.15rem .5rem;border-radius:6px;font-style:normal;font-size:.75rem;font-weight:800;background:var(--horange-soft);color:var(--horange)}
 .dxdue li.hot em{background:var(--danger-soft);color:var(--danger)}
+
+/* ---- Profile page (profile.html): the steps, drawn to the showcase design --
+   Steps down the left, one step's questions on the right under a progress
+   bar. The stepping is profile-steps.js; without it everything shows. */
+.px2{padding-top:1.5rem}
+.pfx{display:grid;gap:1.5rem;align-items:start}
+@media (min-width:56rem){.pfx{grid-template-columns:15rem minmax(0,1fr)}}
+.pfsteps{padding:.5rem;border:1px solid var(--hline);border-radius:16px;background:var(--panel)}
+@media (min-width:56rem){.pfsteps{position:sticky;top:5.5rem}}
+.pfsteps ol{display:grid;gap:.25rem;margin:0;padding:0;list-style:none}
+@media (max-width:55.99rem){.pfsteps ol{grid-auto-flow:column;grid-auto-columns:max-content;overflow-x:auto}}
+.pfsteps a{display:flex;align-items:center;gap:.7rem;padding:.65rem .75rem;border-radius:10px;color:var(--hnavy);font-weight:600;font-size:.92rem;text-decoration:none;white-space:nowrap}
+.pfsteps a:hover{background:var(--hb-soft)}
+.pfsteps a[aria-current]{background:var(--hb-soft);color:var(--hb)}
+.pfdot{position:relative;flex:none;display:grid;place-items:center;width:1.7rem;height:1.7rem;border-radius:50%;
+  border:2px solid var(--hline);background:var(--panel);color:var(--muted);font-size:.8rem}
+.pfdot i{font-style:normal;font-weight:700}
+.pfdot .i{display:none;width:.95rem;height:.95rem}
+.pfsteps a[aria-current] .pfdot{border-color:var(--hb);background:var(--hb);color:#fff}
+:root[data-theme=dark] .pfsteps a[aria-current] .pfdot{color:#0E1520}
+.pfsteps a.done .pfdot{border-color:var(--hgreen);background:var(--hgreen);color:#fff}
+.pfsteps a.done .pfdot i{display:none}
+.pfsteps a.done .pfdot .i{display:block}
+:root[data-theme=dark] .pfsteps a.done .pfdot{color:#0E1520}
+.pfmain h1{margin:0;font-size:clamp(1.5rem,1.1rem + 1.2vw,2rem);font-weight:800;color:var(--hnavy)}
+.pfmain .lede{margin:.3rem 0 1rem;color:var(--muted)}
+.pfbar{display:flex;align-items:center;gap:1rem;margin:0 0 1rem}
+.pftrack{flex:1;height:.6rem;border-radius:999px;background:var(--hline);overflow:hidden}
+.pftrack span{display:block;height:100%;border-radius:inherit;background:var(--hb);transition:width .4s}
+#pfill.p0{width:0%}#pfill.p5{width:5%}#pfill.p10{width:10%}#pfill.p15{width:15%}#pfill.p20{width:20%}#pfill.p25{width:25%}#pfill.p30{width:30%}#pfill.p35{width:35%}#pfill.p40{width:40%}#pfill.p45{width:45%}#pfill.p50{width:50%}#pfill.p55{width:55%}#pfill.p60{width:60%}#pfill.p65{width:65%}#pfill.p70{width:70%}#pfill.p75{width:75%}#pfill.p80{width:80%}#pfill.p85{width:85%}#pfill.p90{width:90%}#pfill.p95{width:95%}#pfill.p100{width:100%}
+.pfbar b{min-width:3rem;text-align:right;color:var(--hnavy)}
+.pfmain fieldset{margin:0 0 1rem;padding:1.1rem 1.25rem;border:1px solid var(--hline);border-radius:16px;background:var(--panel)}
+.pfmain legend{padding:0 .4rem;font-weight:800;color:var(--hnavy)}
+.pfmain fieldset[hidden]{display:none}
+.pfmain .muted{color:var(--faint)}
+.pfreview{margin:0;border:1px solid var(--hline);border-radius:12px;overflow:hidden}
+.pfreview>div{display:grid;grid-template-columns:minmax(9rem,14rem) minmax(0,1fr);gap:1rem;padding:.6rem .9rem;font-size:.92rem}
+.pfreview>div+div{border-top:1px solid var(--hline)}
+.pfreview dt{color:var(--muted)}
+.pfreview dd{margin:0;color:var(--hnavy);overflow-wrap:anywhere}
+.pfedit{margin-left:.4rem;padding:0;border:0;background:none;color:var(--hb);font-size:.82rem;font-weight:600;cursor:pointer;min-height:0}
+.pfedit:hover{text-decoration:underline}
+.pfnav{display:flex;justify-content:flex-end;gap:.6rem}
+/* Without the script there are no steps: the review and Back/Next mean nothing. */
+html:not(.pfjs) #step-review,html:not(.pfjs) #pfback,html:not(.pfjs) #pfnext,html:not(.pfjs) .pfbar{display:none}
+.dxnudge{display:flex;flex-wrap:wrap;align-items:center;gap:.75rem;margin:0 0 1.25rem;padding:.8rem 1rem;border:1px solid var(--hline);border-radius:14px;background:var(--hb-soft);color:var(--hnavy)}
+.dxnudge>.i{width:1.3rem;height:1.3rem;color:var(--hb)}
+.dxnudge span{flex:1;min-width:14rem}
