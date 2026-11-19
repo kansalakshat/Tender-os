@@ -14,6 +14,7 @@ is the upgrade if /tenders?state= gets slow.
 from __future__ import annotations
 
 import re
+from functools import lru_cache
 
 from sqlalchemy import or_
 
@@ -68,6 +69,40 @@ def _texts(t: Tender) -> tuple:
     # The buyer names its place more reliably than a title does.
     return (t.organization, t.department, clean(raw.get("office")),
             clean(raw.get("organisation_chain")), t.title)
+
+
+def _trie_pattern(words) -> str:
+    """One regex for many words, shared prefixes factored out ("West Godavari"
+    and "West Bengal" share "West "), so the engine does not try 800 names one
+    by one at every letter. Longer words are still preferred: a word that is
+    also a prefix of a longer one is made optional, and regex is greedy."""
+    trie: dict = {}
+    for w in words:
+        node = trie
+        for ch in w:
+            node = node.setdefault(ch, {})
+        node[""] = True
+    def build(node) -> str:
+        end = node.get("") is True
+        alts = [re.escape(ch) + build(sub) for ch, sub in sorted(node.items()) if ch]
+        if not alts:
+            return ""
+        body = alts[0] if len(alts) == 1 else "(?:" + "|".join(alts) + ")"
+        return "(?:" + body + ")?" if end else body
+    return build(trie)
+
+
+# The same names as _ANY, as a prefix tree, for counting every open tender's
+# states in Python (states_named). _ANY stays the reference it is tested against.
+_ANY_FAST = re.compile(r"\b(" + _trie_pattern(_PLACE) + r")\b", re.I)
+
+
+@lru_cache(maxsize=50_000)
+def states_named(text: str | None) -> frozenset[str]:
+    """Every state a piece of text names, outright or through one of its
+    districts: the same names state_clause() matches, read in Python. Cached:
+    buyer, department and office names repeat across thousands of tenders."""
+    return frozenset(_PLACE[m.group(1).lower()][0] for m in _ANY_FAST.finditer(text or ""))
 
 
 def place_of(t: Tender) -> tuple[str, str]:

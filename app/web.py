@@ -41,7 +41,7 @@ from .db import get_db, shared
 from .districts import DISTRICTS
 from .eligibility import REGISTRATIONS, checklist, needs_check
 from .facts import links as tender_links, money, preview_facts, sources, tender_facts
-from .geo import PORTAL_STATE, place_of, state_clause
+from .geo import PORTAL_STATE, place_of, state_clause, states_named
 from .matching import (
     SECTOR_LABELS,
     STATES,
@@ -434,16 +434,27 @@ def _render_welcome(db: Session, today: date) -> str:
 def _state_counts(db: Session, today: date) -> dict[str, int]:
     """{state: open tenders} for every state with any, by the same rule as
     /browse?state= (its own portal's tenders, or naming it or a district).
-    One pass over the table for all of them, shared for ten minutes."""
+
+    Counted in Python in one pass over the five text columns, not as 34 regex
+    sums in SQL: on the live corpus that query took minutes (one state alone
+    is 3 s and up), so every cold instance's first home page timed out and
+    each new visitor started the same heavy query again. Shared for ten minutes."""
     def compute(db):
-        dialect = db.get_bind().dialect.name
-        names = {s.id: s.name for s in sources(db).values()}
-        cols = []
-        for st in STATES:
-            portals = [i for i, n in names.items() if PORTAL_STATE.get(n) == st]
-            cols.append(func.coalesce(func.sum(case((state_clause(st, portals, dialect), 1), else_=0)), 0))
-        row = db.execute(select(*cols).where(*_open_now(today))).one()
-        return {st: int(n) for st, n in zip(STATES, row) if n}
+        portal_state = {s.id: PORTAL_STATE.get(s.name) for s in sources(db).values()}
+        counts: dict[str, int] = {}
+        rows = db.execute(
+            select(Tender.source_id, Tender.title, Tender.organization, Tender.department,
+                   Tender.raw_payload["office"].as_string(),
+                   Tender.raw_payload["organisation_chain"].as_string())
+            .where(*_open_now(today))
+            .execution_options(yield_per=5000))
+        for src, *texts in rows:
+            found = set().union(*(states_named(x) for x in texts if x))
+            if portal_state.get(src):
+                found.add(portal_state[src])
+            for st in found:
+                counts[st] = counts.get(st, 0) + 1
+        return {st: counts[st] for st in STATES if st in counts}
     return shared(db, ("home_states", today), 600, compute)
 
 
