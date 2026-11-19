@@ -67,3 +67,11 @@ def test_cancelled_tenders_never_read_open():
     js = (Path(__file__).parent.parent / "static" / "js" / "browse.js").read_text(encoding="utf-8")
     status = js[js.index("function status(t)"):js.index("function row(")]
     assert status.index("'cancelled'") < status.index("left(t.deadline)")
+
+
+def test_the_top_bar_is_the_same_size_on_browse():
+    """The wide browse page once shrank the whole page, top bar included, so
+    the navigation jumped when moving to or from Browse."""
+    css = (Path(__file__).parent.parent / "static" / "css" / "site.css").read_text(encoding="utf-8")
+    assert "html[data-wide]{font-size" not in css
+    assert "html[data-wide] main .wrap{max-width:100rem}" in css

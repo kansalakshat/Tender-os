@@ -474,17 +474,12 @@ legend{padding:0 1rem 0 0;font-size:1.35rem;font-weight:700}
 .req{display:inline-block;margin-left:.4rem;padding:.1rem .45rem;border-radius:4px;background:var(--accent-soft);
   color:var(--accent);font-size:.8rem;font-weight:600;vertical-align:middle}
 
-/* browse: a wide page. Title and search on top; filters down the left. */
-[data-wide] .wrap{max-width:100rem}
-/* A results page is scanned, not read, so it runs about a tenth smaller than
-   the reading pages: body text 16px over 18px, and every rem-sized gap, box
-   and heading with it. */
-html[data-wide]{font-size:14.5px}
-html[data-wide] body{font-size:16px}
-/* ...but a phone zooms the whole page in when a box under 16px gets focus. */
-@media (max-width:48rem){
- html[data-wide] input,html[data-wide] select,html[data-wide] textarea{font-size:16px}
-}
+/* browse: a wide page. Title and search on top; filters down the left. Only
+   the page's own content runs wider: the top bar and the footer keep the
+   width and size every other page has, so moving between pages never makes
+   the navigation jump. (The text size is the same everywhere too; the
+   browse page sets its own compact sizes for the table.) */
+html[data-wide] main .wrap{max-width:100rem}
 .bpage{padding-block:1.75rem 0}
 .bhead{display:flex;flex-wrap:wrap;align-items:baseline;gap:.25rem .75rem;align-self:center}
 .bhead h1{font-size:clamp(1.6rem,1.2rem + 1vw,2rem)}
