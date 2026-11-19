@@ -40,3 +40,34 @@ def test_dashboard_shows_figures_trend_and_deadlines(session_factory):
         assert html.index("id=searches") < html.index("id=bidding") < html.index("id=saved")
     finally:
         app.dependency_overrides.clear()
+
+
+def test_saves_count_by_indias_date(session_factory, monkeypatch):
+    """created_at is stored as naive UTC: a save at 01:30 in India is the
+    previous day in UTC, and must still count in India's period."""
+    from datetime import datetime
+
+    from app.models import Source, Tender, User, WishlistItem
+    monkeypatch.setattr(web, "today_ist", lambda: date(2026, 11, 19))
+    app.dependency_overrides[get_db] = lambda: session_factory()
+    try:
+        c = TestClient(app)
+        c.post("/auth/signup", json={"email": "ist@example.invalid", "password": "coconut-husk-2026"})
+        with session_factory() as db:
+            src = Source(name="CPPP", base_url="https://eprocure.gov.in", license="p", robots_txt_allowed=True)
+            db.add(src)
+            db.flush()
+            t = Tender(source_id=src.id, external_ref="w", source_url="w", title="pump",
+                       deadline=date(2026, 12, 30))
+            db.add(t)
+            db.flush()
+            uid = db.query(User).filter_by(email="ist@example.invalid").one().id
+            # 12 Nov 20:00 UTC is 13 Nov 01:30 in India: the first day of a
+            # seven-day period ending 19 Nov
+            db.add(WishlistItem(user_id=uid, tender_id=t.id, created_at=datetime(2026, 11, 12, 20, 0)))
+            db.commit()
+        html = c.get("/dashboard", params={"days": 7}).text
+        saved = html[html.index("Saved Tenders"):html.index("Bids in Progress")]
+        assert "+1 new" in saved
+    finally:
+        app.dependency_overrides.clear()

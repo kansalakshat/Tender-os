@@ -1469,7 +1469,8 @@ def dashboard(db: Session = Depends(get_db), user: User | None = Depends(current
 
     def added_in(since: date, until: date, bidding: bool) -> int:
         return sum(1 for _t, p, at in rows if bool(p) == bidding and at is not None
-                   and since <= at.date() <= until)
+                   # created_at is naive UTC; the period is India's dates
+                   and since <= ist(at).date() <= until)
 
     # Matches: the company's open matches, and how many of them were
     # published in this range against the range before it.
