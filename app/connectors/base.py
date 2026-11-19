@@ -17,6 +17,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from .. import activity
+from ..geo import states_of, tender_states
 from ..enrich import DONE_KEY
 from ..compliance import (
     BlockedSourceError,
@@ -483,6 +484,12 @@ class BaseConnector(ABC):
         if hit is None:
             # A listing can repeat inside one batch: the later copy is the
             # fresher one, and replacing it here keeps the INSERT to one row.
+            raw = values["raw_payload"]
+            # Its states, worked out once now rather than by every state filter
+            # (tenders.states, read by geo.state_clause).
+            values["states"] = tender_states(src.name, values.get("title"), values.get("organization"),
+                                             values.get("department"), raw.get("office"),
+                                             raw.get("organisation_chain"))
             created[rec.external_ref] = values
             return
         existing = db.get(Tender, hit[0])
@@ -514,6 +521,11 @@ class BaseConnector(ABC):
 
         for key, val in values.items():
             setattr(existing, key, val)
+        # The texts may have changed; so may the states they name. Assigned only
+        # when different, so an unchanged row is not marked updated below.
+        states = states_of(existing, src.name)
+        if existing.states != states:
+            existing.states = states
         # Only a real change counts. Every re-crawled row used to get a new
         # timestamp, and each site instance then re-downloaded all of them
         # (matching._candidates) -- Neon free-plan transfer spent on nothing.

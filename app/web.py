@@ -41,7 +41,7 @@ from .db import get_db, shared
 from .districts import DISTRICTS
 from .eligibility import REGISTRATIONS, checklist, needs_check
 from .facts import links as tender_links, money, preview_facts, sources, tender_facts
-from .geo import PORTAL_STATE, place_of, state_clause
+from .geo import PORTAL_STATE, place_of, state_clause, tender_states
 from .matching import (
     SECTOR_LABELS,
     STATES,
@@ -425,12 +425,45 @@ def _render_welcome(db: Session, today: date) -> str:
         "home.html", title="Tenderleo | AI-powered tender intelligence",
         n_open=f["n_open"], n_soon=f["n_soon"],
         n_sources=f["n_sources"], n_buyers=f["n_buyers"], last=f["last"],
-        # ponytail: no per-state counts -- regex-counting every state took minutes and
-        # timed the page out on Vercel. They return once a tender's state is stored at ingest.
-        states=STATES, state_counts={},
+        states=STATES, state_counts=_state_counts(db, today),
         portals=_portal_counts(db, today), buyer_cards=_buyer_cards(db, today),
         today=today,
     )
+
+
+def _state_counts(db: Session, today: date) -> dict[str, int]:
+    """{state: open tenders} for every state with any, by the same rule as
+    /browse?state= (its own portal's tenders, or naming it or a district).
+
+    Read from tenders.states, stored when each tender is saved: one GROUP BY
+    over a short column, so a few hundred distinct rows come back, not 41,000.
+    (Counting by regex over every tender's texts took minutes and timed the
+    home page out.) A row not worked out yet -- saved by a fetcher still on
+    older code -- is worked out here in memory, so the count never misses it.
+    Shared for ten minutes."""
+    def compute(db):
+        counts: dict[str, int] = {}
+        def add(states: str, n: int) -> None:
+            for st in states.strip("|").split("|"):
+                if st:
+                    counts[st] = counts.get(st, 0) + n
+        pending = False
+        for states, n in db.execute(select(Tender.states, func.count())
+                                    .where(*_open_now(today)).group_by(Tender.states)):
+            if states is None:
+                pending = True
+            else:
+                add(states, n)
+        if pending:
+            names = {s.id: s.name for s in sources(db).values()}
+            for src, *texts in db.execute(
+                    select(Tender.source_id, Tender.title, Tender.organization, Tender.department,
+                           Tender.raw_payload["office"].as_string(),
+                           Tender.raw_payload["organisation_chain"].as_string())
+                    .where(Tender.states.is_(None), *_open_now(today))):
+                add(tender_states(names.get(src), *texts), 1)
+        return {st: counts[st] for st in STATES if st in counts}
+    return shared(db, ("home_states", today), 600, compute)
 
 
 HOME_BUYER_CARDS = 5

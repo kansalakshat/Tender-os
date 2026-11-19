@@ -98,6 +98,11 @@ class Tender(Base):
     raw_payload: Mapped[dict | None] = mapped_column(JSONType)
     # Cross-source duplicates stay as distinct rows; a periodic fuzzy job links them.
     duplicate_of: Mapped[int | None] = mapped_column(ForeignKey("tenders.id"))
+    # Every state the tender is in, worked out once when it is saved (app/geo.py
+    # tender_states): "|Rajasthan|", "|Gujarat|Rajasthan|" for a road between
+    # two, "|" for none. NULL means not worked out yet. Read by state_clause,
+    # so a state filter is a lookup, not a regex over every row (migration 0015).
+    states: Mapped[str | None] = mapped_column(Text)
 
 
 class Company(Base):

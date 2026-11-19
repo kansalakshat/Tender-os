@@ -29,6 +29,7 @@ from . import activity
 from .bidpdf import parse_bid_pdf
 from .compliance import assert_not_blocked, scrub_personal, user_agent
 from .db import SessionLocal
+from .geo import states_of
 from .models import Source, Tender, today_ist, utcnow
 
 log = logging.getLogger(__name__)
@@ -186,6 +187,13 @@ def enrich_one(db: Session, tender: Tender, client: httpx.Client) -> bool:
 
     # raw_payload is scrubbed on the way in everywhere else; do the same here.
     tender.raw_payload = scrub_personal(payload)
+    # The document can name a different buyer, department or office than the
+    # listing did, so the states those texts name are worked out again.
+    src = db.get(Source, tender.source_id)
+    states = states_of(tender, src.name if src else None)
+    if tender.states != states:
+        tender.states = states
+        changed = True
     if changed:
         tender.last_updated_at = utcnow()
     return changed

@@ -14,8 +14,9 @@ is the upgrade if /tenders?state= gets slow.
 from __future__ import annotations
 
 import re
+from functools import lru_cache
 
-from sqlalchemy import or_
+from sqlalchemy import case, or_
 
 from .districts import DISTRICTS
 from .facts import clean, source_name
@@ -70,6 +71,75 @@ def _texts(t: Tender) -> tuple:
             clean(raw.get("organisation_chain")), t.title)
 
 
+def _build_trie(words) -> dict:
+    trie: dict = {}
+    for w in words:
+        node = trie
+        for ch in w:
+            node = node.setdefault(ch, {})
+        node[""] = w                        # the place key that ends here
+    return trie
+
+
+def _trie_pattern(trie: dict) -> str:
+    """One regex for many words, shared prefixes factored out ("West Godavari"
+    and "West Bengal" share "West "), so the engine does not try 800 names one
+    by one at every letter. A word that is also a prefix of a longer one is
+    made optional, and regex is greedy, so the longer one is tried first."""
+    end = "" in trie
+    alts = [re.escape(ch) + _trie_pattern(sub) for ch, sub in sorted(trie.items()) if ch]
+    if not alts:
+        return ""
+    body = alts[0] if len(alts) == 1 else "(?:" + "|".join(alts) + ")"
+    return "(?:" + body + ")?" if end else body
+
+
+# Every place name as a prefix tree, and one regex built from it. The regex only
+# finds where names are; _walk then reads every name in each spot, as SQL does.
+_TRIE = _build_trie(_PLACE)
+_ANY_FAST = re.compile(r"\b(" + _trie_pattern(_TRIE) + r")\b", re.I)
+
+
+def _is_word(text: str, i: int) -> bool:
+    return 0 <= i < len(text) and (text[i].isalnum() or text[i] == "_")
+
+
+def _walk(text: str, start: int):
+    """Every place key spelled from `start` that ends on a word boundary, the
+    shorter ones too ("Lakhimpur" inside "Lakhimpur Kheri"). Characters are
+    compared lowercased, then casefolded, like the regex's own re.I ("ſ" is s)."""
+    node, i = _TRIE, start
+    while i < len(text):
+        ch = text[i]
+        nxt = node.get(ch.lower())
+        if nxt is None:
+            folded = ch.casefold()
+            nxt = node.get(folded) if len(folded) == 1 else None
+        if nxt is None:
+            return
+        node, i = nxt, i + 1
+        if "" in node and _is_word(text, i - 1) != _is_word(text, i):
+            yield node[""]
+
+
+@lru_cache(maxsize=50_000)
+def states_named(text: str | None) -> frozenset[str]:
+    """Every state a piece of text names, outright or through one of its
+    districts: what state_clause() finds, state by state, read in Python.
+
+    The regex finds each spot that holds a name; inside that spot every word
+    start is walked through the tree, so a shorter or overlapping name counts
+    too, exactly as each state's own SQL search would find it. Cached: buyer,
+    department and office names repeat across thousands of tenders."""
+    text = text or ""
+    found = set()
+    for m in _ANY_FAST.finditer(text):
+        for p in range(m.start(), m.end()):
+            if _is_word(text, p) != _is_word(text, p - 1):     # a word boundary
+                found.update(_PLACE[k][0] for k in _walk(text, p))
+    return frozenset(found)
+
+
 def place_of(t: Tender) -> tuple[str, str]:
     """(state, city) for a tender; either may be ''.
 
@@ -112,11 +182,67 @@ def _names(state: str) -> list[str]:
     return [state] + [n for n, (st, d) in _PLACE.items() if st == state and d]
 
 
+def tender_states(source: str | None, title, organization, department, office, chain) -> str:
+    """The states a tender is in, as stored in tenders.states: its own state
+    portal's, plus every state or district its text names -- the rule
+    state_clause() has always used, worked out once instead of per query."""
+    found = set(states_named_all(title, organization, department, office, chain))
+    if PORTAL_STATE.get(source or ""):
+        found.add(PORTAL_STATE[source])
+    return "|" + "".join(st + "|" for st in sorted(found))
+
+
+def states_named_all(*texts) -> frozenset[str]:
+    out: set[str] = set()
+    for x in texts:
+        if x:
+            out |= states_named(str(x))
+    return frozenset(out)
+
+
+def states_of(t: Tender, source: str | None) -> str:
+    """tender_states() for a row: the same five texts state_clause() reads."""
+    raw = t.raw_payload if isinstance(t.raw_payload, dict) else {}
+    return tender_states(source, t.title, t.organization, t.department,
+                         raw.get("office"), raw.get("organisation_chain"))
+
+
 def state_clause(state: str, source_ids: list[int], dialect: str):
     """Tenders in a state: its own portal's, or naming it or one of its districts.
-    A tender naming two states is found under both, though its card shows neither."""
+    A tender naming two states is found under both, though its card shows neither.
+
+    A row whose states are stored is a plain lookup in that short column. Only
+    a row not worked out yet (states NULL: an old closed tender, or one saved by
+    a fetcher still on older code) falls back to the regex over its texts. CASE,
+    so the database never runs the regex on a row that has the answer stored."""
     text = _texts_match(_word_re(_names(state), dialect), dialect)
-    return or_(Tender.source_id.in_(source_ids), text) if source_ids else text
+    old = or_(Tender.source_id.in_(source_ids), text) if source_ids else text
+    return case((Tender.states.is_not(None), Tender.states.like(f"%|{state}|%")), else_=old)
+
+
+def fill_states(db, only_open_on=None, batch: int = 2000, limit: int | None = None) -> int:
+    """Work out and store states for rows that have none yet. Reads only the
+    five short texts per row. only_open_on=a date: only tenders still open that
+    day (what the site lists), as the migration does. Returns rows filled."""
+    from sqlalchemy import select, update
+    from .models import Source
+    names = dict(db.execute(select(Source.id, Source.name)).all())
+    q = (select(Tender.id, Tender.source_id, Tender.title, Tender.organization, Tender.department,
+                Tender.raw_payload["office"].as_string(),
+                Tender.raw_payload["organisation_chain"].as_string())
+         .where(Tender.states.is_(None)).order_by(Tender.id))
+    if only_open_on is not None:
+        q = q.where(or_(Tender.deadline.is_(None), Tender.deadline >= only_open_on))
+    done = 0
+    while limit is None or done < limit:
+        rows = db.execute(q.limit(batch if limit is None else min(batch, limit - done))).all()
+        if not rows:
+            break
+        db.execute(update(Tender), [
+            {"id": i, "states": tender_states(names.get(src), *texts)} for i, src, *texts in rows])
+        db.commit()
+        done += len(rows)
+    return done
 
 
 def city_clause(district: str, dialect: str):

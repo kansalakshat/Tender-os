@@ -89,12 +89,11 @@ def test_home_counts_states_portals_and_buyers(client):
     exactly those tenders."""
     html = client.get("/").text
     states = html[html.index("id=states"):html.index("id=portals")]
-    # no per-state counts for now (see web.py _render_welcome): every state is
-    # still a link on the map and a choice, with no number and no "Top States"
-    assert 'aria-label="Rajasthan" data-state="Rajasthan">' in states
-    assert '<option value="Rajasthan">Rajasthan</option>' in states
-    assert "<h3>Top States" not in states and "data-n=" not in states
+    # counted by the same rule as Browse: one by name, one from its own portal
+    assert 'href="/browse?state=Rajasthan" data-state="Rajasthan">' in states
+    assert "<span>Rajasthan</span><b>2</b>" in states
     assert len(refs(client, state="Rajasthan")) == 2
+    assert "data-counts=" in states
     # portals busiest first, each with who runs it and its open count
     portals = html[html.index("id=portals"):html.index("id=buyers")]
     assert portals.index("<b>CPPP</b>") < portals.index("<b>Rajasthan eProcurement</b>")
