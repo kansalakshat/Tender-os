@@ -425,26 +425,12 @@ def _render_welcome(db: Session, today: date) -> str:
         "home.html", title="Tenderleo | AI-powered tender intelligence",
         n_open=f["n_open"], n_soon=f["n_soon"],
         n_sources=f["n_sources"], n_buyers=f["n_buyers"], last=f["last"],
-        states=STATES, state_counts=_state_counts(db, today),
+        # ponytail: no per-state counts -- regex-counting every state took minutes and
+        # timed the page out on Vercel. They return once a tender's state is stored at ingest.
+        states=STATES, state_counts={},
         portals=_portal_counts(db, today), buyer_cards=_buyer_cards(db, today),
         today=today,
     )
-
-
-def _state_counts(db: Session, today: date) -> dict[str, int]:
-    """{state: open tenders} for every state with any, by the same rule as
-    /browse?state= (its own portal's tenders, or naming it or a district).
-    One pass over the table for all of them, shared for ten minutes."""
-    def compute(db):
-        dialect = db.get_bind().dialect.name
-        names = {s.id: s.name for s in sources(db).values()}
-        cols = []
-        for st in STATES:
-            portals = [i for i, n in names.items() if PORTAL_STATE.get(n) == st]
-            cols.append(func.coalesce(func.sum(case((state_clause(st, portals, dialect), 1), else_=0)), 0))
-        row = db.execute(select(*cols).where(*_open_now(today))).one()
-        return {st: int(n) for st, n in zip(STATES, row) if n}
-    return shared(db, ("home_states", today), 600, compute)
 
 
 HOME_BUYER_CARDS = 5

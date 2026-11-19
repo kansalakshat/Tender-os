@@ -24,7 +24,9 @@
  <div class=hxart>
   {{ india_svg() }}
   <p class="hxbadge one">{{ icon('file-text') }}<span><b>{{ n_open|kfmt }}</b>Tenders</span></p>
+  {%- if state_counts %}
   <p class="hxbadge two">{{ icon('bank') }}<span><b>{{ state_counts|length }}</b>States</span></p>
+  {%- endif %}
  </div>
 </div>
 <dl class=hxstats>
@@ -54,7 +56,8 @@
  <form class=xpick action="/browse" method=get data-autogo>
   {{ icon('funnel-simple') }}<label class=sr for=stpick>Pick a state</label>
   <select id=stpick name=state><option value="">All States</option>
-  {%- for s, n in state_counts|dictsort %}<option value="{{ s }}" data-n="{{ n }}">{{ s }} ({{ n|num }})</option>{% endfor %}</select>
+  {%- if state_counts %}{% for s, n in state_counts|dictsort %}<option value="{{ s }}" data-n="{{ n }}">{{ s }} ({{ n|num }})</option>{% endfor %}
+  {%- else %}{% for s in states|sort %}<option value="{{ s }}">{{ s }}</option>{% endfor %}{% endif %}</select>
   <noscript><button class="hbtn sm">Go</button></noscript>
  </form>
 </div>
@@ -69,11 +72,13 @@
   <p class=sxtip id=sxtip{% if not first %} hidden{% endif %} data-state="{{ first }}">{{ icon('bank') }}<span><b>{{ first }}</b><i>{{ (top_states[0][1] if first else 0)|num }} Tenders</i></span></p>
   <p class=sxgo><a class=hbtn id=sxgo href="/browse{{ '?state=' ~ first|urlquote if first else '' }}">View State Details{{ icon('arrow-right') }}</a></p>
  </div>
+ {%- if top_states %}
  <div class=sxtop>
   <h3>Top States {{ icon('dots-three') }}</h3>
   <ol>{% for s, n in top_states[:5] %}<li><a href="/browse?state={{ s|urlquote }}" data-state="{{ s }}">{{ icon('user') }}<span>{{ s }}</span><b>{{ n|num }}</b></a></li>
   {%- else %}<li class=muted>No open tenders yet.</li>{% endfor %}</ol>
  </div>
+ {%- endif %}
 </div>
 </div></div></section>
 
@@ -105,7 +110,8 @@
  <form class=xpick action="/buyers" method=get data-autogo>
   {{ icon('funnel-simple') }}<label class=sr for=bpick>Buyers with tenders in a state</label>
   <select id=bpick name=state><option value="">All States</option>
-  {%- for s, n in state_counts|dictsort %}<option value="{{ s }}" data-n="{{ n }}">{{ s }} ({{ n|num }})</option>{% endfor %}</select>
+  {%- if state_counts %}{% for s, n in state_counts|dictsort %}<option value="{{ s }}" data-n="{{ n }}">{{ s }} ({{ n|num }})</option>{% endfor %}
+  {%- else %}{% for s in states|sort %}<option value="{{ s }}">{{ s }}</option>{% endfor %}{% endif %}</select>
   <noscript><button class="hbtn sm">Go</button></noscript>
  </form>
 </div>
