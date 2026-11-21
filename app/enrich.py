@@ -187,13 +187,14 @@ def enrich_one(db: Session, tender: Tender, client: httpx.Client) -> bool:
 
     # raw_payload is scrubbed on the way in everywhere else; do the same here.
     tender.raw_payload = scrub_personal(payload)
+    # Written every time, even with nothing new (the done marker), and from this
+    # object, loaded before the download: a fetcher may have saved newer text
+    # since, which this write can put back to the older payload. So the states
+    # are never worked out here: NULL now, and enrich_pending fills them from
+    # the row as saved after it commits, whatever this write did.
+    clear_states(tender)
     if changed:
         tender.last_updated_at = utcnow()
-        # The document can name a different buyer, department or office, so the
-        # states must be worked out again -- but not from this object: it was
-        # loaded before the download, and a fetcher may have saved newer text
-        # since. enrich_pending fills them from the saved row after it commits.
-        clear_states(tender)
     return changed
 
 
@@ -221,7 +222,7 @@ def enrich_pending(limit: int = 200, session_factory=SessionLocal,
         follow_redirects=True,
     )
     loaded: dict[int, Tender] = {}
-    # Rows changed since the last commit: their states were set to NULL and are
+    # Rows read since the last commit: their states were set to NULL and are
     # filled once the commit has landed (geo.refill_states).
     unfilled: list[int] = []
     try:
@@ -240,7 +241,10 @@ def enrich_pending(limit: int = 200, session_factory=SessionLocal,
                     continue
                 if enrich_one(db, tender, client):
                     changed += 1
-                    unfilled.append(tid)
+                # Queued whatever enrich_one returned: it clears states whenever
+                # it writes the payload, which it does even with nothing new. A
+                # row it did not touch is refilled to the same value: no write.
+                unfilled.append(tid)
                 if n % BATCH == 0:
                     db.commit()
                     refill_states(db, unfilled)

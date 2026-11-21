@@ -205,6 +205,35 @@ def test_enrichment_writes_null_even_when_its_copy_already_says_null(session_fac
     assert _states(session_factory, tid) is None
 
 
+def test_an_empty_document_still_leaves_states_matching_the_saved_row(session_factory, monkeypatch):
+    """The document adds nothing (changed is False), but enrichment still
+    writes raw_payload from its old copy, to mark it done. If a fetcher saved a
+    new office meanwhile, that write puts the old payload back; the states must
+    then match the payload as saved, not the fetcher's office."""
+    from datetime import datetime
+    from app import enrich
+    db, tid = _gem_tender(session_factory, monkeypatch, "unused")
+    monkeypatch.setattr(enrich, "_parse", lambda b: {})                # nothing in the document
+    real = enrich.enrich_one
+
+    def fetcher_saves_mid_download(edb, tender, client):
+        with session_factory() as other:
+            row = other.get(Tender, tid)
+            row.raw_payload = {**(row.raw_payload or {}), "office": "Collectorate Bhopal"}
+            row.states, row.last_updated_at = "|Madhya Pradesh|", datetime(2030, 1, 1)
+            other.commit()
+        return real(edb, tender, client)
+
+    monkeypatch.setattr(enrich, "enrich_one", fetcher_saves_mid_download)
+    assert enrich.enrich_pending(limit=1, session_factory=session_factory) == 0   # nothing changed
+    with session_factory() as fresh:
+        row = fresh.get(Tender, tid)
+        payload = row.raw_payload or {}
+        assert payload.get(enrich.DONE_KEY)                             # still marked done
+        assert row.states == geo.tender_states("GeM", row.title, row.organization, row.department,
+                                               payload.get("office"), payload.get("organisation_chain"))
+
+
 def test_enrich_one_does_not_work_out_states_from_its_loaded_copy():
     import inspect
     from app import enrich
