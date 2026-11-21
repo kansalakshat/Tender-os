@@ -52,7 +52,8 @@ def test_the_fetcher_stores_states_on_create_and_update(session_factory):
     assert t.states == "|Madhya Pradesh|Rajasthan|"        # recomputed when the text changes
 
 
-def test_enrichment_recomputes_states(session_factory, monkeypatch):
+def _gem_tender(session_factory, monkeypatch, office):
+    """One GeM tender whose document names `office`; enrich_pending wired to it."""
     from app import enrich
     db = session_factory()
     gem = Source(name="GeM", base_url="https://bidplus.gem.gov.in"); db.add(gem); db.flush()
@@ -64,11 +65,56 @@ def test_enrichment_recomputes_states(session_factory, monkeypatch):
         content = b""
         def raise_for_status(self): pass
     class C:
+        def __init__(self, *a, **k): pass
         def get(self, url): return R()
-    monkeypatch.setattr(enrich, "_parse", lambda b: {"office": "Collectorate Bhopal"})
+        def close(self): pass
+    monkeypatch.setattr(enrich.httpx, "Client", C)
+    monkeypatch.setattr(enrich, "_parse", lambda b: {"office": office})
     monkeypatch.setattr(enrich, "assert_not_blocked", lambda u: None)
-    assert enrich.enrich_one(db, t, C())
-    assert t.states == "|Madhya Pradesh|"
+    monkeypatch.setattr(enrich, "needs_enrichment", lambda *a, **k: [t.id])
+    return db, t.id
+
+
+def _states(session_factory, tid):
+    with session_factory() as fresh:              # read from the database, not a cached object
+        return fresh.execute(select(Tender.states).where(Tender.id == tid)).scalar_one()
+
+
+def test_enrichment_recomputes_states(session_factory, monkeypatch):
+    from app import enrich
+    db, tid = _gem_tender(session_factory, monkeypatch, "Collectorate Bhopal")
+    assert enrich.enrich_pending(limit=1, session_factory=session_factory) == 1
+    assert _states(session_factory, tid) == "|Madhya Pradesh|"
+
+
+def test_a_fetcher_save_during_enrichment_is_not_overwritten(session_factory, monkeypatch):
+    """Enrichment loads a tender, downloads its document (slow), then saves.
+    If the fetcher saves newer text in between, the states must come from that
+    newer text, not from the copy enrichment loaded before the download."""
+    from app import enrich
+    db, tid = _gem_tender(session_factory, monkeypatch, "Collectorate Bhopal")
+    real = enrich.enrich_one
+
+    def fetcher_saves_mid_download(edb, tender, client):
+        with session_factory() as other:                                 # the fetcher, another session
+            row = other.get(Tender, tid)
+            row.title = "Chairs for Collectorate Jaipur"
+            row.states = "|Rajasthan|"
+            other.commit()
+        return real(edb, tender, client)                                 # enrichment carries on with its old copy
+
+    monkeypatch.setattr(enrich, "enrich_one", fetcher_saves_mid_download)
+    enrich.enrich_pending(limit=1, session_factory=session_factory)
+    # Saved now: the fetcher's Jaipur title and the document's Bhopal office.
+    # The old code wrote "|Madhya Pradesh|", worked out from its stale "Chairs".
+    assert _states(session_factory, tid) == "|Madhya Pradesh|Rajasthan|"
+
+
+def test_enrich_one_does_not_work_out_states_from_its_loaded_copy():
+    import inspect
+    from app import enrich
+    src = inspect.getsource(enrich.enrich_one)
+    assert "states_of" not in src and "tender.states = None" in src
 
 
 def _rows(session_factory, monkeypatch):
@@ -145,15 +191,11 @@ def test_a_save_between_read_and_write_is_not_overwritten(session_factory, monke
     assert geo._store_states(db, [(t.id, "|Rajasthan|", t.last_updated_at)], only_null=False) == 1
 
 
-def test_enrichment_reads_the_cached_source_name_not_a_select_per_document():
-    import inspect
-    from app import enrich
-    src = inspect.getsource(enrich.enrich_one)
-    assert "db.get(Source" not in src and "source_name(tender) or None" in src
-
-
-def test_migration_0015_adds_and_fills_the_column():
+def test_migration_0015_only_adds_the_column_and_imports_no_app_code():
+    """A migration must still run on a fresh database after app/ is renamed."""
     from pathlib import Path
     src = (Path(__file__).resolve().parents[1] / "migrations" / "versions" / "0015_tender_states.py").read_text()
     assert 'revision = "0015"' in src and 'down_revision = "0014"' in src
-    assert 'op.add_column("tenders", sa.Column("states"' in src and "fill_states(db, only_open_on=" in src
+    assert 'op.add_column("tenders", sa.Column("states"' in src
+    import re
+    assert not re.search(r"^\s*(from|import) app\b", src, re.M)

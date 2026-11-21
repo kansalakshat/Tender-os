@@ -29,8 +29,7 @@ from . import activity
 from .bidpdf import parse_bid_pdf
 from .compliance import assert_not_blocked, scrub_personal, user_agent
 from .db import SessionLocal
-from .facts import source_name
-from .geo import states_of
+from .geo import fill_states
 from .models import Source, Tender, today_ist, utcnow
 
 log = logging.getLogger(__name__)
@@ -188,16 +187,33 @@ def enrich_one(db: Session, tender: Tender, client: httpx.Client) -> bool:
 
     # raw_payload is scrubbed on the way in everywhere else; do the same here.
     tender.raw_payload = scrub_personal(payload)
-    # The document can name a different buyer, department or office than the
-    # listing did, so the states those texts name are worked out again.
-    # facts.source_name reads the shared sources map: no SELECT per document.
-    states = states_of(tender, source_name(tender) or None)
-    if tender.states != states:
-        tender.states = states
-        changed = True
     if changed:
         tender.last_updated_at = utcnow()
+        # The document can name a different buyer, department or office, so the
+        # states must be worked out again -- but not from this object: it was
+        # loaded before the download, and a fetcher may have saved newer text
+        # since. NULL is always right (the state filter reads the text itself
+        # for NULL rows); enrich_pending fills it from the saved row after commit.
+        tender.states = None
     return changed
+
+
+def _fill_states_of(db: Session, ids: list[int]) -> None:
+    """Work out states for rows enrichment just committed, from the row as it is
+    saved now -- not from the copy enrichment loaded before its download, which
+    a fetcher may have overwritten meanwhile. Only NULL rows whose
+    last_updated_at is unchanged are written, so a fetcher's newer save always
+    wins. If this fails the rows stay NULL, which the state filter handles, and
+    the daily cron fills them."""
+    if not ids:
+        return
+    try:
+        fill_states(db, ids=ids)
+    except OperationalError as exc:
+        db.rollback()
+        log.warning("enrich: states for %d tenders left for the cron: %s",
+                    len(ids), str(exc).splitlines()[0][:120])
+    ids.clear()
 
 
 def enrich_pending(limit: int = 200, session_factory=SessionLocal,
@@ -224,6 +240,9 @@ def enrich_pending(limit: int = 200, session_factory=SessionLocal,
         follow_redirects=True,
     )
     loaded: dict[int, Tender] = {}
+    # Rows changed since the last commit: their states were set to NULL and are
+    # filled once the commit has landed (see _fill_states_of).
+    unfilled: list[int] = []
     try:
         for n, tid in enumerate(ids, 1):
             activity.beat("reading", f"bid documents: a pass of {len(ids):,}")
@@ -240,8 +259,10 @@ def enrich_pending(limit: int = 200, session_factory=SessionLocal,
                     continue
                 if enrich_one(db, tender, client):
                     changed += 1
+                    unfilled.append(tid)
                 if n % BATCH == 0:
                     db.commit()
+                    _fill_states_of(db, unfilled)
                     log.info("enrich: %d/%d processed, %d changed", n, len(ids), changed)
             except OperationalError as exc:
                 # A deadlock is transient by definition: the loser is told to
@@ -254,6 +275,7 @@ def enrich_pending(limit: int = 200, session_factory=SessionLocal,
                 # stays unmarked, so the next pass picks it up anyway.
                 db.rollback()
                 loaded = {}          # rolled-back rows are stale; reload from the next one
+                unfilled.clear()     # and their states were never set to NULL
                 log.warning("enrich: %s on tender %s, skipping it: %s",
                             type(exc).__name__, tid, str(exc).splitlines()[0][:120])
                 if exc.connection_invalidated:
@@ -262,6 +284,7 @@ def enrich_pending(limit: int = 200, session_factory=SessionLocal,
                     # list in seconds, one failed query per tender.
                     time.sleep(OUTAGE_PAUSE)
         db.commit()
+        _fill_states_of(db, unfilled)
     finally:
         client.close()
         db.close()

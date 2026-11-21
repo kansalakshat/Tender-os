@@ -274,7 +274,7 @@ def _store_states(db, rows, only_null: bool) -> int:
 
 
 def fill_states(db, only_open_on=None, batch: int = 2000, limit: int | None = None,
-                refresh: bool = False) -> int:
+                refresh: bool = False, ids: list[int] | None = None) -> int:
     """Work out and store tenders.states from each row's five short texts.
 
     Default: only rows with none yet (NULL) -- the migration and the daily cron.
@@ -282,6 +282,8 @@ def fill_states(db, only_open_on=None, batch: int = 2000, limit: int | None = No
     it once after every fetcher is on this code: a fetcher on older code that
     changed a row's text after the migration left that row's states stale, and
     a NULL-only fill would never look at it again.
+
+    ids=[...]: only these rows (enrichment, right after it commits).
 
     only_open_on=a date: only tenders still open that day. Pages by id, so a row
     skipped because it changed meanwhile is not read again in the same pass
@@ -296,6 +298,8 @@ def fill_states(db, only_open_on=None, batch: int = 2000, limit: int | None = No
         q = q.where(Tender.states.is_(None))
     if only_open_on is not None:
         q = q.where(or_(Tender.deadline.is_(None), Tender.deadline >= only_open_on))
+    if ids is not None:
+        q = q.where(Tender.id.in_(ids))
     written, read, last_id = 0, 0, 0
     while limit is None or read < limit:
         rows = db.execute(q.where(Tender.id > last_id)
