@@ -13,21 +13,14 @@ is the upgrade if /tenders?state= gets slow.
 """
 from __future__ import annotations
 
-import logging
 import re
-from functools import lru_cache
 
-from datetime import datetime
-
-from sqlalchemy import case, func, or_
-from sqlalchemy.orm.attributes import flag_modified
+from sqlalchemy import or_
 
 from .districts import DISTRICTS
 from .facts import clean, source_name
 from .matching import SECTOR_PATTERNS, STATES, district_names
 from .models import Tender
-
-log = logging.getLogger(__name__)
 
 # GePNIC portals that serve one state each (app/connectors/gepnic.py). CPPP,
 # GeM and Defence Procurement are national and place nothing; DNH is not a
@@ -77,100 +70,6 @@ def _texts(t: Tender) -> tuple:
             clean(raw.get("organisation_chain")), t.title)
 
 
-# How re.IGNORECASE compares two letters, taken from the regex engine itself:
-# its own one-letter lowercase (so "İ" is i, where str.lower() makes two
-# letters), plus the extra pairs it treats as equal ("ı" and i, "ſ" and s).
-# _walk uses these so it finds exactly what the regex finds.
-try:
-    from _sre import unicode_tolower as _sre_lower
-except ImportError:                                  # not CPython: close enough
-    def _sre_lower(c: int) -> int:
-        low = chr(c).lower()
-        return ord(low) if len(low) == 1 else c
-try:
-    from re._casefix import _EXTRA_CASES
-except ImportError:
-    _EXTRA_CASES = {}
-
-
-@lru_cache(maxsize=4096)
-def _letters(ch: str) -> tuple[str, ...]:
-    """Every trie letter `ch` can stand for under re.IGNORECASE."""
-    low = _sre_lower(ord(ch))
-    return (chr(low),) + tuple(chr(c) for c in _EXTRA_CASES.get(low, ()))
-
-
-def _build_trie(words) -> dict:
-    trie: dict = {}
-    for w in words:
-        node = trie
-        for ch in w:
-            node = node.setdefault(chr(_sre_lower(ord(ch))), {})
-        node[""] = w                        # the place key that ends here
-    return trie
-
-
-def _trie_pattern(trie: dict) -> str:
-    """One regex for many words, shared prefixes factored out ("West Godavari"
-    and "West Bengal" share "West "), so the engine does not try 800 names one
-    by one at every letter. A word that is also a prefix of a longer one is
-    made optional, and regex is greedy, so the longer one is tried first."""
-    end = "" in trie
-    alts = [re.escape(ch) + _trie_pattern(sub) for ch, sub in sorted(trie.items()) if ch]
-    if not alts:
-        return ""
-    body = alts[0] if len(alts) == 1 else "(?:" + "|".join(alts) + ")"
-    return "(?:" + body + ")?" if end else body
-
-
-# Every place name as a prefix tree, and one regex built from it. The regex only
-# finds where names are; _walk then reads every name in each spot, as SQL does.
-_TRIE = _build_trie(_PLACE)
-# Stands in for a NULL last_updated_at when comparing it (_store_states).
-_EPOCH = datetime(1970, 1, 1)
-_ANY_FAST = re.compile(r"\b(" + _trie_pattern(_TRIE) + r")\b", re.I)
-
-
-def _is_word(text: str, i: int) -> bool:
-    return 0 <= i < len(text) and (text[i].isalnum() or text[i] == "_")
-
-
-def _walk(text: str, start: int):
-    """Every place key spelled from `start` that ends on a word boundary, the
-    shorter ones too ("Lakhimpur" inside "Lakhimpur Kheri"). Letters compare as
-    the regex's own re.IGNORECASE compares them (_letters)."""
-    node, i = _TRIE, start
-    while i < len(text):
-        nxt = None
-        for ch in _letters(text[i]):
-            nxt = node.get(ch)
-            if nxt is not None:
-                break
-        if nxt is None:
-            return
-        node, i = nxt, i + 1
-        if "" in node and _is_word(text, i - 1) != _is_word(text, i):
-            yield node[""]
-
-
-@lru_cache(maxsize=50_000)
-def states_named(text: str | None) -> frozenset[str]:
-    """Every state a piece of text names, outright or through one of its
-    districts: what state_clause() finds, state by state, read in Python.
-
-    The regex finds each spot that holds a name; inside that spot every word
-    start is walked through the tree, so a shorter or overlapping name counts
-    too, exactly as each state's own SQL search would find it. Cached: buyer,
-    department and office names repeat across thousands of tenders."""
-    text = text or ""
-    found = set()
-    for m in _ANY_FAST.finditer(text):
-        for p in range(m.start(), m.end()):
-            if _is_word(text, p) != _is_word(text, p - 1):     # a word boundary
-                found.update(_PLACE[k][0] for k in _walk(text, p))
-    return frozenset(found)
-
-
 def place_of(t: Tender) -> tuple[str, str]:
     """(state, city) for a tender; either may be ''.
 
@@ -213,141 +112,11 @@ def _names(state: str) -> list[str]:
     return [state] + [n for n, (st, d) in _PLACE.items() if st == state and d]
 
 
-def tender_states(source: str | None, title, organization, department, office, chain) -> str:
-    """The states a tender is in, as stored in tenders.states: its own state
-    portal's, plus every state or district its text names -- the rule
-    state_clause() has always used, worked out once instead of per query."""
-    found = set(states_named_all(title, organization, department, office, chain))
-    if PORTAL_STATE.get(source or ""):
-        found.add(PORTAL_STATE[source])
-    return "|" + "".join(st + "|" for st in sorted(found))
-
-
-def states_named_all(*texts) -> frozenset[str]:
-    out: set[str] = set()
-    for x in texts:
-        if x:
-            out |= states_named(str(x))
-    return frozenset(out)
-
-
 def state_clause(state: str, source_ids: list[int], dialect: str):
     """Tenders in a state: its own portal's, or naming it or one of its districts.
-    A tender naming two states is found under both, though its card shows neither.
-
-    A row whose states are stored is a plain lookup in that short column. Only
-    a row not worked out yet (states NULL: an old closed tender, or one saved by
-    a fetcher still on older code) falls back to the regex over its texts. CASE,
-    so the database never runs the regex on a row that has the answer stored."""
+    A tender naming two states is found under both, though its card shows neither."""
     text = _texts_match(_word_re(_names(state), dialect), dialect)
-    old = or_(Tender.source_id.in_(source_ids), text) if source_ids else text
-    return case((Tender.states.is_not(None), Tender.states.like(f"%|{state}|%")), else_=old)
-
-
-def _store_states(db, rows, only_null: bool) -> int:
-    """Write computed states, but only where the row is still as it was read:
-    the same last_updated_at (enrichment and the fetcher move it when they
-    change a row), and in fill mode still NULL. So a save that lands between
-    our SELECT and this UPDATE is never overwritten with older membership.
-    rows: (id, states, last_updated_at as read). Returns rows written."""
-    from sqlalchemy import bindparam, select, update
-    if not rows:
-        return 0
-    # The table, not the ORM class: with a list of rows the ORM switches to its
-    # "update by primary key" mode, which drops these WHERE conditions.
-    tbl = Tender.__table__
-    still = select(tbl.c.id).where(tbl.c.id == bindparam("b_id"),
-                                   func.coalesce(tbl.c.last_updated_at, _EPOCH) == bindparam("b_seen"))
-    if only_null:
-        still = still.where(tbl.c.states.is_(None))
-    # SKIP LOCKED (PostgreSQL): a row another writer has locked -- a fetcher's
-    # batch not committed yet -- is skipped, not waited for. That writer is
-    # changing the row and refills its states itself after it commits; waiting
-    # could stall this for minutes, or deadlock the two. (SQLite: no row locks.)
-    stmt = (update(tbl)
-            .where(tbl.c.id.in_(still.with_for_update(skip_locked=True).scalar_subquery()))
-            .values(states=bindparam("b_states")))
-    # One executemany per batch: psycopg pipelines it, so a 2,000-row batch is
-    # a few round trips, not 2,000 (the migration may run from far from Neon).
-    result = db.connection().execute(stmt, [{"b_id": i, "b_states": states, "b_seen": seen or _EPOCH}
-                                            for i, states, seen in rows])
-    db.commit()
-    return max(result.rowcount or 0, 0)
-
-
-def fill_states(db, only_open_on=None, batch: int = 2000, limit: int | None = None,
-                refresh: bool = False, ids: list[int] | None = None) -> int:
-    """Work out and store tenders.states from each row's five short texts.
-
-    Default: only rows with none yet (NULL) -- the migration and the daily cron.
-    refresh=True: every row, writing only where the stored value is wrong. Run
-    it once after every fetcher is on this code: a fetcher on older code that
-    changed a row's text after the migration left that row's states stale, and
-    a NULL-only fill would never look at it again.
-
-    ids=[...]: only these rows (enrichment, right after it commits).
-
-    only_open_on=a date: only tenders still open that day. Pages by id, so a row
-    skipped because it changed meanwhile is not read again in the same pass
-    (the next run picks it up). Returns rows written."""
-    from sqlalchemy import select
-    from .models import Source
-    names = dict(db.execute(select(Source.id, Source.name)).all())
-    q = select(Tender.id, Tender.states, Tender.last_updated_at, Tender.source_id, Tender.title,
-               Tender.organization, Tender.department, Tender.raw_payload["office"].as_string(),
-               Tender.raw_payload["organisation_chain"].as_string()).order_by(Tender.id)
-    if not refresh:
-        q = q.where(Tender.states.is_(None))
-    if only_open_on is not None:
-        q = q.where(or_(Tender.deadline.is_(None), Tender.deadline >= only_open_on))
-    if ids is not None:
-        q = q.where(Tender.id.in_(ids))
-    written, read, last_id = 0, 0, 0
-    while limit is None or read < limit:
-        page = batch if limit is None else min(batch, limit - read)
-        rows = db.execute(q.where(Tender.id > last_id).limit(page)).all()
-        if not rows:
-            break
-        last_id, read = rows[-1][0], read + len(rows)
-        todo = []
-        for i, current, seen, src, *texts in rows:
-            states = tender_states(names.get(src), *texts)
-            if states != current:
-                todo.append((i, states, seen))
-        written += _store_states(db, todo, only_null=not refresh)
-        if len(rows) < page:
-            break                       # a short page is the last one: no empty query to find that out
-    return written
-
-
-def clear_states(tender: Tender) -> None:
-    """For a writer that changes a loaded row's texts (the fetcher, enrichment).
-
-    Its copy was loaded earlier -- before a download, or a few pages ago -- and
-    the other writer may have saved newer text since, so states worked out from
-    this copy could be stale. NULL is always right: the state filter reads the
-    texts themselves for a NULL row. Written even if this copy already says
-    NULL (flag_modified), because the database may hold a value since filled.
-    The writer then calls refill_states with the row's id after it commits."""
-    tender.states = None
-    flag_modified(tender, "states")
-
-
-def refill_states(db, ids: list[int]) -> None:
-    """Right after a commit: work out states for these rows from the rows as
-    saved now. Written only where last_updated_at is still what this read saw,
-    so a newer save by anyone always wins (_store_states). Never raises: if it
-    fails the rows stay NULL, which the state filter handles, and the daily
-    cron fills them. Empties `ids`."""
-    if not ids:
-        return
-    try:
-        fill_states(db, ids=list(ids), refresh=True)
-    except Exception:
-        db.rollback()
-        log.exception("states for %d tenders left for the daily fill", len(ids))
-    finally:
-        ids.clear()
+    return or_(Tender.source_id.in_(source_ids), text) if source_ids else text
 
 
 def city_clause(district: str, dialect: str):

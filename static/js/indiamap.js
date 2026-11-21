@@ -35,7 +35,9 @@
     if (!on || !tip) return;
     const n = counts[name] || 0;
     tip.querySelector('b').textContent = name;
-    tip.querySelector('i').textContent = n.toLocaleString('en-IN') + (n === 1 ? ' Tender' : ' Tenders');
+    // No counts on the page (web.py _render_welcome): name the state, no number.
+    tip.querySelector('i').textContent = !Object.keys(counts).length ? ''
+      : n.toLocaleString('en-IN') + (n === 1 ? ' Tender' : ' Tenders');
     tip.hidden = false;
     tip.dataset.state = name;
     place(name);

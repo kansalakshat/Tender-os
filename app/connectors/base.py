@@ -17,7 +17,6 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from .. import activity
-from ..geo import clear_states, refill_states, tender_states
 from ..enrich import DONE_KEY
 from ..compliance import (
     BlockedSourceError,
@@ -87,9 +86,6 @@ class BaseConnector(ABC):
     rate_limit_seconds: float = 2.0
     paths: tuple[str, ...] = ("/",)  # paths robots.txt must permit for us to run
     max_retries: int = 4
-    # Set per instance (__init__, run); None here only so a connector built
-    # without __init__ still works. Never a list here: it would be shared.
-    states_todo: list[int] | None = None
     # True when fetch_batch drives a real browser. Such a connector cannot run in
     # a serverless function -- there is no Chromium there and no room in a 300s
     # ceiling for one -- so /cron/ingest skips it rather than logging the same
@@ -118,8 +114,6 @@ class BaseConnector(ABC):
         # instance, never the class: a shared list would hand one run's rows to
         # another.
         self.created_ids: list[int] = []
-        # Changed rows whose states are filled once their batch commits.
-        self.states_todo: list[int] = []
         self._client = client or httpx.Client(
             headers={"User-Agent": user_agent()},
             timeout=httpx.Timeout(45.0),
@@ -292,7 +286,6 @@ class BaseConnector(ABC):
         """
         summary = RunSummary(source=self.source_name)
         self.created_ids = []           # a second run() must start clean
-        self.states_todo = []           # changed rows whose states are refilled after each commit
         db = self.session_factory()
         src = None
         try:
@@ -373,7 +366,6 @@ class BaseConnector(ABC):
                         src.listing_total_at = utcnow()
                     db.commit()
                     self.committed()
-                    refill_states(db, self.states_todo or [])
                     log.info("%s: committed %d records so far, %d new", self.source_name,
                              summary.fetched, summary.new)
             if batch:
@@ -389,7 +381,6 @@ class BaseConnector(ABC):
                 src.listing_total_at = utcnow()
             db.commit()
             self.committed()
-            refill_states(db, self.states_todo or [])
         except (BlockedSourceError, RobotsDisallowedError) as exc:
             db.rollback()
             summary.status = "refused"
@@ -492,12 +483,6 @@ class BaseConnector(ABC):
         if hit is None:
             # A listing can repeat inside one batch: the later copy is the
             # fresher one, and replacing it here keeps the INSERT to one row.
-            raw = values["raw_payload"]
-            # Its states, worked out once now rather than by every state filter
-            # (tenders.states, read by geo.state_clause).
-            values["states"] = tender_states(src.name, values.get("title"), values.get("organization"),
-                                             values.get("department"), raw.get("office"),
-                                             raw.get("organisation_chain"))
             created[rec.external_ref] = values
             return
         existing = db.get(Tender, hit[0])
@@ -534,14 +519,6 @@ class BaseConnector(ABC):
         # (matching._candidates) -- Neon free-plan transfer spent on nothing.
         if db.is_modified(existing):
             existing.last_updated_at = utcnow()
-            # The texts may have changed; so may the states they name. Not
-            # worked out from this copy: it was loaded pages ago, and enrichment
-            # may have saved newer text since. Filled from the saved row once
-            # this batch commits (run -> refill_states).
-            clear_states(existing)
-            if self.states_todo is None:
-                self.states_todo = []
-            self.states_todo.append(existing.id)
 
     def close(self) -> None:
         self._client.close()

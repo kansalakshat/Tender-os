@@ -29,7 +29,6 @@ from . import activity
 from .bidpdf import parse_bid_pdf
 from .compliance import assert_not_blocked, scrub_personal, user_agent
 from .db import SessionLocal
-from .geo import clear_states, refill_states
 from .models import Source, Tender, today_ist, utcnow
 
 log = logging.getLogger(__name__)
@@ -187,12 +186,6 @@ def enrich_one(db: Session, tender: Tender, client: httpx.Client) -> bool:
 
     # raw_payload is scrubbed on the way in everywhere else; do the same here.
     tender.raw_payload = scrub_personal(payload)
-    # Written every time, even with nothing new (the done marker), and from this
-    # object, loaded before the download: a fetcher may have saved newer text
-    # since, which this write can put back to the older payload. So the states
-    # are never worked out here: NULL now, and enrich_pending fills them from
-    # the row as saved after it commits, whatever this write did.
-    clear_states(tender)
     if changed:
         tender.last_updated_at = utcnow()
     return changed
@@ -222,9 +215,6 @@ def enrich_pending(limit: int = 200, session_factory=SessionLocal,
         follow_redirects=True,
     )
     loaded: dict[int, Tender] = {}
-    # Rows read since the last commit: their states were set to NULL and are
-    # filled once the commit has landed (geo.refill_states).
-    unfilled: list[int] = []
     try:
         for n, tid in enumerate(ids, 1):
             activity.beat("reading", f"bid documents: a pass of {len(ids):,}")
@@ -241,13 +231,8 @@ def enrich_pending(limit: int = 200, session_factory=SessionLocal,
                     continue
                 if enrich_one(db, tender, client):
                     changed += 1
-                # Queued whatever enrich_one returned: it clears states whenever
-                # it writes the payload, which it does even with nothing new. A
-                # row it did not touch is refilled to the same value: no write.
-                unfilled.append(tid)
                 if n % BATCH == 0:
                     db.commit()
-                    refill_states(db, unfilled)
                     log.info("enrich: %d/%d processed, %d changed", n, len(ids), changed)
             except OperationalError as exc:
                 # A deadlock is transient by definition: the loser is told to
@@ -260,7 +245,6 @@ def enrich_pending(limit: int = 200, session_factory=SessionLocal,
                 # stays unmarked, so the next pass picks it up anyway.
                 db.rollback()
                 loaded = {}          # rolled-back rows are stale; reload from the next one
-                unfilled.clear()     # and their states were never set to NULL
                 log.warning("enrich: %s on tender %s, skipping it: %s",
                             type(exc).__name__, tid, str(exc).splitlines()[0][:120])
                 if exc.connection_invalidated:
@@ -269,7 +253,6 @@ def enrich_pending(limit: int = 200, session_factory=SessionLocal,
                     # list in seconds, one failed query per tender.
                     time.sleep(OUTAGE_PAUSE)
         db.commit()
-        refill_states(db, unfilled)
     finally:
         client.close()
         db.close()
