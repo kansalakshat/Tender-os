@@ -589,7 +589,10 @@ def login(
         user = authenticate(db, email, password)
     except AuthError as exc:
         raise HTTPException(status_code=401, detail=str(exc))
-    security.reset_key(db, key)      # a success clears the failure budget
+    # A success clears both budgets; otherwise a victim who finally types the
+    # right password is still refused by the per-account counter.
+    security.reset_key(db, key)
+    security.reset_key(db, f"login-any:{address}")
     set_session_cookie(response, user, request)
     # Same landing rule as the Google callback. "/" would bounce an operator
     # with no company profile to /profile.
@@ -828,10 +831,13 @@ def cron_ingest(request: Request):
         if time.monotonic() >= deadline:
             unreached.append(name)
             continue
-        connector = connector_cls()
-        if hasattr(connector, "max_pages"):
-            connector.max_pages = max_pages
+        # Construction inside the try: a connector that raises on import or
+        # setup must not abort every source after it in the registry.
+        connector = None
         try:
+            connector = connector_cls()
+            if hasattr(connector, "max_pages"):
+                connector.max_pages = max_pages
             summary = connector.run(since=since, deadline=deadline)
             results.append({
                 "source": name, "status": summary.status,
@@ -843,7 +849,8 @@ def cron_ingest(request: Request):
             log.exception("cron/ingest: %s failed", name)
             results.append({"source": name, "status": "error", "message": str(exc)})
         finally:
-            connector.close()
+            if connector is not None:
+                connector.close()
 
     return {
         "ran": results,

@@ -40,6 +40,10 @@ def run_connector(name: str, since: datetime | None = None, enrich_new: bool = F
     connectors = [REGISTRY[name]() for _ in range(slices)]
     if slices > 1:
         first, total = connectors[0].start_page, connectors[0].max_pages
+        # More slices than pages would leave later slices with max_pages <= 0:
+        # they still open a browser and crawl nothing. Keep only real slices.
+        slices = min(slices, max(1, total))
+        connectors = connectors[:slices]
         per = -(-total // slices)
         for i, c in enumerate(connectors):
             c.start_page, c.max_pages = first + i * per, min(per, total - i * per)

@@ -149,8 +149,11 @@ def _run(job: Job, name: str, max_pages: int | None, since_hours: float | None,
             job.log(job.summary)
             return
         if name == ENRICH_JOB:
-            job.log(f"reading bid documents, {workers} workers, up to {then_enrich}")
-            changed = _enrich(job, workers, then_enrich)
+            # 0 means "no count given", not "read nothing": the button must do
+            # the same default work as enrich_pending's own limit.
+            limit = then_enrich or 200
+            job.log(f"reading bid documents, {workers} workers, up to {limit}")
+            changed = _enrich(job, workers, limit)
             job.summary = f"read {changed} bid document(s)"
             job.status = "ok"
             job.log(job.summary)

@@ -170,7 +170,9 @@ def checklist(tender, company=None) -> list[Item]:
                 f"This tender is worth {_inr(Decimal(value))}. Add how much work you "
                 "can run at once to your profile to see whether it fits.", True))
 
-    period = (raw.get("contract_period") or "").strip()
+    # Not .strip() directly: a scraped payload can hold a number here, and an
+    # int has no strip(), which turned the tender page into a 500.
+    period = str(raw.get("contract_period") or "").strip()
     if period:
         items.append(Item(
             True, "Contract period",

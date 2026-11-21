@@ -198,7 +198,11 @@ def _summary(t: Tender, sectors: list[str], places: list[str], left: str) -> str
         "": "",
         "closed": " Bidding has closed.",
         "today": " Bids close today.",
-    }.get(left, f" Bids close in {left.replace('d', ' days')}.")
+    }.get(left)
+    if when is None:
+        # days_left() gives "5d"; spell out the unit and its plural here.
+        n = left[:-1] if left.endswith("d") else left
+        when = f" Bids close in {n} day{'' if n == '1' else 's'}."
 
     # Enrichment reads these off the bid PDF (app/enrich.py). Most listings do not
     # publish a value, so each part appears only when we actually have it rather
@@ -900,8 +904,10 @@ def _fit(db: Session, company: Company | None, t: Tender, today: date) -> str:
 
 def _related(db: Session, t: Tender, today: date) -> str:
     """Same tender on other sources, more from this buyer, and similar work."""
+    # A null deadline is unknown, not expired -- the same rule GET /tenders
+    # follows -- so those rows belong in "more open tenders" too.
     others = (Tender.id != t.id, Tender.duplicate_of.is_(None),
-              Tender.deadline >= today)
+              or_(Tender.deadline.is_(None), Tender.deadline >= today))
 
     twin = Tender.duplicate_of == t.id
     if t.duplicate_of:

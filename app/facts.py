@@ -29,7 +29,10 @@ def money(value) -> str:
 
 def clean(v) -> str:
     """The listing prints an em-dash placeholder in empty cells."""
-    v = str(v or "").strip()
+    # `v or ""` dropped a legitimate 0 (and False, which reads as empty anyway).
+    if v is None or v is False:
+        return ""
+    v = str(v).strip()
     return "" if v in {"", "--", "-", "NA", "N/A"} else v
 
 
