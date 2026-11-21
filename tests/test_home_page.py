@@ -85,33 +85,11 @@ def test_home_buyer_panel_and_demo_button(db_with_buyers, monkeypatch):
     assert html.count("class=bxpick") == html.count("data-buyer=")
     # the buyer picker sends a state, and works without JavaScript
     assert "<select id=bpick name=state>" in html
-    # only states with open tenders are offered, each with its count
+    # every state is offered; no per-state counts until a tender's state is
+    # stored at ingest (counting them by regex timed the page out)
     picker = html[html.index("<select id=bpick"):html.index("</select>", html.index("<select id=bpick"))]
-    assert 'value="Madhya Pradesh" data-n="2"' in picker and "Goa" not in picker
+    assert '<option value="Madhya Pradesh">Madhya Pradesh</option>' in picker and "data-n=" not in picker
     assert html.count("<noscript><button") == 2
     # no video configured: the hero offers to book a demo, not to watch one
     hero = html[html.index("class=hxctas"):html.index("class=hxart")]
     assert "Book a Demo" in hero and "Watch Demo" not in hero
-
-
-def test_top_states_panel_does_not_say_no_tenders_when_there_are_some(session_factory, monkeypatch):
-    """Open tenders that name no state (a national portal's) give no state
-    counts; the panel must not then claim there are no open tenders."""
-    from app import db as dbm
-    monkeypatch.setattr(web, "today_ist", lambda: TODAY)
-    monkeypatch.setitem(web._env.globals, "demo_video", "")
-    dbm._SHARED.clear()
-    with session_factory() as db:
-        cppp = Source(name="CPPP", base_url="https://eprocure.gov.in", license="p", robots_txt_allowed=True)
-        db.add(cppp); db.flush()
-        db.add(Tender(source_id=cppp.id, external_ref="r", source_url="ur", title="Track work",
-                      organization="Ministry of Railways", deadline=TODAY + timedelta(days=9)))
-        db.commit()
-    app.dependency_overrides[get_db] = lambda: session_factory()
-    try:
-        html = TestClient(app).get("/").text
-    finally:
-        app.dependency_overrides.clear()
-        dbm._SHARED.clear()
-    panel = html[html.index("class=sxtop"):html.index("</ol>", html.index("class=sxtop"))]
-    assert "No open tenders name a state yet." in panel and "No open tenders yet." not in panel
