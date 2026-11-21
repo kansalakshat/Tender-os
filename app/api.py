@@ -39,7 +39,7 @@ from .connectors import REGISTRY
 from .db import SessionLocal, get_db
 from .districts import DISTRICTS
 from .facts import sources
-from .geo import PORTAL_STATE, city_clause, sector_clause, state_clause
+from .geo import PORTAL_STATE, city_clause, fill_states, sector_clause, state_clause
 from .matching import ALL_DISTRICTS, SECTOR_LABELS, STATES, find_matches, warm_candidates
 from .models import Company, ConnectorRun, Source, Tender, User
 from .models import today_ist, utcnow
@@ -852,7 +852,16 @@ def cron_ingest(request: Request):
             if connector is not None:
                 connector.close()
 
+    # Rows saved by a fetcher still on older code have no states yet; work
+    # them out now, a bounded number, so the state filter stays a lookup.
+    try:
+        with SessionLocal() as db:
+            filled = fill_states(db, only_open_on=today_ist(), limit=20_000)
+    except Exception:
+        log.exception("cron/ingest: filling tender states failed")
+        filled = None
     return {
+        "filled_states": filled,
         "ran": results,
         "skipped": skipped,                # browser-driven; not runnable here
         "not_reached": unreached,          # ran out of budget; next run picks them up
