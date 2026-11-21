@@ -13,17 +13,21 @@ is the upgrade if /tenders?state= gets slow.
 """
 from __future__ import annotations
 
+import logging
 import re
 from functools import lru_cache
 
 from datetime import datetime
 
 from sqlalchemy import case, func, or_
+from sqlalchemy.orm.attributes import flag_modified
 
 from .districts import DISTRICTS
 from .facts import clean, source_name
 from .matching import SECTOR_PATTERNS, STATES, district_names
 from .models import Tender
+
+log = logging.getLogger(__name__)
 
 # GePNIC portals that serve one state each (app/connectors/gepnic.py). CPPP,
 # GeM and Defence Procurement are national and place nothing; DNH is not a
@@ -227,13 +231,6 @@ def states_named_all(*texts) -> frozenset[str]:
     return frozenset(out)
 
 
-def states_of(t: Tender, source: str | None) -> str:
-    """tender_states() for a row: the same five texts state_clause() reads."""
-    raw = t.raw_payload if isinstance(t.raw_payload, dict) else {}
-    return tender_states(source, t.title, t.organization, t.department,
-                         raw.get("office"), raw.get("organisation_chain"))
-
-
 def state_clause(state: str, source_ids: list[int], dialect: str):
     """Tenders in a state: its own portal's, or naming it or one of its districts.
     A tender naming two states is found under both, though its card shows neither.
@@ -253,18 +250,23 @@ def _store_states(db, rows, only_null: bool) -> int:
     change a row), and in fill mode still NULL. So a save that lands between
     our SELECT and this UPDATE is never overwritten with older membership.
     rows: (id, states, last_updated_at as read). Returns rows written."""
-    from sqlalchemy import bindparam, update
+    from sqlalchemy import bindparam, select, update
     if not rows:
         return 0
     # The table, not the ORM class: with a list of rows the ORM switches to its
     # "update by primary key" mode, which drops these WHERE conditions.
     tbl = Tender.__table__
-    stmt = (update(tbl)
-            .where(tbl.c.id == bindparam("b_id"),
-                   func.coalesce(tbl.c.last_updated_at, _EPOCH) == bindparam("b_seen"))
-            .values(states=bindparam("b_states")))
+    still = select(tbl.c.id).where(tbl.c.id == bindparam("b_id"),
+                                   func.coalesce(tbl.c.last_updated_at, _EPOCH) == bindparam("b_seen"))
     if only_null:
-        stmt = stmt.where(tbl.c.states.is_(None))
+        still = still.where(tbl.c.states.is_(None))
+    # SKIP LOCKED (PostgreSQL): a row another writer has locked -- a fetcher's
+    # batch not committed yet -- is skipped, not waited for. That writer is
+    # changing the row and refills its states itself after it commits; waiting
+    # could stall this for minutes, or deadlock the two. (SQLite: no row locks.)
+    stmt = (update(tbl)
+            .where(tbl.c.id.in_(still.with_for_update(skip_locked=True).scalar_subquery()))
+            .values(states=bindparam("b_states")))
     # One executemany per batch: psycopg pipelines it, so a 2,000-row batch is
     # a few round trips, not 2,000 (the migration may run from far from Neon).
     result = db.connection().execute(stmt, [{"b_id": i, "b_states": states, "b_seen": seen or _EPOCH}
@@ -302,8 +304,8 @@ def fill_states(db, only_open_on=None, batch: int = 2000, limit: int | None = No
         q = q.where(Tender.id.in_(ids))
     written, read, last_id = 0, 0, 0
     while limit is None or read < limit:
-        rows = db.execute(q.where(Tender.id > last_id)
-                          .limit(batch if limit is None else min(batch, limit - read))).all()
+        page = batch if limit is None else min(batch, limit - read)
+        rows = db.execute(q.where(Tender.id > last_id).limit(page)).all()
         if not rows:
             break
         last_id, read = rows[-1][0], read + len(rows)
@@ -313,7 +315,39 @@ def fill_states(db, only_open_on=None, batch: int = 2000, limit: int | None = No
             if states != current:
                 todo.append((i, states, seen))
         written += _store_states(db, todo, only_null=not refresh)
+        if len(rows) < page:
+            break                       # a short page is the last one: no empty query to find that out
     return written
+
+
+def clear_states(tender: Tender) -> None:
+    """For a writer that changes a loaded row's texts (the fetcher, enrichment).
+
+    Its copy was loaded earlier -- before a download, or a few pages ago -- and
+    the other writer may have saved newer text since, so states worked out from
+    this copy could be stale. NULL is always right: the state filter reads the
+    texts themselves for a NULL row. Written even if this copy already says
+    NULL (flag_modified), because the database may hold a value since filled.
+    The writer then calls refill_states with the row's id after it commits."""
+    tender.states = None
+    flag_modified(tender, "states")
+
+
+def refill_states(db, ids: list[int]) -> None:
+    """Right after a commit: work out states for these rows from the rows as
+    saved now. Written only where last_updated_at is still what this read saw,
+    so a newer save by anyone always wins (_store_states). Never raises: if it
+    fails the rows stay NULL, which the state filter handles, and the daily
+    cron fills them. Empties `ids`."""
+    if not ids:
+        return
+    try:
+        fill_states(db, ids=list(ids), refresh=True)
+    except Exception:
+        db.rollback()
+        log.exception("states for %d tenders left for the daily fill", len(ids))
+    finally:
+        ids.clear()
 
 
 def city_clause(district: str, dialect: str):

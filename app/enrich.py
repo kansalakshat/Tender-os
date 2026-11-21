@@ -29,7 +29,7 @@ from . import activity
 from .bidpdf import parse_bid_pdf
 from .compliance import assert_not_blocked, scrub_personal, user_agent
 from .db import SessionLocal
-from .geo import fill_states
+from .geo import clear_states, refill_states
 from .models import Source, Tender, today_ist, utcnow
 
 log = logging.getLogger(__name__)
@@ -192,28 +192,9 @@ def enrich_one(db: Session, tender: Tender, client: httpx.Client) -> bool:
         # The document can name a different buyer, department or office, so the
         # states must be worked out again -- but not from this object: it was
         # loaded before the download, and a fetcher may have saved newer text
-        # since. NULL is always right (the state filter reads the text itself
-        # for NULL rows); enrich_pending fills it from the saved row after commit.
-        tender.states = None
+        # since. enrich_pending fills them from the saved row after it commits.
+        clear_states(tender)
     return changed
-
-
-def _fill_states_of(db: Session, ids: list[int]) -> None:
-    """Work out states for rows enrichment just committed, from the row as it is
-    saved now -- not from the copy enrichment loaded before its download, which
-    a fetcher may have overwritten meanwhile. Only NULL rows whose
-    last_updated_at is unchanged are written, so a fetcher's newer save always
-    wins. If this fails the rows stay NULL, which the state filter handles, and
-    the daily cron fills them."""
-    if not ids:
-        return
-    try:
-        fill_states(db, ids=ids)
-    except OperationalError as exc:
-        db.rollback()
-        log.warning("enrich: states for %d tenders left for the cron: %s",
-                    len(ids), str(exc).splitlines()[0][:120])
-    ids.clear()
 
 
 def enrich_pending(limit: int = 200, session_factory=SessionLocal,
@@ -241,7 +222,7 @@ def enrich_pending(limit: int = 200, session_factory=SessionLocal,
     )
     loaded: dict[int, Tender] = {}
     # Rows changed since the last commit: their states were set to NULL and are
-    # filled once the commit has landed (see _fill_states_of).
+    # filled once the commit has landed (geo.refill_states).
     unfilled: list[int] = []
     try:
         for n, tid in enumerate(ids, 1):
@@ -262,7 +243,7 @@ def enrich_pending(limit: int = 200, session_factory=SessionLocal,
                     unfilled.append(tid)
                 if n % BATCH == 0:
                     db.commit()
-                    _fill_states_of(db, unfilled)
+                    refill_states(db, unfilled)
                     log.info("enrich: %d/%d processed, %d changed", n, len(ids), changed)
             except OperationalError as exc:
                 # A deadlock is transient by definition: the loser is told to
@@ -284,7 +265,7 @@ def enrich_pending(limit: int = 200, session_factory=SessionLocal,
                     # list in seconds, one failed query per tender.
                     time.sleep(OUTAGE_PAUSE)
         db.commit()
-        _fill_states_of(db, unfilled)
+        refill_states(db, unfilled)
     finally:
         client.close()
         db.close()

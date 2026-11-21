@@ -72,7 +72,7 @@
  <div class=sxtop>
   <h3>Top States {{ icon('dots-three') }}</h3>
   <ol>{% for s, n in top_states[:5] %}<li><a href="/browse?state={{ s|urlquote }}" data-state="{{ s }}">{{ icon('user') }}<span>{{ s }}</span><b>{{ n|num }}</b></a></li>
-  {%- else %}<li class=muted>No open tenders yet.</li>{% endfor %}</ol>
+  {%- else %}<li class=muted>{{ 'No open tenders name a state yet.' if n_open else 'No open tenders yet.' }}</li>{% endfor %}</ol>
  </div>
 </div>
 </div></div></section>

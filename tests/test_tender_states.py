@@ -26,11 +26,13 @@ class _Dummy(BaseConnector):
 
 
 def _save(db, src, ref, **kw):
+    """What run() does for one listing: upsert, commit, then refill states."""
     rec = TenderRecord(external_ref=ref, source_url="u" + ref, **kw)
     c = _Dummy.__new__(_Dummy)
-    c.created_ids = []
+    c.created_ids, c.states_todo = [], []
     c._upsert(db, src, rec)
     db.commit()
+    geo.refill_states(db, c.states_todo)
     return db.execute(select(Tender).where(Tender.external_ref == ref)).scalar_one()
 
 
@@ -49,7 +51,74 @@ def test_the_fetcher_stores_states_on_create_and_update(session_factory):
     t = _save(db, raj, "a", title="Construction of road", organization="PWD")
     assert t.states == "|Rajasthan|"                       # from its state portal
     t = _save(db, raj, "a", title="Construction of road near Gwalior", organization="PWD")
+    db.refresh(t)
     assert t.states == "|Madhya Pradesh|Rajasthan|"        # recomputed when the text changes
+
+
+def test_an_enrichment_save_during_a_fetch_is_not_overwritten(session_factory):
+    """The mirror case: the fetcher loads a tender, keeps reading pages, and
+    saves later. If enrichment saved newer text in between (here a department
+    in Bhopal, which the listing does not carry, so the fetcher leaves it), the
+    states must come from the row as saved, not from the fetcher's old copy."""
+    from datetime import datetime
+    db = session_factory()
+    cppp = Source(name="CPPP", base_url="https://eprocure.gov.in"); db.add(cppp); db.flush()
+    tid = _save(db, cppp, "m", title="Supply of chairs").id
+    c = _Dummy.__new__(_Dummy)
+    c.created_ids, c.states_todo = [], []
+    c._upsert(db, cppp, TenderRecord(external_ref="m", source_url="um",
+                                     title="Supply of chairs at Jaipur"))      # loaded, not saved yet
+    with session_factory() as other:                                           # enrichment saves meanwhile
+        row = other.get(Tender, tid)
+        row.department, row.states = "Collectorate Bhopal", "|Madhya Pradesh|"
+        row.last_updated_at = datetime(2030, 1, 1)
+        other.commit()
+    db.commit()                                                                # the fetcher's batch commits
+    geo.refill_states(db, c.states_todo)
+    # Saved now: the fetcher's Jaipur title and enrichment's Bhopal department.
+    # Worked out from the fetcher's old copy it would be "|Rajasthan|" alone.
+    assert _states(session_factory, tid) == "|Madhya Pradesh|Rajasthan|"
+
+
+def test_a_tender_updated_twice_in_one_run_never_keeps_stale_states(session_factory, monkeypatch):
+    """The fetcher's session keeps its objects after a commit, so on a second
+    update its copy already says NULL while the database holds the refilled
+    value. The second save must still write NULL: if its refill then fails,
+    the row must say "not worked out" (NULL), never the first update's states."""
+    db = session_factory()
+    raj = Source(name="Rajasthan eProcurement", base_url="https://eproc.rajasthan.gov.in"); db.add(raj); db.flush()
+    c = _Dummy.__new__(_Dummy)
+    c.created_ids, c.states_todo = [], []
+    c._upsert(db, raj, TenderRecord(external_ref="r", source_url="ur", title="Road"))
+    db.commit()
+    tid = db.execute(select(Tender.id).where(Tender.external_ref == "r")).scalar_one()
+    c._upsert(db, raj, TenderRecord(external_ref="r", source_url="ur", title="Road near Gwalior"))
+    db.commit()
+    keep = db.get(Tender, tid)            # the session's copy, kept: it says NULL from here on
+    geo.refill_states(db, c.states_todo)
+    assert keep.states is None            # the copy is not refreshed by the refill
+    assert _states(session_factory, tid) == "|Madhya Pradesh|Rajasthan|"
+    c._upsert(db, raj, TenderRecord(external_ref="r", source_url="ur", title="Road near Surat"))
+    db.commit()
+    monkeypatch.setattr(geo, "fill_states", lambda *a, **k: (_ for _ in ()).throw(RuntimeError("db gone")))
+    geo.refill_states(db, c.states_todo)
+    assert _states(session_factory, tid) is None          # not the stale "|Madhya Pradesh|Rajasthan|"
+
+
+def test_a_failed_refill_leaves_null_and_does_not_raise(session_factory, monkeypatch):
+    db = session_factory()
+    raj = Source(name="Rajasthan eProcurement", base_url="https://eproc.rajasthan.gov.in"); db.add(raj); db.flush()
+    _save(db, raj, "f", title="Road")
+    c = _Dummy.__new__(_Dummy)
+    c.created_ids, c.states_todo = [], []
+    c._upsert(db, raj, TenderRecord(external_ref="f", source_url="uf", title="Road near Gwalior"))
+    db.commit()
+    def boom(*a, **k): raise RuntimeError("database gone")
+    monkeypatch.setattr(geo, "fill_states", boom)
+    geo.refill_states(db, c.states_todo)                  # logs, does not raise
+    assert c.states_todo == []
+    tid = db.execute(select(Tender.id).where(Tender.external_ref == "f")).scalar_one()
+    assert _states(session_factory, tid) is None          # NULL: the filter reads the text itself
 
 
 def _gem_tender(session_factory, monkeypatch, office):
@@ -110,11 +179,37 @@ def test_a_fetcher_save_during_enrichment_is_not_overwritten(session_factory, mo
     assert _states(session_factory, tid) == "|Madhya Pradesh|Rajasthan|"
 
 
+def test_enrichment_writes_null_even_when_its_copy_already_says_null(session_factory, monkeypatch):
+    """Loaded with states NULL; a fill stores a value during the download.
+    Setting NULL again is no change to SQLAlchemy unless flagged, so the
+    value would survive the commit -- and NULL-only fills never look again."""
+    from app import enrich
+    db, tid = _gem_tender(session_factory, monkeypatch, "Collectorate Bhopal")
+    with session_factory() as other:
+        other.get(Tender, tid).states = None
+        other.commit()
+    tender = db.get(Tender, tid)
+    db.refresh(tender)
+    assert tender.states is None                         # enrichment's copy says NULL
+    with session_factory() as other:                     # a fill lands during the download
+        other.get(Tender, tid).states = "|"
+        other.commit()
+
+    class R:
+        content = b""
+        def raise_for_status(self): pass
+    class C:
+        def get(self, url): return R()
+    assert enrich.enrich_one(db, tender, C())
+    db.commit()                                          # before any refill
+    assert _states(session_factory, tid) is None
+
+
 def test_enrich_one_does_not_work_out_states_from_its_loaded_copy():
     import inspect
     from app import enrich
     src = inspect.getsource(enrich.enrich_one)
-    assert "states_of" not in src and "tender.states = None" in src
+    assert "states_of" not in src and "clear_states(tender)" in src
 
 
 def _rows(session_factory, monkeypatch):
