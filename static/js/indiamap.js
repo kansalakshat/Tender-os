@@ -30,9 +30,17 @@
     tip.style.left = x + 'px';
     tip.style.top = y + 'px';
   }
-  function mark(name, on) {
-    for (const a of links) if (a.dataset.state === name) a.classList.toggle('lit', on);
-    if (!on || !tip) return;
+  // Where the bubble rests when nothing is pointed at: the busiest state, or
+  // nowhere when the page has no counts (then it starts hidden).
+  const home = tip ? tip.dataset.state || '' : '';
+  function show(name) {
+    if (!tip) return;
+    if (!name) {
+      tip.hidden = true;
+      tip.dataset.state = '';
+      if (go) go.href = '/browse';
+      return;
+    }
     const n = counts[name] || 0;
     tip.querySelector('b').textContent = name;
     // No counts on the page (web.py _render_welcome): name the state, no number.
@@ -42,6 +50,12 @@
     tip.dataset.state = name;
     place(name);
     if (go) go.href = '/browse?state=' + encodeURIComponent(name);
+  }
+  function mark(name, on) {
+    for (const a of links) if (a.dataset.state === name) a.classList.toggle('lit', on);
+    // Pointing away puts the bubble back where it rests, so a state's name
+    // does not stay on the map after the pointer has left it.
+    show(on ? name : home);
   }
   for (const a of links) {
     const name = a.dataset.state;
