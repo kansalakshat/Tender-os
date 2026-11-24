@@ -74,12 +74,19 @@
     document.getElementById('sxweek').href = '/browse?' + q + '&closing=7';
     document.getElementById('sxlinks').hidden = false;
     refresh();
-    // On a phone the card sits under the map: bring it into view.
+    // On a phone the card sits under the map: bring it into view. No
+    // behavior here, so the page's own scroll-behavior decides -- smooth, or
+    // instant for someone who has asked for reduced motion.
     const card = side.querySelector('.sxcard'), r = card.getBoundingClientRect();
-    if (r.top < 0 || r.bottom > window.innerHeight) card.scrollIntoView({block: 'nearest', behavior: 'smooth'});
+    if (r.top < 0 || r.bottom > window.innerHeight) card.scrollIntoView({block: 'nearest'});
   }
+  // A plain click (or Enter) picks; Ctrl/Cmd/Shift-click and any other button
+  // stay ordinary links, so "open in a new tab" still opens Browse.
   if (side) for (const a of sec.querySelectorAll('.indiamap [data-state]'))
-    a.addEventListener('click', (e) => { e.preventDefault(); pick(a.dataset.state); });
+    a.addEventListener('click', (e) => {
+      if (e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+      e.preventDefault(); pick(a.dataset.state);
+    });
   for (const a of links) {
     const name = a.dataset.state;
     a.addEventListener('mouseenter', () => { hovered = name; refresh(); });
