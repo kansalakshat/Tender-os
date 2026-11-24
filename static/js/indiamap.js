@@ -30,9 +30,17 @@
     tip.style.left = x + 'px';
     tip.style.top = y + 'px';
   }
-  function mark(name, on) {
-    for (const a of links) if (a.dataset.state === name) a.classList.toggle('lit', on);
-    if (!on || !tip) return;
+  // Where the bubble rests when nothing is pointed at: the busiest state, or
+  // nowhere when the page has no counts (then it starts hidden).
+  const home = tip ? tip.dataset.state || '' : '';
+  function show(name) {
+    if (!tip) return;
+    if (!name) {
+      tip.hidden = true;
+      tip.dataset.state = '';
+      if (go) go.href = '/browse';
+      return;
+    }
     const n = counts[name] || 0;
     tip.querySelector('b').textContent = name;
     // No counts on the page (web.py _render_welcome): name the state, no number.
@@ -43,10 +51,21 @@
     place(name);
     if (go) go.href = '/browse?state=' + encodeURIComponent(name);
   }
+  // The pointer and keyboard focus are tracked apart: moving the mouse off a
+  // state must not drop a state the keyboard is still on. The bubble shows the
+  // pointed-at state, else the focused one, else goes back where it rests --
+  // so a state's name does not stay on the map once nothing is on it.
+  let hovered = '', focused = '';
+  function refresh() {
+    for (const a of links) a.classList.toggle('lit', a.dataset.state === hovered || a.dataset.state === focused);
+    show(hovered || focused || home);
+  }
   for (const a of links) {
     const name = a.dataset.state;
-    for (const ev of ['mouseenter', 'focus']) a.addEventListener(ev, () => mark(name, true));
-    for (const ev of ['mouseleave', 'blur']) a.addEventListener(ev, () => mark(name, false));
+    a.addEventListener('mouseenter', () => { hovered = name; refresh(); });
+    a.addEventListener('mouseleave', () => { if (hovered === name) hovered = ''; refresh(); });
+    a.addEventListener('focus', () => { focused = name; refresh(); });
+    a.addEventListener('blur', () => { if (focused === name) focused = ''; refresh(); });
   }
   if (tip) {
     if (tip.dataset.state) place(tip.dataset.state);
