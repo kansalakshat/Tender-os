@@ -72,3 +72,18 @@ def test_about_keys_are_real_sectors(about):
 def test_about_has_no_inline_styles():
     html = (ROOT / "templates" / "about.html").read_text(encoding="utf-8")
     assert "style=" not in html and "<script" not in html
+
+
+def test_signed_in_visitors_are_not_asked_to_create_an_account(about):
+    """The page is the same for everyone; site.js removes what is only for
+    signed-out visitors once /me says someone is signed in. The demo stays."""
+    cta = about[about.index("class=abcta id=start"):]
+    cta = cta[:cta.index("</div>", cta.index("class=abctas"))]
+    assert '<a class="abbtn" href="/signup" data-signedout>Create free account</a>' in cta
+    demo = cta[cta.index("Book a demo") - 120:cta.index("Book a demo")]
+    assert "data-signedout" not in demo
+    js = (ROOT / "static" / "js" / "site.js").read_text(encoding="utf-8")
+    signed_in = js[js.index("fetch('/me')"):]
+    signed_in = signed_in[signed_in.index("if(!d.user){"):]
+    after_signout_branch = signed_in[signed_in.index("return;"):]
+    assert "querySelectorAll('[data-signedout]')) e.remove()" in after_signout_branch
