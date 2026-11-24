@@ -181,6 +181,9 @@ fetch('/me').then(r=>r.json()).then(d=>{
     signinPrompt();
     return;
   }
+  // Signed in: buttons only for signed-out visitors ("Create free account")
+  // go. The page is the same for everyone, so this is decided here, not there.
+  for(const e of document.querySelectorAll('[data-signedout]')) e.remove();
   // Signed in: a real account menu, not a row of loose links. The label is the
   // company name when there is one, because that is what the person recognises;
   // the email stays in the menu where it is still checkable.
