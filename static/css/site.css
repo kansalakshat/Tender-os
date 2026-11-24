@@ -834,6 +834,27 @@ pre#err:empty{display:none}
 .sxtip b{font-size:.9rem;color:var(--hnavy)}
 .sxtip i{font-style:normal;font-size:.78rem;color:var(--muted)}
 .sxgo{margin:.75rem 0 0}
+.sxside{align-self:start;display:grid;gap:1rem}
+.sxcard{padding:1.1rem 1.25rem;border:1px solid var(--hline);border-radius:16px;background:var(--panel)}
+.sxk{display:flex;align-items:center;gap:.5rem;margin:0;font-size:1.15rem;font-weight:700;color:var(--hnavy)}
+.sxk .i{width:1.9rem;height:1.9rem;padding:.35rem;border-radius:8px;background:var(--hb-soft);color:var(--hb)}
+.sxhint{margin:.4rem 0 0;color:var(--muted);font-size:.92rem}
+.sxlinks{list-style:none;margin:.75rem 0 0;padding:0;display:grid;gap:.4rem}
+.sxlinks[hidden]{display:none}
+.sxlinks a{display:flex;align-items:center;gap:.6rem;padding:.65rem .8rem;border:1px solid var(--hline);border-radius:10px;color:var(--hnavy);text-decoration:none;font-weight:600}
+.sxlinks a:hover,.sxlinks a:focus-visible{border-color:var(--hb);background:var(--hb-soft)}
+.sxlinks a span{flex:1}
+.sxlinks .i{width:1.1rem;height:1.1rem;color:var(--hb)}
+.sxpop{margin:1rem 0 .5rem;font-size:.78rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.sxchips{display:flex;flex-wrap:wrap;gap:.45rem}
+.sxchip{padding:.4rem .75rem;border:1px solid var(--hline);border-radius:999px;font-size:.88rem;color:var(--hnavy);text-decoration:none}
+.sxchip:hover,.sxchip.lit,.sxchip:focus-visible{border-color:var(--hb);background:var(--hb-soft);color:var(--hb)}
+.sxalert{display:grid;grid-template-columns:auto 1fr;gap:.35rem .75rem;align-items:start;padding:1rem 1.25rem;border-radius:16px;background:var(--hb-soft)}
+.sxalert>.i{width:1.6rem;height:1.6rem;color:var(--hb);margin-top:.1rem}
+.sxalert b{display:block;color:var(--hnavy)}
+.sxalert span{display:block;margin-top:.15rem;color:var(--muted);font-size:.9rem}
+.sxalert .hbtn{grid-column:2;justify-self:start;margin-top:.35rem}
+.sxmap .indiamap a.sel path{fill:#1D4ED8}
 .sxtop{align-self:start;padding:1.1rem 1.25rem;border:1px solid var(--hline);border-radius:16px;background:var(--panel)}
 .sxtop h3{display:flex;justify-content:space-between;align-items:center;margin:0 0 .5rem;font-size:1.05rem}
 .sxtop h3 .i{color:var(--muted)}
