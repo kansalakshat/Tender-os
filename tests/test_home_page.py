@@ -93,3 +93,30 @@ def test_home_buyer_panel_and_demo_button(db_with_buyers, monkeypatch):
     # no video configured: the hero offers to book a demo, not to watch one
     hero = html[html.index("class=hxctas"):html.index("class=hxart")]
     assert "Book a Demo" in hero and "Watch Demo" not in hero
+
+
+def test_state_picker_fills_the_space_beside_the_map(db_with_buyers, monkeypatch):
+    """No state counts on the page: a picker stands beside the map. Its links
+    open Browse with filters Browse already reads; the page does no counting."""
+    monkeypatch.setitem(web._env.globals, "demo_video", "")
+    app.dependency_overrides[get_db] = lambda: db_with_buyers()
+    try:
+        html = TestClient(app).get("/").text
+    finally:
+        app.dependency_overrides.clear()
+    side = html[html.index("<div class=sxside id=sxside>"):html.index('<section class="sec px"') if '<section class="sec px"' in html else None]
+    # the ids the script fills are the ones the page draws
+    js = (Path(__file__).parent.parent / "static" / "js" / "indiamap.js").read_text(encoding="utf-8")
+    for el in ("sxside", "sxname", "sxhint", "sxlinks", "sxall", "sxweek"):
+        assert f"getElementById('{el}')" in js and f"id={el}" in html
+    # before a pick: no state's links yet, and they open Browse without one
+    assert "<ul class=sxlinks id=sxlinks hidden>" in side
+    assert 'href="/browse?closing=7"' in side
+    # six popular states, each a plain link to Browse that works without JavaScript
+    assert side.count("class=sxchip href=") == 6
+    assert 'href="/browse?state=Madhya%20Pradesh" data-state="Madhya Pradesh"' in side
+    # the sign-up card goes where the header's button goes
+    assert 'href="/signup">Get ranked matches</a>' in side
+    # Browse reads both filters from its URL
+    bjs = (Path(__file__).parent.parent / "static" / "js" / "browse.js").read_text(encoding="utf-8")
+    assert "'state'" in bjs and "'closing'" in bjs

@@ -78,6 +78,24 @@
   <ol>{% for s, n in top_states[:5] %}<li><a href="/browse?state={{ s|urlquote }}" data-state="{{ s }}">{{ icon('user') }}<span>{{ s }}</span><b>{{ n|num }}</b></a></li>
   {%- else %}<li class=muted>No open tenders yet.</li>{% endfor %}</ol>
  </div>
+ {%- else %}
+ {#- No counts on the page: a state picker in their place. Clicking a state on
+     the map fills the card with links into Browse; no database work. -#}
+ <div class=sxside id=sxside>
+  <div class=sxcard aria-live=polite>
+   <p class=sxk>{{ icon('map-pin') }}<span id=sxname>Pick a state</span></p>
+   <p class=sxhint id=sxhint>Click any state on the map to see its tenders.</p>
+   <ul class=sxlinks id=sxlinks hidden>
+    <li><a id=sxall href="/browse">{{ icon('magnifying-glass') }}<span>All open tenders</span>{{ icon('arrow-right') }}</a></li>
+    <li><a id=sxweek href="/browse?closing=7">{{ icon('clock-countdown') }}<span>Closing in the next 7 days</span>{{ icon('arrow-right') }}</a></li>
+   </ul>
+   <p class=sxpop>Popular states</p>
+   <div class=sxchips>{% for s in ("Maharashtra", "Uttar Pradesh", "Madhya Pradesh", "Rajasthan", "Gujarat", "Karnataka") %}<a class=sxchip href="/browse?state={{ s|urlquote }}" data-state="{{ s }}">{{ s }}</a>{% endfor %}</div>
+  </div>
+  <div class=sxalert>{{ icon('sparkle') }}<div><b>Tenders matched to your business</b>
+   <span>Set your states and sectors once. See ranked matches every day.</span></div>
+   <a class=hbtn href="/signup">Get ranked matches</a></div>
+ </div>
  {%- endif %}
 </div>
 </div></div></section>

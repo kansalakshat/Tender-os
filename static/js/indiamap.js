@@ -2,7 +2,8 @@
 // a plain link to /browse?state=...; this only adds the extras: each state is
 // shaded by its count, and pointing at one lights up its row (and the row its
 // shape), puts a bubble with its count over it and points "View State Details"
-// at it. The bubble starts on the busiest state.
+// at it. The bubble starts on the busiest state. With no counts on the page a
+// state picker takes the list's place: a click on a state fills its card.
 (function () {
   const sec = document.getElementById('states');
   if (!sec) return;
@@ -55,11 +56,30 @@
   // state must not drop a state the keyboard is still on. The bubble shows the
   // pointed-at state, else the focused one, else goes back where it rests --
   // so a state's name does not stay on the map once nothing is on it.
-  let hovered = '', focused = '';
+  let hovered = '', focused = '', picked = '';
   function refresh() {
     for (const a of links) a.classList.toggle('lit', a.dataset.state === hovered || a.dataset.state === focused);
-    show(hovered || focused || home);
+    show(hovered || focused || picked || home);
   }
+  // The state picker beside the map (no counts on the page): a click on a
+  // state fills the card with its links instead of leaving the page.
+  const side = document.getElementById('sxside');
+  function pick(name) {
+    picked = name;
+    for (const a of sec.querySelectorAll('.indiamap [data-state]')) a.classList.toggle('sel', a.dataset.state === name);
+    const q = 'state=' + encodeURIComponent(name);
+    document.getElementById('sxname').textContent = name;
+    document.getElementById('sxhint').textContent = 'Open tenders from ' + name + ':';
+    document.getElementById('sxall').href = '/browse?' + q;
+    document.getElementById('sxweek').href = '/browse?' + q + '&closing=7';
+    document.getElementById('sxlinks').hidden = false;
+    refresh();
+    // On a phone the card sits under the map: bring it into view.
+    const card = side.querySelector('.sxcard'), r = card.getBoundingClientRect();
+    if (r.top < 0 || r.bottom > window.innerHeight) card.scrollIntoView({block: 'nearest', behavior: 'smooth'});
+  }
+  if (side) for (const a of sec.querySelectorAll('.indiamap [data-state]'))
+    a.addEventListener('click', (e) => { e.preventDefault(); pick(a.dataset.state); });
   for (const a of links) {
     const name = a.dataset.state;
     a.addEventListener('mouseenter', () => { hovered = name; refresh(); });
